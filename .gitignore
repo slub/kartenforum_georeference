@@ -1,0 +1,11 @@
+# local developing files
+.idea/
+/deprecated
+
+# custom installations files
+/python_env
+
+# all files with ending 
+*.pyc
+
+# configuration files
