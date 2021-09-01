@@ -1,5 +1,6 @@
 # local developing files
 .idea/
+.coverage
 /deprecated
 
 # custom installations files

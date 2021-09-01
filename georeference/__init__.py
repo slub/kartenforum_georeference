@@ -7,14 +7,8 @@
 # "LICENSE", which is part of this source code package.
 import logging
 from pyramid.config import Configurator
-from pyramid.response import Response
-from sqlalchemy import engine_from_config
 
 LOGGER = logging.getLogger(__name__)
-
-def hello_world(request):
-    LOGGER.info("test")
-    return Response('Hello World!')
 
 def createApplication(debug_mode=False, **settings):
     """ Creates the georeference applications.
@@ -40,12 +34,14 @@ def createApplication(debug_mode=False, **settings):
     # Initialize configurator
     config = Configurator(settings=settings)
 
-    # Initialize database
-    engine = engine_from_config(settings, prefix='sqlalchemy.')
+    # Initialize database and models
+    config.include('.models')
+
+    # Initialize routes
+    config.include('.routes')
 
     # Debug code
-    config.add_route('hello', '/')
-    config.add_view(hello_world, route_name='hello')
+    config.scan()
 
     return config.make_wsgi_app()
 

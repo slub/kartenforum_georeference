@@ -10,9 +10,11 @@ from setuptools import setup, find_packages
 requires = [
     'pyramid==2.0',
     'pyramid_tm==2.4',
+    'pyramid_retry==2.1.1',
     'psycopg2==2.9.1',
     'SQLAlchemy==1.4.23',
-    'waitress==2.0'
+    'waitress==2.0',
+    'zope.sqlalchemy==1.5',
 ]
 
 tests_require = [
