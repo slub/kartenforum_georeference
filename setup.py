@@ -15,6 +15,12 @@ requires = [
     'waitress==2.0'
 ]
 
+tests_require = [
+    'WebTest',
+    'pytest',
+    'pytest-cov',
+]
+
 setup(
     name='georeference',
     version='1.0',
@@ -33,12 +39,13 @@ setup(
     author='Jacob Mendt, Nicolas Looschen',
     author_email='jacob.mendt@pikobytes.de,nicolas.looschen@pikobytes.de',
     url='http://www.slub-dresden.de/startseite/',
-    packages=find_packages(),
+    packages=find_packages(exclude=['georeference_tests']),
     include_package_data=True,
     zip_safe=False,
     install_requires=requires,
-    tests_require=requires,
-    test_suite="georeference",
+    extras_require={
+        'testing': tests_require,
+    },
     entry_points="""\
       [paste.app_factory]
       main = georeference:main
