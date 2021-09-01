@@ -5,7 +5,8 @@
 # custom installations files
 /python_env
 
-# all files with ending 
+# build files
+/georeference.egg-info
 *.pyc
 
 # configuration files
