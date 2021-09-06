@@ -8,7 +8,7 @@ update of the georeference data basis.
 The georeference service relies on the following dependencies:
 
 ```
-apt-get install python3 python3-virtualenv libpq-dev
+apt-get install python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev
 ```
 
 First of all the python dependencies have to be installed. This done by creating a virtual environment:
@@ -36,3 +36,7 @@ The kartenforum_georeference application uses [pytest](https://docs.pytest.org/e
 ```
 
 Make sure that the project is properly installed beforehand.
+
+## Troubleshooting
+
+* If the execution of the command `./python_env/bin/python setup.py develop` fails, make sure that the system wide gdal version, matches the GDAL version within the `setup.py`. 

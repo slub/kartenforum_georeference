@@ -2,6 +2,7 @@
 .idea/
 .coverage
 /deprecated
+/georeference_tests/data_output
 
 # custom installations files
 /python_env

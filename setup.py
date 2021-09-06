@@ -15,6 +15,7 @@ requires = [
     'SQLAlchemy==1.4.23',
     'waitress==2.0',
     'zope.sqlalchemy==1.5',
+    'GDAL==3.2.2'
 ]
 
 tests_require = [
