@@ -1,0 +1,14 @@
+# local developing files
+.idea/
+.coverage
+/deprecated
+/georeference_tests/data_output
+
+# custom installations files
+/python_env
+
+# build files
+/georeference.egg-info
+*.pyc
+
+# configuration files
