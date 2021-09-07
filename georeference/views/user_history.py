@@ -68,7 +68,7 @@ def generateGeoreferenceHistory(request):
                 responseRecord['boundingbox'] = mapObj.getExtentAsString(request.dbsession, 4326)
 
             # calculate points
-            if georef.adminvalidation is not 'invalide':
+            if georef.adminvalidation != 'invalide':
                 points += 20
 
             georef_profile.append(responseRecord)

@@ -18,8 +18,8 @@ LOGGER = logging.getLogger(__name__)
 
 GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
-@view_config(route_name='summary_georeference', renderer='json')
-def getGeoreferencePoints(request):
+@view_config(route_name='statistics', renderer='json')
+def getStatistics(request):
     LOGGER.info('Request - Get georeference points.')
     LOGGER.debug(request)
     try:
@@ -79,7 +79,7 @@ def getGeoreferencePoints(request):
         for record in queryData:
             missing_georeference_map_count = record[0]
 
-        return {'pointoverview': user_points, 'georeference_map_count': georeference_map_count, 'missing_georeference_map_count':missing_georeference_map_count}
+        return {'georeference_points': user_points, 'georeference_map_count': georeference_map_count, 'not_georeference_map_count':missing_georeference_map_count}
     except Exception as e:
         LOGGER.error('Error while trying to request georeference history information')
         LOGGER.error(e)

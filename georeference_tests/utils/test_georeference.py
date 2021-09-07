@@ -9,11 +9,11 @@ import os
 import logging
 import time
 from osgeo import gdal
-from georeference.utils.georeference import rectifyPolynomWithVRT
+from georeference.utils.georeference import rectifyImage
 
 GEOREFERENCE_TESTS = [
     {
-        'name': 'Map: test-ak.jpg (11545x9291), Gcps: 13, Algorithm: Polynom',
+        'name': 'Map: test-ak.jpg (11545x9291), Gcps: 13, Algorithm: Polynom, Without clip polygon',
         'algorithm': 'polynom',
         'gcps': [
             (13.322571166912697, 50.869534359847236, 5473, 6079),
@@ -56,9 +56,7 @@ def test_georeference():
         gcps = list(map(lambda gcp: gdal.GCP(gcp[0], gcp[1], 0, gcp[2], gcp[3]), test['gcps']))
 
         t0 = time.time()
-        response = None
-        if algorithm == 'polynom':
-            response = rectifyPolynomWithVRT(srcFile, dstFile, gcps, srs, logging, tmpDir, None, order=1)
+        response = rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logging, tmpDir, None)
 
         # Tests
         assert os.path.exists(response)

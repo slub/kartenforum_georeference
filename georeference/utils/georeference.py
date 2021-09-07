@@ -25,14 +25,16 @@ def _createVrt(srcDataset, dstFile):
     dstDataset = dstDriver.CreateCopy(dstFile, srcDataset,0)
     return dstDataset
 
-def rectifyPolynomWithVRT(srcFile, dstFile,  gcps, srs, logger, tmpDir, clipShp=None, order=None):
-    """ Functions generates and clips an image and adds a geotransformation matrix to it but it uses a vrt
-        for faster processing.
+def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp=None):
+    """ Functions generates and clips a georeferenced image based on a polynom transformation. This function heavily
+    relies on the usage of [gdalwarp](https://gdal.org/programs/gdalwarp.html).
 
     :param srcFile: Source image path
     :type srcFile: str
     :param dstFile: Target image path
     :type dstFile: str
+    :param algorithm: Transformation algorithm for the rectification
+    :type algorithm: 'polynom', 'affine', 'tps'
     :param gcps: List of ground control points for rectifing the image
     :type gcps: List.<gdal.GCP>
     :param srs: EPSG code of the spatial reference system. Currently only EPSG:4314 is supported
@@ -43,8 +45,6 @@ def rectifyPolynomWithVRT(srcFile, dstFile,  gcps, srs, logger, tmpDir, clipShp=
     :type tmpDir: str
     :param clipShp: Path to the shapefile which is used for clipping
     :type clipShp: str (Default: None)
-    :param order: Order of the polygon (1 is the same like affine)
-    :type order: int (Default: None)
     :raise: ValueError
     :result: Path to the target image
     :rtype: str
@@ -57,30 +57,34 @@ def rectifyPolynomWithVRT(srcFile, dstFile,  gcps, srs, logger, tmpDir, clipShp=
         # get projection
         geoProj = SRC_DICT_WKT[srs]
         if geoProj is None:
-            raise ValueError("SRS with id - %s - is not supported"%srs)
+            raise ValueError('The given srs "%s" is not supported' % srs)
 
-        # save results in VRT and increase processing speed
+        # Is algorithm supported
+        if algorithm not in ['polynom', 'tps', 'affine']:
+            raise ValueError('The given algorithm "%s" is not supported.' % algorithm)
+
+        # Create a virtual raster dataset and add the GCP with the target geoprojection to it
         tmpFile = os.path.join(tmpDir, '%s.vrt'%tmpDataName)
         newDataset = _createVrt(gdal.Open(srcFile, GA_ReadOnly), tmpFile)
         newDataset.SetGCPs(gcps, geoProj)
-        # newDataset.SetProjection(geoProj)
-        # newDataset.SetGeoTransform(gdal.GCPsToGeoTransform(gcps))
         newDataset.FlushCache()
 
-        # doing the rectification
         if os.path.exists(tmpFile):
-            # doing a rectification of an image using a polynomial transformation
-            # and a nearest neighbor resampling method
-            logger.debug('Do georeferencing based on a polynom transformation ...')
-            resampling = 'near'
-            order = order if order in [1,2,3] else None
-            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r %s -wm 500 ' % (GEOREFERENCE_PATH_GDALWARP, resampling)
+            logger.info('Rectify image with a %s transformation ...' % (algorithm))
+            # The rectification is done via gdalwarp command line utility. Therefor we first build the correct
+            # string.
+            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r near -wm 500 ' % (GEOREFERENCE_PATH_GDALWARP)
 
-            # check if order is described
-            if order is not None:
-                command += '-order %s ' % order
+            # In case the algorithm is tps we extend the command with -tps
+            if algorithm == 'tps':
+                command += '-tps '
 
-            # check if clip shape is defined
+            # In case the algorithm is affine we set order=1 to tell gdalwarp to use a polynom first order. If either
+            # affine or tps, gdal uses a polynom by default
+            if algorithm == 'affine':
+                command += '-order 1'
+
+            # If a shapefile with a clip polygon is defined it is used.
             if clipShp is not None:
                 command += '-cutline \'%s\' -crop_to_cutline ' % clipShp
 
@@ -88,6 +92,7 @@ def rectifyPolynomWithVRT(srcFile, dstFile,  gcps, srs, logger, tmpDir, clipShp=
             command += ' %s %s' % (tmpFile, dstFile)
 
             # run the command
+            logger.debug(command)
             subprocess.check_call(command, shell=True)
         return dstFile
     except:
