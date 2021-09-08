@@ -5,6 +5,8 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+import logging
+import os
 
 #
 # General
@@ -33,6 +35,25 @@ ROUTE_PREFIX = ''
 # @TODO Check if we can replace this through a better configuration injection
 # Pattern for building the correct oai id
 OAI_ID_PATTERN = 'oai:de:slub-dresden:vk:id-%s'
+
+# Settings for logger of the georeference persistent
+GEOREFERENCE_DAEMON_LOGGER = {
+    'name':'geoereference-daemon',
+    'file': os.path.abspath('../tmp/'),
+    # See supported log level https://docs.python.org/3/library/logging.html#levels
+    'level': logging.INFO,
+    'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+}
+
+# Settings for the georeference persistent
+GEOREFERENCE_DAEMON_SETTINGS = {
+    'stdin': os.path.abspath('../tmp/null'),
+    'stdout': os.path.abspath('../tmp/tty'),
+    'stderr': os.path.abspath('../tmp/tty'),
+    'pidfile_path': os.path.abspath('../tmp/daemon.pid'),
+    'pidfile_timeout': 5,
+    'sleep_time': 60
+}
 
 # Path to gdalwarp tool
 GEOREFERENCE_PATH_GDALWARP = 'gdalwarp'
