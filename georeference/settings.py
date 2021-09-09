@@ -12,6 +12,9 @@ import os
 # General
 #
 
+# Global error message
+GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
+
 # @TODO check if we can replace this dict through a system wide library
 # Definition of used srids
 SRC_DICT_WKT = {

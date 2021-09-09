@@ -9,5 +9,7 @@ from .settings import ROUTE_PREFIX
 
 def includeme(config):
     config.add_static_view('static', 'static', cache_max_age=3600)
+    config.add_route('maps', ROUTE_PREFIX + '/maps/{mapid}')
+    config.add_route('maps_georefs', ROUTE_PREFIX + '/maps/{mapid}/georefs', request_method='GET')
     config.add_route('user_history', ROUTE_PREFIX + '/user/{userid}/history')
     config.add_route('statistics', ROUTE_PREFIX + '/statistics')

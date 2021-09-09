@@ -8,6 +8,7 @@
 import os
 import pytest
 import transaction
+import webtest
 from sqlalchemy import create_engine
 from pyramid.paster import get_appsettings
 from pyramid.scripting import prepare
@@ -45,6 +46,20 @@ def tm():
 def dbsession(app, tm):
     session_factory = app.registry['dbsession_factory']
     return models.get_tm_session(session_factory, tm)
+
+@pytest.fixture
+def testapp(app, tm, dbsession):
+    # override request.dbsession and request.tm with our own
+    # externally-controlled values that are shared across requests but aborted
+    # at the end
+    testapp = webtest.TestApp(app, extra_environ={
+        'HTTP_HOST': 'example.com',
+        'tm.active': True,
+        'tm.manager': tm,
+        'app.dbsession': dbsession,
+    })
+
+    return testapp
 
 @pytest.fixture
 def app_request(app, tm, dbsession):

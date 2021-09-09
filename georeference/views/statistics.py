@@ -13,10 +13,9 @@ from sqlalchemy import desc
 from sqlalchemy import func
 from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
 from ..models.map import Map
-
+from ..models.map import Map
+from ..settings import GLOBAL_ERROR_MESSAGE
 LOGGER = logging.getLogger(__name__)
-
-GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
 @view_config(route_name='statistics', renderer='json')
 def getStatistics(request):
@@ -84,4 +83,4 @@ def getStatistics(request):
         LOGGER.error('Error while trying to request georeference history information')
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
-        raise HTTPInternalServerError(GENERAL_ERROR_MESSAGE)
+        raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)

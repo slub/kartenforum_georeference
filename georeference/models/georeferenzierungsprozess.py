@@ -57,6 +57,7 @@ class Georeferenzierungsprozess(Base):
          
         # at first check if there are unprocessed process processes with type new
         if actualOverwriteProcess is None:
+
             # check if there exist unprocessed process process for this id with type new
             unprocssedProcessOfTypeNew = session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapId)\
                 .filter(Georeferenzierungsprozess.processed == False)\
@@ -65,8 +66,8 @@ class Georeferenzierungsprozess(Base):
             # there are more than one unprocessed and new georeferences processes 
             if len(unprocssedProcessOfTypeNew) > 0:
                 return True
-             
-            raise ProcessInvalidException('There is no activated process process for this map sheet, ...')
+            else:
+                return False
          
         # now check if there exist concurrent update processes
         actualOverwriteId = actualOverwriteProcess.id
@@ -169,6 +170,19 @@ class Georeferenzierungsprozess(Base):
             .filter(Georeferenzierungsprozess.type == 'update')\
             .filter(Georeferenzierungsprozess.overwrites != 0)\
             .distinct(Georeferenzierungsprozess.mapid)
+
+    def getClipAsGeoJson(self, dbsession):
+        """ Returns the clip geometry as geojson.
+
+        :param dbsession: Database session object.
+        :type dbsession: sqlalchemy.orm.session.Session
+        :return: GeoJSON Geometry | None
+        """
+        query = "SELECT st_asgeojson(clip) FROM georeferenzierungsprozess WHERE id = %s" % self.id
+        response = dbsession.execute(query).fetchone()
+        if response is not None:
+            return response[0]
+        return None
 
     def setActive(self):
         """ Sets the georeference process to active. If - isactive - is set to True - processed - has also to be set

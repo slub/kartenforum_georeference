@@ -93,7 +93,12 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp
 
             # run the command
             logger.debug(command)
-            subprocess.check_call(command, shell=True)
+            subprocess.check_call(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT
+            )
         return dstFile
     except:
         raise
