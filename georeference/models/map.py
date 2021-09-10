@@ -5,8 +5,10 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+import os
 from sqlalchemy import Column, Integer, Boolean, String
 from sqlalchemy import desc
+from ..settings import PATH_IMAGE_ROOT
 from .meta import Base
 from .geometry import Geometry
 
@@ -24,6 +26,15 @@ class Map(Base):
     hasgeorefparams = Column(Integer)
     boundingbox = Column(Geometry)
     recommendedsrid = Column(Integer)
+    image_rel_path = Column(String(255))
+
+    def getAbsPath(self):
+        """ Returns the absolute path.
+
+        :return: Absolute path to image
+        :rtype: str
+        """
+        return os.path.abspath(os.path.join(PATH_IMAGE_ROOT, self.image_rel_path))
 
     def getExtent(self, dbsession, srid):
         """ Function returns the parsed extent.
@@ -107,7 +118,7 @@ class Map(Base):
         return dbsession.query(Map).filter(Map.maptype == str(type).upper())
 
     @classmethod
-    def by_id(cls, id, dbsession):
+    def byId(cls, id, dbsession):
         """
         :type str: id
         :type sqlalchemy.orm.session.Session: dbsession

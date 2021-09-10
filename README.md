@@ -1,7 +1,6 @@
 # Kartenforum Georeference
 
-This repository contains the code for deploying a georeference service as well as a daemon for an asynchrone permanent 
-update of the georeference data basis.
+This repository contains the code for deploying a georeference service as well as a daemon for an asynchrone permanent update of the georeference data basis.
 
 ## Install
 

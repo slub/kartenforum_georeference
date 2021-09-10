@@ -39,11 +39,11 @@ def getMapsById(request):
     }}
     """
     try:
-        if request.method != 'GET' or request.matchdict['mapid'] == None:
-            return HTTPBadRequest('Missing mapid')
+        if request.method != 'GET' or request.matchdict['map_id'] == None:
+            return HTTPBadRequest('Missing map_id')
 
         # query map object and metadata
-        mapObj = Map.by_id(toInt(request.matchdict['mapid']), request.dbsession)
+        mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
         metadataObj = Metadata.by_id(mapObj.id, request.dbsession)
 
         # Building basic json response

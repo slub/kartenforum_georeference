@@ -10,6 +10,7 @@ import logging
 import time
 from osgeo import gdal
 from georeference.utils.georeference import rectifyImage
+from georeference.utils.parser import toGDALGcps
 from .testcases_georeference import GEOREFERENCE_TESTCASES
 
 GEOREFERENCE_TESTS = [
@@ -48,7 +49,7 @@ def test_georeference():
                     algorithm
                 )
             )
-            gcps = list(map(lambda gcp: gdal.GCP(gcp['target'][0], gcp['target'][1], 0, gcp['source'][0], gcp['source'][1]), test['gcps']))
+            gcps = toGDALGcps(test['gcps'])
 
             t00 = time.time()
             response = rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logging, tmpDir, None)

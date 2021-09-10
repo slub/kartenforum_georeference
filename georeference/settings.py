@@ -8,12 +8,18 @@
 import logging
 import os
 
+# For correct resolving of the paths we use derive the base_path of the file
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 #
 # General
 #
 
 # Global error message
 GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
+
+# Path to the image root directory
+PATH_IMAGE_ROOT = os.path.join(BASE_PATH, '../georeference_tests/data_input')
 
 # @TODO check if we can replace this dict through a system wide library
 # Definition of used srids
@@ -31,6 +37,18 @@ SRC_DICT_WKT = {
 # applications
 ROUTE_PREFIX = ''
 
+# Directory where the mapfiles for the validation process are saved
+GEOREFERENCE_VALIDATION_FOLDER = os.path.join(BASE_PATH, '../tmp')
+
+# Service tmp
+TMP_DIR = os.path.join(BASE_PATH, '../tmp')
+
+# WMS Service default url template
+TEMPLATE_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/%s'
+
+# WMS data path template
+TEMPLATE_WMS_DATA_DIR = '/mapdata/%s'
+
 #
 # Parameter for the georeference persistent / persistent georeferencing
 #
@@ -42,7 +60,7 @@ OAI_ID_PATTERN = 'oai:de:slub-dresden:vk:id-%s'
 # Settings for logger of the georeference persistent
 GEOREFERENCE_DAEMON_LOGGER = {
     'name':'geoereference-daemon',
-    'file': os.path.abspath('../tmp/'),
+    'file': os.path.join(BASE_PATH, '../tmp/'),
     # See supported log level https://docs.python.org/3/library/logging.html#levels
     'level': logging.INFO,
     'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -50,10 +68,10 @@ GEOREFERENCE_DAEMON_LOGGER = {
 
 # Settings for the georeference persistent
 GEOREFERENCE_DAEMON_SETTINGS = {
-    'stdin': os.path.abspath('../tmp/null'),
-    'stdout': os.path.abspath('../tmp/tty'),
-    'stderr': os.path.abspath('../tmp/tty'),
-    'pidfile_path': os.path.abspath('../tmp/daemon.pid'),
+    'stdin': os.path.join(BASE_PATH, '../tmp/null'),
+    'stdout': os.path.join(BASE_PATH, '../tmp/tty'),
+    'stderr': os.path.join(BASE_PATH, '../tmp/tty'),
+    'pidfile_path': os.path.join(BASE_PATH, '../tmp/daemon.pid'),
     'pidfile_timeout': 5,
     'sleep_time': 60
 }

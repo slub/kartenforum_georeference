@@ -1,0 +1,47 @@
+MAP
+  DEBUG 5
+
+  PROJECTION
+	"init=epsg:3857"
+  END
+
+  WEB
+    METADATA
+        "wms_srs" "epsg:3857 epsg:4314 epsg:4326"
+        "wms_onlineresource" "$wmsUrl"
+        "wms_enable_request" "*"
+        "wms_titel" "Temporary Messtischblatt WMS"
+        "wms_contactorganization" "Saxon State and University Library Dresden (SLUB)"
+        "wms_contactperson" "Alexander Bigga"
+        "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
+        "wms_abstract" "$wmsAbstract"
+    END
+  END
+
+  IMAGECOLOR 255 255 255
+  IMAGETYPE "jpeg"
+  SIZE 600 400
+  STATUS ON
+  UNITS METERS
+
+  OUTPUTFORMAT
+    NAME "jpeg"
+    MIMETYPE "image/jpeg"
+    DRIVER "AGG/JPEG"
+    EXTENSION "jpg"
+    IMAGEMODE RGB
+    TRANSPARENT FALSE
+  END
+
+  LAYER
+    NAME "$layerName"
+    TYPE RASTER
+    UNITS PIXELS
+    STATUS OFF
+    DATA "$layerDataPath"
+    PROJECTION
+	    "init=$layerProjection"
+    END
+  END
+
+END # MAP

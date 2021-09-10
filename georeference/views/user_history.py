@@ -22,28 +22,17 @@ GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your reque
 
 @view_config(route_name='user_history', renderer='json')
 def generateGeoreferenceHistory(request):
+    if request.method != 'GET':
+        return HTTPBadRequest('The endpoint only supports "GET" requests.')
 
-    def getUserId(request):
-        """ Parse the process id from the request.
-
-        :type request: pyramid.request
-        :return: str|None """
-        if request.method == 'GET' and 'userid' in request.matchdict:
-            return request.matchdict['userid']
-        return None
-
-    LOGGER.info('Request - Get georeference profile page.')
-
-    # Try to get the user id
-    userid = getUserId(request)
-    if userid is None:
-        raise HTTPBadRequest("Wrong or missing userid.")
+    if request.matchdict['user_id'] == None:
+        return HTTPBadRequest('Missing user_id')
 
     try:
-        LOGGER.debug('Query georeference profile information from database for user %s'%userid)
+        LOGGER.debug('Query georeference profile information from database for user %s' % request.matchdict['user_id'])
         queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata, Map).join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid)\
             .join(Map, Georeferenzierungsprozess.mapid == Map.id)\
-            .filter(Georeferenzierungsprozess.nutzerid == userid)\
+            .filter(Georeferenzierungsprozess.nutzerid == request.matchdict['user_id'])\
             .order_by(desc(Georeferenzierungsprozess.id))
 
         LOGGER.debug('Create response list')
@@ -77,7 +66,7 @@ def generateGeoreferenceHistory(request):
 
         return {'georef_profile':georef_profile, 'points':points}
     except Exception as e:
-        LOGGER.error('Error while trying to request georeference history information');
+        LOGGER.error('Error while trying to request georeference history information')
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
         raise HTTPInternalServerError(GENERAL_ERROR_MESSAGE)

@@ -25,6 +25,45 @@ def _createVrt(srcDataset, dstFile):
     dstDataset = dstDriver.CreateCopy(dstFile, srcDataset,0)
     return dstDataset
 
+def _getExtentFromDataset(dataset):
+    """ Returns the extent of a given gdal dataset.
+
+    :type gdal.Dataset: dataset
+    :return: Boundingbox of the image
+    :rtype: [number]
+    """
+    cols = dataset.RasterXSize
+    rows = dataset.RasterYSize
+
+    geotransform = dataset.GetGeoTransform()
+    bb1 = originX = geotransform[0]
+    bb4 = originY = geotransform[3]
+
+    pixelWidth = geotransform[1]
+    pixelHeight = geotransform[5]
+    width = cols*pixelWidth
+    height = rows*pixelHeight
+
+    bb3 = originX + width
+    bb2 = originY + height
+    return [ bb1, bb2, bb3, bb4 ]
+
+def getImageExtent(filePath):
+    """ Returns the extent for a given georeference image.
+
+    :param filePath: Path to the georeferenced image
+    :type filePath: str
+    :return: Extent of the georeference image
+    :rtype: [number]
+    """
+    try:
+        dataset = gdal.Open(filePath, GA_ReadOnly)
+        return _getExtentFromDataset(dataset)
+    except:
+        raise
+    finally:
+        del dataset
+
 def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp=None):
     """ Functions generates and clips a georeferenced image based on a polynom transformation. This function heavily
     relies on the usage of [gdalwarp](https://gdal.org/programs/gdalwarp.html).
@@ -64,7 +103,9 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp
             raise ValueError('The given algorithm "%s" is not supported.' % algorithm)
 
         # Create a virtual raster dataset and add the GCP with the target geoprojection to it
-        tmpFile = os.path.join(tmpDir, '%s.vrt'%tmpDataName)
+        tmpFile = os.path.abspath(
+            os.path.join(tmpDir, '%s.vrt' % tmpDataName)
+        )
         newDataset = _createVrt(gdal.Open(srcFile, GA_ReadOnly), tmpFile)
         newDataset.SetGCPs(gcps, geoProj)
         newDataset.FlushCache()
@@ -100,7 +141,8 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp
                 stderr=subprocess.STDOUT
             )
         return dstFile
-    except:
+    except Exception as e:
+        logger.error(e)
         raise
     finally:
         if os.path.exists(tmpFile):

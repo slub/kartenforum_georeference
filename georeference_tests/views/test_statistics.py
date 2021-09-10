@@ -10,6 +10,6 @@ from georeference.views.statistics import getStatistics
 def test_getStatistics_success(app_request):
     subject = getStatistics(app_request)
     assert app_request.response.status_int == 200
-    assert len(subject['georeference_points']) == 0
-    assert subject['georeference_map_count'] == 0
+    assert len(subject['georeference_points']) == 2
+    assert subject['georeference_map_count'] == 9
     assert subject['not_georeference_map_count'] == 0

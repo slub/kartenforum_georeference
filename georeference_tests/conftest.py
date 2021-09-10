@@ -15,10 +15,13 @@ from pyramid.scripting import prepare
 from georeference import main
 from georeference import models
 
+# For correct resolving of the paths we use derive the base_path of the file
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 @pytest.fixture(scope='session')
-def ini_file(request):
+def ini_file():
     # potentially grab this path from a pytest option
-    return os.path.abspath('../../testing.ini')
+    return os.path.join(BASE_PATH, '../testing.ini')
 
 @pytest.fixture(scope='session')
 def app_settings(ini_file):

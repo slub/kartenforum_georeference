@@ -3,6 +3,11 @@
 .coverage
 /deprecated
 /georeference_tests/data_output
+!/georeference_tests/data_output/README.md
+/georeference_tests/data_input
+!/georeference_tests/data_input/README.md
+/tmp
+!/tmp/README.md
 
 # custom installations files
 /python_env
