@@ -9,9 +9,12 @@ import traceback
 import logging
 import json
 import os
+import ast
+from datetime import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from ..utils.parser import toInt
+from ..utils.validations import isValidateGeorefConfirm
 from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
 from ..models.map import Map
 from ..settings import GLOBAL_ERROR_MESSAGE
@@ -66,7 +69,7 @@ def getGeorefs(request):
         for process in request.dbsession.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapObj.id):
             # Create a georeference process object
             responseObj['items'].append({
-                'clip_polygon': json.loads(process.getClipAsGeoJson(request.dbsession)),
+                'clip_polygon': json.loads(process.getClipAsGeoJSON(request.dbsession)),
                 'params': process.georefparams,
                 'id': process.id,
                 'timestamp': str(process.timestamp),
@@ -80,28 +83,80 @@ def getGeorefs(request):
         LOGGER.error(traceback.format_exc())
         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)
 
-@view_config(route_name='maps_georefs', renderer='json', request_method='POST')
+@view_config(route_name='maps_georefs', renderer='json', request_method='POST', accept='application/json')
 def postGeorefs(request):
-    """ Endpoint for getting a list of registered georef processes for a given map_id. Expects the following:
+    """ Endpoint for POST a new georef process and save it for a given map_id. Expects the following:
 
         POST     {route_prefix}/map/{map_id}/georefs
 
     :param map_id: Id of the map object
     :type map_id: int
-
+    :param params: Json object containing the parameters
+    :type params: {{
+        clip_polygon: GeoJSON,
+        georef_params: *,
+        type: 'new' | 'update',
+        user_id: str,
+      }}
     :result: JSON object describing the map object
     :rtype: {...}
-
-    @TODO - Improve validation off input. Make sure that no incorrect input can be pushed to the database.
     """
     try:
+        # Validate request
         if request.method != 'POST':
             return HTTPBadRequest('The endpoint only supports "POST" requests.')
-
         if request.matchdict['map_id'] == None:
             return HTTPBadRequest('Missing map_id')
 
-        return "TODO"
+        # Validate input
+        valid = isValidateGeorefConfirm(request.json_body)
+        if valid['isValid'] == False:
+            return HTTPBadRequest(valid['errorMsg'])
+
+        # Process response
+        mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        clipPolygon = request.json_body['clip_polygon']
+        georefParams = request.json_body['georef_params']
+        type = request.json_body['type'].lower()
+        userId = request.json_body['user_id']
+
+        # If type is "new" make sure that there is no Georeferenprozess request
+        if type == 'new' and Georeferenzierungsprozess.isGeoreferenced(mapObj.id, request.dbsession):
+            return HTTPBadRequest('It is forbidden to register a new georeference process for a map, which already has a georeference process registered.')
+
+        # Save to process
+        timestamp = datetime.now().isoformat()
+        currentGeorefProcess = Georeferenzierungsprozess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession)
+        overwrites = currentGeorefProcess.id if type == 'update' and currentGeorefProcess != None else 0
+        newGeorefProcess = Georeferenzierungsprozess(
+            messtischblattid=mapObj.apsobjectid,
+            nutzerid=userId,
+            georefparams=json.dumps(georefParams),
+            timestamp=timestamp,
+            isactive=False,
+            type=type,
+            overwrites=overwrites,
+            adminvalidation='',
+            processed=False,
+            mapid=mapObj.id,
+            algorithm=georefParams['algorithm']
+        )
+
+        # Add georef process
+        request.dbsession.add(newGeorefProcess)
+        request.dbsession.flush()
+
+        if clipPolygon != None:
+            newGeorefProcess.setClipFromGeoJSON(
+                clipPolygon,
+                request.dbsession
+            )
+
+        # Build response
+        return {
+            'id': newGeorefProcess.id,
+            'points': int(len(georefParams['gcps'])) * 5,
+        }
     except Exception as e:
         LOGGER.error('Error while trying to process POST request')
         LOGGER.error(e)

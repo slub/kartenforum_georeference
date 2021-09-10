@@ -15,3 +15,4 @@ def includeme(config):
     config.add_route('maps_georefs_validate', ROUTE_PREFIX + '/maps/{map_id}/georefs_validate')
     config.add_route('user_history', ROUTE_PREFIX + '/user/{user_id}/history')
     config.add_route('statistics', ROUTE_PREFIX + '/statistics')
+    config.add_route('admin_georefs', ROUTE_PREFIX + '/admin/georefs')

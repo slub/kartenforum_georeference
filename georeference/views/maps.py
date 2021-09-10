@@ -17,8 +17,6 @@ from ..settings import GLOBAL_ERROR_MESSAGE
 
 LOGGER = logging.getLogger(__name__)
 
-GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
-
 @view_config(route_name='maps', renderer='json')
 def getMapsById(request):
     """ Endpoint for accessing map metadata for a given mapid. Expects the following:

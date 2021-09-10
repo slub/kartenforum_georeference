@@ -54,7 +54,7 @@ def getGeorefsForId(request):
             return HTTPNotFound('Could not find georef process for given georef_id')
 
         return {
-            'clip_polygon': json.loads(georefObj.getClipAsGeoJson(request.dbsession)),
+            'clip_polygon': json.loads(georefObj.getClipAsGeoJSON(request.dbsession)),
             'georef_params': georefObj.georefparams,
             'id': georefObj.id,
             'timestamp': str(georefObj.timestamp),

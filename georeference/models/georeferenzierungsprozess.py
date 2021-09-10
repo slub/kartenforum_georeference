@@ -6,12 +6,11 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package.
 import json
-from ..exceptions import ProcessInvalidException
+import ast
 from .meta import Base
 from .geometry import Geometry
 from .adminjobs import AdminJobs
-
-from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc, PickleType
+from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc, PickleType, JSON
 
 
 class JsonPickleType(PickleType):
@@ -22,8 +21,8 @@ class Georeferenzierungsprozess(Base):
     __table_args__ = {'extend_existing':True}
     id = Column(Integer, primary_key=True)
     messtischblattid = Column(Integer)
-    georefparams = Column(JsonPickleType(pickler=json))
-    clipparameter = Column(String(255))
+    georefparams = Column(String)
+    # clipparameter = Column(String(255))
     timestamp = Column(DateTime(timezone=False))
     type = Column(String(255))
     nutzerid = Column(String(255))
@@ -34,8 +33,9 @@ class Georeferenzierungsprozess(Base):
     mapid = Column(Integer)
     comment = Column(String(255))
     algorithm = Column(String(255))
-    clippolygon = Column(JsonPickleType(pickler=json))
-    clip = Column(Geometry)
+    # clippolygon = Column(JsonPickleType(pickler=json))
+    # clip = Column(Geometry)
+    georef_params = Column(JSON)
     
     @classmethod
     def all(cls, session):
@@ -171,7 +171,7 @@ class Georeferenzierungsprozess(Base):
             .filter(Georeferenzierungsprozess.overwrites != 0)\
             .distinct(Georeferenzierungsprozess.mapid)
 
-    def getClipAsGeoJson(self, dbsession):
+    def getClipAsGeoJSON(self, dbsession):
         """ Returns the clip geometry as geojson.
 
         :param dbsession: Database session object.
@@ -184,6 +184,31 @@ class Georeferenzierungsprozess(Base):
             return response[0]
         return None
 
+    def setClipFromGeoJSON(self, geojsonGeom, dbsession):
+        """ Set the clip property via a GeoJSON dict. It is important the the GeoJSON object contains a crs reference.
+
+        :param geojsonGeom: GeoJSON Geometry
+        :type geojsonGeom: dict
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :return: """
+
+        # Validate the passed input
+        if geojsonGeom['type'] != 'Polygon':
+            raise TypeError('Only polygons are allowed for a clip polygon')
+        if geojsonGeom['crs'] == None:
+            raise TypeError('Missing crs information for the clip polygon')
+        if geojsonGeom['coordinates'] == None:
+            raise TypeError('Missing coordinates for the clip polygon')
+
+        # Execute the insert process
+        dbsession.execute(
+            "UPDATE georeferenzierungsprozess SET clip = ST_GeomFromGeoJSON('%s') WHERE id = %s" % (
+                json.dumps(geojsonGeom),
+                self.id
+            )
+        )
+
     def setActive(self):
         """ Sets the georeference process to active. If - isactive - is set to True - processed - has also to be set
             to True, in any cases.
@@ -191,15 +216,6 @@ class Georeferenzierungsprozess(Base):
         """
         self.processed = True
         self.isactive = True
-
-    def setClip(self, geomAsText, srid, dbsession):
-        """ Set the clip
-        :type str: geomAsText
-        :type int: srid
-        :type sqlalchemy.orm.session.Session: dbsession
-        :return: """
-        query = "UPDATE georeferenzierungsprozess SET clip = ST_GeomFromText('%s', %s) WHERE id = %s"%(geomAsText, srid, self.id)
-        dbsession.execute(query)
 
     def setDeactive(self):
         """ Sets the georeference process to deactive.

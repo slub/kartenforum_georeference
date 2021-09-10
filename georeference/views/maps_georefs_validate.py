@@ -29,7 +29,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='maps_georefs_validate', renderer='json', request_method='POST')
+@view_config(route_name='maps_georefs_validate', renderer='json', request_method='POST', accept='application/json')
 def postGeorefsValidate(request):
     """ Endpoint for processing a temporary validation results for a georef process. Expects the following url pattern:
 
