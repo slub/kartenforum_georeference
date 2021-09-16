@@ -9,6 +9,7 @@ import os
 from sqlalchemy import Column, Integer, Boolean, String
 from sqlalchemy import desc
 from ..settings import PATH_IMAGE_ROOT
+from ..settings import PATH_GEOREF_ROOT
 from .meta import Base
 from .geometry import Geometry
 
@@ -27,14 +28,23 @@ class Map(Base):
     boundingbox = Column(Geometry)
     recommendedsrid = Column(Integer)
     image_rel_path = Column(String(255))
+    georef_rel_path = Column(String(255))
 
-    def getAbsPath(self):
-        """ Returns the absolute path.
+    def getAbsImagePath(self):
+        """ Returns the absolute path to the raw image
 
-        :return: Absolute path to image
+        :return: Absolute path to raw image
         :rtype: str
         """
         return os.path.abspath(os.path.join(PATH_IMAGE_ROOT, self.image_rel_path))
+
+    def getAbsGeorefPath(self):
+        """ Returns the absolute path to the georef image.
+
+        :return: Absolute path to georef image
+        :rtype: str
+        """
+        return os.path.abspath(os.path.join(PATH_GEOREF_ROOT, self.georef_rel_path))
 
     def getExtent(self, dbsession, srid):
         """ Function returns the parsed extent.
@@ -107,6 +117,15 @@ class Map(Base):
         :return: List.<georeference.models.vkdb.map.Map>
         """
         return dbsession.query(Map).order_by(desc(Map.id))
+
+    @classmethod
+    def allActive(cls, dbsession):
+        """ Equivalent to an 'SELECT * FROM map WHERE isactive=True;'
+
+        :type sqlalchemy.orm.session.Session: dbsession
+        :return: List.<georeference.models.vkdb.map.Map>
+        """
+        return dbsession.query(Map).filter(Map.istaktiv == True).order_by(desc(Map.id))
 
     @classmethod
     def allForType(cls, type, dbsession):

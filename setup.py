@@ -8,6 +8,7 @@
 from setuptools import setup, find_packages
 
 requires = [
+    'python-daemon==2.3.0',
     'pyramid==2.0',
     'pyramid_tm==2.4',
     'pyramid_retry==2.1.1',

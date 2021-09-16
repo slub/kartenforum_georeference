@@ -74,7 +74,31 @@ GET     /georeference/admin/setinvalide?georeferenceid={id_of_the_georeference_p
 GET     /georeference/admin/setisvalide?georeferenceid={id_of_the_georeference_process}
 ```
 
+## Processing- & Service-Engine (Daemon)
 
+The Processing- & Service-Engine is a daemon, which runs in the background and performs persistent updates of the search-index and the mapping data. It checks if something has changed
+within the database and sync the other services with this update.
+
+The settings for the daemon could be found in the:
+
+```
+georeference/settings.py
+```
+
+The daemon can be controlled with the following commands:
+
+```
+# Starts the daemon
+python_env/bin/python georeference/daemon/runner.py
+```
+
+#### Find and kill daemons
+
+```
+top -c -p $(pgrep -d',' -f python_env)
+kill -9
+```
+	
 ## Troubleshooting
 
 * If the execution of the command `./python_env/bin/python setup.py develop` fails, make sure that the system wide gdal version, matches the GDAL version within the `setup.py`. 

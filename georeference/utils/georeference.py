@@ -8,11 +8,36 @@
 import uuid
 import os
 import subprocess
+import json
+import sys
 from osgeo import gdal
 from osgeo.gdalconst import GDT_Byte
 from osgeo.gdalconst import GA_ReadOnly
 from ..settings import GEOREFERENCE_PATH_GDALWARP
+from ..settings import GEOREFERENCE_PATH_GDALADDO
 from ..settings import SRC_DICT_WKT
+from ..settings import TMP_DIR
+
+def _addOverviews(dstFile, overviewLevels, logger):
+    """ Function adds overview to given geotiff.
+
+    :param dstFile: Path of the destination image to which overviews should be added
+    :type dstFile: str
+    :param overviewLevels: String describing the adding of overview levels
+    :type overviewLevels: str
+    :param logger: Logger
+    :type logger: logging.Logger
+    :return: str
+    :raise: Exception """
+    try:
+        logger.debug('Adding overviews to raster %s'%dstFile)
+        command = '%s --config GDAL_CACHEMAX 500 -r average %s %s' % (GEOREFERENCE_PATH_GDALADDO, dstFile, overviewLevels)
+        subprocess.check_call(command, shell=True)
+        return dstFile
+    except:
+        logger.error("%s - Unexpected error while trying add overviews to the raster: %s - with command - %s"%(sys.stderr,sys.exc_info()[0],command))
+        raise Exception("Error while running subprocess via commandline!")
+
 
 def _createVrt(srcDataset, dstFile):
     """ This functions creates a vrt for a corresponding, from gdal supported, source dataset.
@@ -64,7 +89,7 @@ def getImageExtent(filePath):
     finally:
         del dataset
 
-def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp=None):
+def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeoJSON=None):
     """ Functions generates and clips a georeferenced image based on a polynom transformation. This function heavily
     relies on the usage of [gdalwarp](https://gdal.org/programs/gdalwarp.html).
 
@@ -82,8 +107,8 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp
     :type logger: logging.logger
     :param tmpDir: Path for temporary working directory
     :type tmpDir: str
-    :param clipShp: Path to the shapefile which is used for clipping
-    :type clipShp: str (Default: None)
+    :param clipGeoJSON: Path to the GeoJSON which is used for clipping
+    :type clipGeoJSON: str (Default: None)
     :raise: ValueError
     :result: Path to the target image
     :rtype: str
@@ -123,14 +148,14 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp
             # In case the algorithm is affine we set order=1 to tell gdalwarp to use a polynom first order. If either
             # affine or tps, gdal uses a polynom by default
             if algorithm == 'affine':
-                command += '-order 1'
+                command += '-order 1 '
 
             # If a shapefile with a clip polygon is defined it is used.
-            if clipShp is not None:
-                command += '-cutline \'%s\' -crop_to_cutline ' % clipShp
+            if clipGeoJSON is not None:
+                command += '-crop_to_cutline -cutline \'%s\' ' % clipGeoJSON
 
             # append source and dest file
-            command += ' %s %s' % (tmpFile, dstFile)
+            command += '%s %s' % (tmpFile, dstFile)
 
             # run the command
             logger.debug(command)
@@ -147,5 +172,62 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipShp
     finally:
         if os.path.exists(tmpFile):
             os.remove(tmpFile)
-
         del newDataset
+
+def rectifyImageWithClipAndOverviews(srcFile, dstFile, algorithm, gcps, gcps_srs, logger, tmpDir, clip=None):
+    """ Function rectifies a image, clips it and adds overviews to it.
+
+:param srcFile: Source image path
+    :type srcFile: str
+    :param dstFile: Target image path
+    :type dstFile: str
+    :param algorithm: Transformation algorithm for the rectification
+    :type algorithm: 'polynom', 'affine', 'tps'
+    :param gcps: List of ground control points for rectifing the image
+    :type gcps: List.<gdal.GCP>
+    :param gcps_srs: EPSG code of the spatial reference system of the gcps. Currently only EPSG:4314 is supported
+    :type gcps_srs: int
+    :param logger: Logger
+    :type logger: logging.logger
+    :param tmpDir: Path for temporary working directory
+    :type tmpDir: str
+    :param clip: Clip as a GeoJSON geometry
+    :type clip: dict
+    :raise: ValueError
+    :result: Path to the target image
+    :rtype: str """
+    try:
+        # Check if the target directory exists and if not create it
+        if not os.path.exists(os.path.dirname(dstFile)):
+            os.makedirs(os.path.dirname(dstFile))
+
+        # Create the clip shapefile
+        clipFile = None
+        if clip != None:
+            clipFile = os.path.join(tmpDir, '%s.geojson' % uuid.uuid4())
+            with open(clipFile, "w") as jsonFile:
+                jsonFile.write(json.dumps(clip))
+                jsonFile.close()
+
+        rectifyImage(
+            srcFile,
+            dstFile,
+            algorithm,
+            gcps,
+            gcps_srs,
+            logger,
+            tmpDir,
+            clipGeoJSON=clipFile,
+        )
+
+        if not os.path.exists(dstFile):
+            raise Exception('Could not find result of rectifyImage.')
+        else:
+            logger.info('Add overviews to the image ...')
+            _addOverviews(dstFile, '2 4 8 16 32', logger)
+
+        return dstFile
+    except Exception as e:
+        logger.error('Something went wrong while trying to generate a permanent georeference result')
+        logger.error(e)
+        raise

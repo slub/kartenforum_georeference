@@ -21,6 +21,9 @@ GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your reques
 # Path to the image root directory
 PATH_IMAGE_ROOT = os.path.join(BASE_PATH, '../georeference_tests/data_input')
 
+# Path to the georef root directory
+PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp')
+
 # @TODO check if we can replace this dict through a system wide library
 # Definition of used srids
 SRC_DICT_WKT = {
@@ -60,7 +63,7 @@ OAI_ID_PATTERN = 'oai:de:slub-dresden:vk:id-%s'
 # Settings for logger of the georeference persistent
 GEOREFERENCE_DAEMON_LOGGER = {
     'name':'geoereference-daemon',
-    'file': os.path.join(BASE_PATH, '../tmp/'),
+    'file': os.path.join(BASE_PATH, '../tmp/daemon.log'),
     # See supported log level https://docs.python.org/3/library/logging.html#levels
     'level': logging.INFO,
     'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -78,3 +81,4 @@ GEOREFERENCE_DAEMON_SETTINGS = {
 
 # Path to gdalwarp tool
 GEOREFERENCE_PATH_GDALWARP = 'gdalwarp'
+GEOREFERENCE_PATH_GDALADDO = 'gdaladdo'

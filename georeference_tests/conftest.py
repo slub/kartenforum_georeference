@@ -10,6 +10,8 @@ import pytest
 import transaction
 import webtest
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 from pyramid.paster import get_appsettings
 from pyramid.scripting import prepare
 from georeference import main
@@ -84,3 +86,11 @@ def app_request(app, tm, dbsession):
         request.tm = tm
 
         yield request
+
+@pytest.fixture
+def dbsession_only(dbengine):
+    db_sessionmaker = sessionmaker(bind=dbengine)
+    Base = declarative_base()
+    Base.metadata.bind = dbengine
+    Base.metadata.create_all(dbengine)
+    return db_sessionmaker()

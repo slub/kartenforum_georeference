@@ -24,7 +24,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='admin_georefs', renderer='json')
+@view_config(route_name='admin_georefs', renderer='json', request_method='POST')
 def getAdminGeorefs(request):
     """ Admin endpoint for querying different georefs process with further metadata. Expects the following url pattern:
 
@@ -131,3 +131,106 @@ def getAdminGeorefs(request):
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)
+
+# @view_config(route_name='maps_georefs', renderer='json', request_method='POST', accept='application/json'):
+# def postAdminGeorefs(request):
+#     """ Admin endpoint for setting a georeference process validation status. Expects the following url pattern:
+#
+#             POST     {route_prefix}/admin/georefs
+#
+#         :param georef_id: Id of the georeference process
+#         :type georef_id: int
+#         :param validation_status: Validation state. Can be "invalid" or "valid"
+#         :type validation_status:  "invalid" or "valid"
+#         :result: JSON array of georeference process enhanced with further metadata
+#         :rtype: {{
+#           georef: {
+#               clip_polygon: GeoJSON,
+#               georef_params: *,
+#               id: int,
+#               isActive: bool,
+#               processed: bool,
+#               timestamp: str,
+#               type: 'new' | 'update',
+#               validation_status: str,
+#               user_id: str,
+#           },
+#           metadata: {
+#             oai: str,
+#             time_publish: str,
+#             title: str,
+#           }
+#         }}
+#     """
+#
+#     try:
+#         if request.method != 'GET':
+#             return HTTPBadRequest('The endpoint only supports "GET" requests.')
+#
+#         # Try to query the data
+#         queryData = None
+#
+#         # Generate response data via map_id
+#         if 'map_id' in request.params:
+#             queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata) \
+#                 .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
+#                 .filter(Georeferenzierungsprozess.mapid == toInt(request.params['map_id'])) \
+#                 .order_by(desc(Georeferenzierungsprozess.id))
+#
+#         # Generate response data via user_id
+#         elif 'user_id' in request.params:
+#             queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata) \
+#                 .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
+#                 .filter(Georeferenzierungsprozess.nutzerid == request.params['user_id']) \
+#                 .order_by(desc(Georeferenzierungsprozess.id))
+#
+#         # Generate response data via validation
+#         elif 'validation' in request.params:
+#             queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata) \
+#                 .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
+#                 .filter(Georeferenzierungsprozess.adminvalidation == request.params['validation']) \
+#                 .order_by(desc(Georeferenzierungsprozess.id))
+#
+#         # Generate response data via pending
+#         elif 'pending' in request.params:
+#             queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata) \
+#                 .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
+#                 .filter(
+#                 or_(Georeferenzierungsprozess.adminvalidation == '', Georeferenzierungsprozess.adminvalidation == None)) \
+#                 .order_by(desc(Georeferenzierungsprozess.id))
+#
+#         if queryData == None:
+#             return HTTPBadRequest(
+#                 'Please pass values for one of the following query parameters: "map_id", "user_id", "pending", "validation"')
+#         else:
+#             response = []
+#             for record in queryData:
+#                 georefObj = record[0]
+#                 metadataObj = record[1]
+#                 dict = {
+#                     'georef': {
+#                         'clip_polygon': georefObj.getClipAsGeoJSON(request.dbsession),
+#                         'georef_params': georefObj.georefparams,
+#                         'id': georefObj.id,
+#                         'isActive': georefObj.isactive,
+#                         'processed': georefObj.processed,
+#                         'timestamp': str(georefObj.timestamp),
+#                         'type': georefObj.type,
+#                         'validation_status': georefObj.adminvalidation,
+#                         'user_id': georefObj.nutzerid
+#                     },
+#                     'metadata': {
+#                         'oai': OAI_ID_PATTERN % georefObj.mapid,
+#                         'time_publish': str(metadataObj.timepublish),
+#                         'title': metadataObj.title,
+#                     }
+#                 }
+#                 response.append(dict)
+#
+#             return response
+#         return ""
+#     except Exception as e:
+#         LOGGER.error('Error while trying to process GET request')
+#         LOGGER.error(e)
+#         LOGGER.error(traceback.format_exc())
+#         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)

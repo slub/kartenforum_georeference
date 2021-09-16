@@ -8,7 +8,7 @@
 import os
 import logging
 import time
-from osgeo import gdal
+from georeference.utils.georeference import rectifyImageWithClipAndOverviews
 from georeference.utils.georeference import rectifyImage
 from georeference.utils.parser import toGDALGcps
 from .testcases_georeference import GEOREFERENCE_TESTCASES
@@ -30,7 +30,7 @@ GEOREFERENCE_TESTS = [
 # Directory which to use as temporary or output dir for tests
 TMP_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data_output')
 
-def test_georeference():
+def test_rectifyImage():
     testcases = GEOREFERENCE_TESTCASES + GEOREFERENCE_TESTS
     t0 = time.time()
     print('Test %s georeference test cases' % len(testcases))
@@ -53,6 +53,49 @@ def test_georeference():
 
             t00 = time.time()
             response = rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logging, tmpDir, None)
+            print('Test: %s (Time: %s)' % (test['name'], (time.time()) - t00))
+
+            # Tests
+            assert os.path.exists(response)
+            assert response == dstFile
+        else:
+            print('Skip test case: %s' % test['name'])
+
+    print('Executed %s tests (Time: %s)' % (len(testcases), (time.time()) - t0))
+
+def test_processGeorefImage():
+    testcases = list(filter(lambda g: g['clip'] != None, GEOREFERENCE_TESTCASES))
+    t0 = time.time()
+    print('Test %s georeference (full) test cases' % len(testcases))
+    for test in testcases:
+        algorithm = test['algorithm']
+        gcps_srs = test['srs']
+        clip = test['clip']
+        srcFile = os.path.join(os.path.dirname(os.path.realpath(__file__)), test['srcFile'])
+        if os.path.exists(srcFile):
+            tmpDir = os.path.realpath(TMP_DIR)
+            dstFile = os.path.join(
+                tmpDir,
+                '%s_espg:%s_gcps:%s_%s.tif' % (
+                    os.path.splitext(os.path.basename(test['srcFile']))[0],
+                    test['srs'],
+                    len(test['gcps']),
+                    algorithm
+                )
+            )
+            gcps = toGDALGcps(test['gcps'])
+
+            t00 = time.time()
+            response = rectifyImageWithClipAndOverviews(
+                srcFile,
+                dstFile,
+                algorithm,
+                gcps,
+                gcps_srs,
+                logging,
+                tmpDir,
+                clip,
+            )
             print('Test: %s (Time: %s)' % (test['name'], (time.time()) - t00))
 
             # Tests
