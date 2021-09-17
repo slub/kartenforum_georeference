@@ -70,7 +70,7 @@ def postGeorefsValidate(request):
         # Parse gcps, srs and create a temporary result
         LOGGER.debug('Create temporary validation result ...')
         gdalGcps = toGDALGcps(gcps)
-        srs = toInt(target.split(':')[1])
+        srs = target
         srcFile = mapObj.getAbsImagePath()
         trgFileName = '%s::%s.tif' % (mapObj.apsdateiname, uuid.uuid4())
         trgFile = os.path.abspath(

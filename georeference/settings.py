@@ -22,14 +22,17 @@ GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your reques
 PATH_IMAGE_ROOT = os.path.join(BASE_PATH, '../georeference_tests/data_input')
 
 # Path to the georef root directory
-PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp')
+PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp/georef')
+
+# Path to the tms root directo
+PATH_TMS_ROOT = os.path.join(BASE_PATH, '../tmp/tms')
 
 # @TODO check if we can replace this dict through a system wide library
 # Definition of used srids
 SRC_DICT_WKT = {
-    3043:'PROJCS[\"ETRS89 / UTM zone 31N (N-E)\",GEOGCS[\"ETRS89\",DATUM[\"European_Terrestrial_Reference_System_1989\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6258\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4258\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",3],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"3043\"]]',
-    4314:'GEOGCS[\"DHDN\",DATUM[\"Deutsches_Hauptdreiecksnetz\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],TOWGS84[598.1,73.7,418.2,0.202,0.045,-2.455,6.7],AUTHORITY[\"EPSG\",\"6314\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4314\"]]',
-    4326:'GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]'
+    'EPSG:3043':'PROJCS[\"ETRS89 / UTM zone 31N (N-E)\",GEOGCS[\"ETRS89\",DATUM[\"European_Terrestrial_Reference_System_1989\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6258\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4258\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",3],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AUTHORITY[\"EPSG\",\"3043\"]]',
+    'EPSG:4314':'GEOGCS[\"DHDN\",DATUM[\"Deutsches_Hauptdreiecksnetz\",SPHEROID[\"Bessel 1841\",6377397.155,299.1528128,AUTHORITY[\"EPSG\",\"7004\"]],TOWGS84[598.1,73.7,418.2,0.202,0.045,-2.455,6.7],AUTHORITY[\"EPSG\",\"6314\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4314\"]]',
+    'EPSG:4326':'GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]'
 }
 
 #
@@ -79,6 +82,37 @@ GEOREFERENCE_DAEMON_SETTINGS = {
     'sleep_time': 60
 }
 
+# Number of processes used for creating the tms
+GEOREFERENCE_TMS_PROCESSES = 1
+
+# Year below which wcs links should be created
+GEOREFERENCE_WCS_YEAR_LIMIT = 1900
+
 # Path to gdalwarp tool
 GEOREFERENCE_PATH_GDALWARP = 'gdalwarp'
 GEOREFERENCE_PATH_GDALADDO = 'gdaladdo'
+
+# Template which are used for the creating of metadata records
+TEMPLATE_OGC_SERVICE_LINK = {
+    'wms_template':'http://localhost/cgi-bin/mtbows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Historische Messtischblaetter&TRANSPARENT=true&FORMAT=image/png&STYLES=&SRS=EPSG:%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&TIME=%(time)s',
+    'wcs_download':'http://localhost/cgi-bin/wcs?&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&TIME=%(time)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff',
+    'dynamic_ows_template':'http://localhost/cgi-bin/dynamic-ows?map=%(mapid)s&SERVICE=%(service)s&VERSION=1.0.0&REQUEST=GetCapabilities'
+}
+
+# Permalink resolver
+PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
+
+#
+# ElasticSearch settings
+#
+
+# Root of the es instance
+ES_ROOT = {
+    'host': 'localhost',
+    'port': 9200
+}
+
+# Name of the search index
+ES_INDEX_NAME = 'vk20'
+
+

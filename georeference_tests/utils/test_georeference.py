@@ -23,7 +23,7 @@ GEOREFERENCE_TESTS = [
                  {'source': [7020, 6807], 'target': [13.53735995082988, 50.802610870942374]},
                  {'source': [7812, 5913], 'target': [13.667546305614797, 50.89755275702876]}],
         'srcFile': '../data_input/test-ak.jpg',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     }
 ]
 
@@ -76,7 +76,7 @@ def test_processGeorefImage():
             tmpDir = os.path.realpath(TMP_DIR)
             dstFile = os.path.join(
                 tmpDir,
-                'test/%s_espg:%s_gcps:%s_%s.tif' % (
+                'test/%s_%s_gcps:%s_%s.tif' % (
                     os.path.splitext(os.path.basename(test['srcFile']))[0],
                     test['srs'],
                     len(test['gcps']),

@@ -42,7 +42,7 @@ def getMapsById(request):
 
         # query map object and metadata
         mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
-        metadataObj = Metadata.by_id(mapObj.id, request.dbsession)
+        metadataObj = Metadata.byId(mapObj.id, request.dbsession)
 
         # Building basic json response
         responseObj = {

@@ -38,7 +38,7 @@ class Metadata(Base):
     thumbsmid = Column(String(255))
     
     @classmethod
-    def by_id(cls, id, session):
+    def byId(cls, id, session):
         return session.query(Metadata).filter(Metadata.mapid == id).first()
 
     @classmethod

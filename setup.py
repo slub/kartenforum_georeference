@@ -8,6 +8,8 @@
 from setuptools import setup, find_packages
 
 requires = [
+    'elasticsearch==7.14.1',
+    'pillow==8.3.2',
     'python-daemon==2.3.0',
     'pyramid==2.0',
     'pyramid_tm==2.4',

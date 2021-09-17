@@ -29,6 +29,7 @@ class Map(Base):
     recommendedsrid = Column(Integer)
     image_rel_path = Column(String(255))
     georef_rel_path = Column(String(255))
+    map_scale = Column(Integer)
 
     def getAbsImagePath(self):
         """ Returns the absolute path to the raw image
@@ -83,14 +84,27 @@ class Map(Base):
             return response[0]
         return None
 
-    def setBoundingBox(self, geomAsText, srid, dbsession):
+    def setExtent(self, extent, srs, dbsession):
         """ Set the bounding box
-        :type str: geomAsText
-        :type int: srid
-        :type sqlalchemy.orm.session.Session: dbsession
+
+        :param extent: Boundingbox coordinates
+        :type extent: number[]
+        :param srs: EPSG code of the coordinate system of the boundingbox
+        :type srs: str
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
         :return: """
-        query = "UPDATE map SET boundingbox = ST_GeomFromText('%s', %s) WHERE id = %s"%(geomAsText, srid, self.id)
-        dbsession.execute(query)
+        if len(extent) != 4:
+            raise Exception('The given extent array has more or less then 4 numbers.')
+
+        dbsession.execute(
+            "UPDATE map SET boundingbox = ST_GeomFromText('%s', %s) WHERE id = %s" % (
+                'POLYGON((%(lx)s %(ly)s, %(lx)s %(uy)s, %(ux)s %(uy)s, %(ux)s %(ly)s, %(lx)s %(ly)s))' % {
+                    'lx': extent[0], 'ly': extent[1], 'ux': extent[2], 'uy': extent[3]},
+                int(srs.split(':')[1]),
+                self.id
+            )
+        )
 
     def setActive(self, path):
         """ Methode sets the map object to active.

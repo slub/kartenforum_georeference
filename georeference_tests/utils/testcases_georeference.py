@@ -18,7 +18,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [7907, 4149], "target": [14.994077170632, 51.159581323447]},
                  {"source": [1665, 1321], "target": [14.246610357359, 51.387001187134]}],
         'srcFile': '../data_input/df_dk_0010001_5154_1892.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dk_0010001_5154_1892.tif (8250x9294), Gcps: >80, Algorithm: tps, Without clip polygon',
@@ -105,7 +105,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [6387, 7226], "target": [14.802360083153, 50.800460327448]},
                  {"source": [7467, 4470], "target": [14.829268312941, 50.843462199227]}],
         'srcFile': '../data_input/df_dk_0010001_5154_1892.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dk_0010002_0004.tif (9624,8837), Gcps: 4, Algorithm: Affine, Without clip polygon',
@@ -116,7 +116,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [7907, 4149], "target": [14.994077170632, 51.159581323447]},
                  {"source": [1665, 1321], "target": [14.246610357359, 51.387001187134]}],
         'srcFile': '../data_input/df_dk_0010002_0004.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dk_0010002_0004.tif (9624,8837), Gcps: 20, Algorithm: Polynom, Without clip polygon',
@@ -144,7 +144,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [8432, 5159], "target": [15.056776081041, 51.082331653744]},
                  {"source": [8428, 5994], "target": [15.054328030997, 51.020028166673]}],
         'srcFile': '../data_input/df_dk_0010002_0004.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dk_0010002_0004.tif (9624,8837), Gcps: 20, Algorithm: tps, Without clip polygon',
@@ -172,7 +172,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [8432, 5159], "target": [15.056776081041, 51.082331653744]},
                  {"source": [8428, 5994], "target": [15.054328030997, 51.020028166673]}],
         'srcFile': '../data_input/df_dk_0010002_0004.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dk_0000310.tif (9515,9429), Gcps: 4, Algorithm: Affine, Without clip polygon',
@@ -183,7 +183,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [3483, 2432], "target": [13.72439149141, 51.078816150987]},
                  {"source": [5107, 3414], "target": [13.758749806377, 51.065411912287]}],
         'srcFile': '../data_input/df_dk_0000310.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dk_0000310.tif (9515,9429), Gcps: >60, Algorithm: TPS, Without clip polygon',
@@ -264,7 +264,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [8718, 6072], "target": [13.835623562118, 51.026997705065]},
                  {"source": [8728, 7420], "target": [13.835596293102, 51.009354374664]}],
         'srcFile': '../data_input/df_dk_0000310.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dz_0000636.tif (10678,9170), Gcps: >10, Algorithm: TPS, Without clip polygon',
@@ -283,7 +283,7 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [3562, 4690], "target": [13.724217116833, 51.05792165391]},
                  {"source": [2110, 4552], "target": [13.716446757317, 51.060433518255]}],
         'srcFile': '../data_input/df_dz_0000636.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     },
     {
         'name': 'Map: df_dz_0000636.tif (10678,9170), Gcps: >10, Algorithm: Polynom, Without clip polygon',
@@ -302,6 +302,6 @@ GEOREFERENCE_TESTCASES = [
                  {"source": [3562, 4690], "target": [13.724217116833, 51.05792165391]},
                  {"source": [2110, 4552], "target": [13.716446757317, 51.060433518255]}],
         'srcFile': '../data_input/df_dz_0000636.tif',
-        'srs': 4314,
+        'srs': 'EPSG:4314',
     }
 ]

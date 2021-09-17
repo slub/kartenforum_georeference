@@ -11,6 +11,7 @@ import subprocess
 import json
 import sys
 from osgeo import gdal
+from osgeo import osr
 from osgeo.gdalconst import GDT_Byte
 from osgeo.gdalconst import GA_ReadOnly
 from ..settings import GEOREFERENCE_PATH_GDALWARP
@@ -44,7 +45,8 @@ def _createVrt(srcDataset, dstFile):
 
     :type srcDataset: osgeo.gdal.Dataset
     :type dstFile: str
-    :return: str """
+    :result: Path of the VRT
+    :rtype: str """
     outputFormat = 'VRT'
     dstDriver = gdal.GetDriverByName(outputFormat)
     dstDataset = dstDriver.CreateCopy(dstFile, srcDataset,0)
@@ -73,6 +75,37 @@ def _getExtentFromDataset(dataset):
     bb2 = originY + height
     return [ bb1, bb2, bb3, bb4 ]
 
+def getExtentFromGeoTIFF(filePath):
+    """ Parses the boundingbox from a georeference image
+
+    :param path: Path the GeoTIFF
+    :type path: str
+    :result: Extent
+    :rtype: number[]
+    """
+    try:
+        dataset = gdal.Open(filePath, GA_ReadOnly)
+        return _getExtentFromDataset(dataset)
+    finally:
+        del dataset
+
+def getSrsFromGeoTIFF(path):
+    """ Returns the pure epsg code for a given GeoTIFF.
+
+    :param path: Path to the geotiff
+    :type path: str
+    :result: EPSG code in the form "epsg:4324"
+    :rtype: str
+    """
+    try:
+        dataset = gdal.Open(path, GA_ReadOnly)
+        proj = dataset.GetProjection()
+        srs = osr.SpatialReference()
+        srs.SetFromUserInput(proj)
+        return srs.GetAttrValue('AUTHORITY', 0) + ':' + srs.GetAttrValue('AUTHORITY', 1)
+    finally:
+        del dataset
+
 def getImageExtent(filePath):
     """ Returns the extent for a given georeference image.
 
@@ -89,6 +122,27 @@ def getImageExtent(filePath):
     finally:
         del dataset
 
+def getImageSize(filePath):
+    """ Functions looks for the image size of an given path
+
+    :param filePath: Path to the image
+    :type filePath: str
+    :return: dict|None ({x:..., y: ....})
+    :rtype: dict
+    """
+    if not os.path.exists(filePath):
+        return None
+    try:
+        datafile = gdal.Open(filePath)
+        if datafile:
+            return {'x':datafile.RasterXSize,'y':datafile.RasterYSize}
+        return None
+    except:
+        pass
+    finally:
+        if datafile:
+            del datafile
+
 def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeoJSON=None):
     """ Functions generates and clips a georeferenced image based on a polynom transformation. This function heavily
     relies on the usage of [gdalwarp](https://gdal.org/programs/gdalwarp.html).
@@ -102,7 +156,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
     :param gcps: List of ground control points for rectifing the image
     :type gcps: List.<gdal.GCP>
     :param srs: EPSG code of the spatial reference system. Currently only EPSG:4314 is supported
-    :type srs: int
+    :type srs: str
     :param logger: Logger
     :type logger: logging.logger
     :param tmpDir: Path for temporary working directory
@@ -119,9 +173,9 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
         tmpDataName = uuid.uuid4()
 
         # get projection
-        geoProj = SRC_DICT_WKT[srs]
-        if geoProj is None:
-            raise ValueError('The given srs "%s" is not supported' % srs)
+        if not srs.upper() in SRC_DICT_WKT:
+            raise ValueError('The given srs "%s" is not supported' % srs.upper())
+        geoProj = SRC_DICT_WKT[srs.upper()]
 
         # Is algorithm supported
         if algorithm not in ['polynom', 'tps', 'affine']:
@@ -177,7 +231,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
 def rectifyImageWithClipAndOverviews(srcFile, dstFile, algorithm, gcps, gcps_srs, logger, tmpDir, clip=None):
     """ Function rectifies a image, clips it and adds overviews to it.
 
-:param srcFile: Source image path
+    :param srcFile: Source image path
     :type srcFile: str
     :param dstFile: Target image path
     :type dstFile: str
@@ -186,7 +240,7 @@ def rectifyImageWithClipAndOverviews(srcFile, dstFile, algorithm, gcps, gcps_srs
     :param gcps: List of ground control points for rectifing the image
     :type gcps: List.<gdal.GCP>
     :param gcps_srs: EPSG code of the spatial reference system of the gcps. Currently only EPSG:4314 is supported
-    :type gcps_srs: int
+    :type gcps_srs: str
     :param logger: Logger
     :type logger: logging.logger
     :param tmpDir: Path for temporary working directory
@@ -204,9 +258,9 @@ def rectifyImageWithClipAndOverviews(srcFile, dstFile, algorithm, gcps, gcps_srs
         # Create the clip shapefile
         clipFile = None
         if clip != None:
-            clipFile = os.path.join(tmpDir, '%s.geojson' % uuid.uuid4())
+            clipFile = os.path.abspath(os.path.join(tmpDir, '%s.geojson' % uuid.uuid4()))
             with open(clipFile, "w") as jsonFile:
-                jsonFile.write(json.dumps(clip))
+                json.dump(clip, jsonFile, indent=2)
                 jsonFile.close()
 
         rectifyImage(

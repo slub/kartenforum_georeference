@@ -176,7 +176,7 @@ class Georeferenzierungsprozess(Base):
         query = "SELECT st_asgeojson(clip) FROM georeferenzierungsprozess WHERE id = %s" % self.id
         response = dbsession.execute(query).fetchone()
         if response is not None:
-            return response[0]
+            return json.loads(response[0])
         return None
 
     def setClipFromGeoJSON(self, geojsonGeom, dbsession):
