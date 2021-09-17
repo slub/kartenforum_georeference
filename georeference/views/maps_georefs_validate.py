@@ -11,17 +11,17 @@ import os
 import uuid
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
-from ..utils.georeference import getImageExtent
-from ..utils.georeference import rectifyImage
-from ..utils.mapfile import writeMapfile
-from ..utils.parser import toInt
-from ..utils.parser import toGDALGcps
-from ..models.map import Map
-from ..settings import GLOBAL_ERROR_MESSAGE
-from ..settings import GEOREFERENCE_VALIDATION_FOLDER
-from ..settings import TMP_DIR
-from ..settings import TEMPLATE_WMS_URL
-from ..settings import TEMPLATE_WMS_DATA_DIR
+from georeference.utils.georeference import getImageExtent
+from georeference.utils.georeference import rectifyImage
+from georeference.utils.mapfile import writeMapfile
+from georeference.utils.parser import toInt
+from georeference.utils.parser import toGDALGcps
+from georeference.models.map import Map
+from georeference.settings import GLOBAL_ERROR_MESSAGE
+from georeference.settings import GEOREFERENCE_VALIDATION_FOLDER
+from georeference.settings import TMP_DIR
+from georeference.settings import TEMPLATE_WMS_URL
+from georeference.settings import TEMPLATE_WMS_DATA_DIR
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

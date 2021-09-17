@@ -11,12 +11,12 @@ import os
 from pyramid.view import view_config
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import or_
-from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
-from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
-from ..models.metadata import Metadata
-from ..utils.parser import toInt
-from ..settings import GLOBAL_ERROR_MESSAGE
-from ..settings import OAI_ID_PATTERN
+from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
+from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.metadata import Metadata
+from georeference.utils.parser import toInt
+from georeference.settings import GLOBAL_ERROR_MESSAGE
+from georeference.settings import OAI_ID_PATTERN
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -24,7 +24,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='admin_georefs', renderer='json', request_method='POST')
+@view_config(route_name='admin_georefs', renderer='json', request_method='POST', accept='application/json')
 def getAdminGeorefs(request):
     """ Admin endpoint for querying different georefs process with further metadata. Expects the following url pattern:
 

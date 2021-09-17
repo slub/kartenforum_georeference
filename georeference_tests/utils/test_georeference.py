@@ -76,7 +76,7 @@ def test_processGeorefImage():
             tmpDir = os.path.realpath(TMP_DIR)
             dstFile = os.path.join(
                 tmpDir,
-                '%s_espg:%s_gcps:%s_%s.tif' % (
+                'test/%s_espg:%s_gcps:%s_%s.tif' % (
                     os.path.splitext(os.path.basename(test['srcFile']))[0],
                     test['srs'],
                     len(test['gcps']),

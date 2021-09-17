@@ -9,6 +9,7 @@ import os
 import pytest
 import transaction
 import webtest
+import traceback
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -31,11 +32,21 @@ def app_settings(ini_file):
 
 @pytest.fixture(scope='session')
 def dbengine(app_settings, ini_file):
-    return create_engine(app_settings['sqlalchemy.url'], encoding='utf8', echo=True)
+    return create_engine(
+        app_settings['sqlalchemy.url'],
+        encoding='utf8',
+        # Set echo=True if te sqlalchemy.url logging output sould be displayed
+        echo=False,
+    )
 
 @pytest.fixture(scope='session')
 def app(app_settings, dbengine):
-    return main({}, dbengine=dbengine, **app_settings)
+    try:
+        return main({}, dbengine=dbengine, **app_settings)
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+
 
 @pytest.fixture
 def tm():

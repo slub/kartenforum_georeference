@@ -11,7 +11,33 @@ from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
 from ..models.map import Map
 from ..settings import PATH_IMAGE_ROOT
 from ..settings import PATH_GEOREF_ROOT
+from ..utils.georeference import rectifyImageWithClipAndOverviews
+from ..utils.parser import toGDALGcps
 from .process import activate
+
+def _processGeoref(georefObj, srcPath, dstPath, logger):
+    """ Process a given georeference process.
+
+    :param georefObj: Georeferenzierungsprozess
+    :type georefObj: georeference.models.georeferenzierungsprozess.Georeferenzierungsprozess
+    :param srcPath: Path to the source image
+    :type srcPath: str
+    :param dstPath: Path of the georeferenced image
+    :type dstPath: str
+    :param logger: Logger
+    :type logger: logging.Logger
+    """
+    logger.debug('Process georefence process wit id "%s" ...' % georefObj.id)
+    rectifyImageWithClipAndOverviews(
+        srcPath,
+        dstPath,
+        georefObj.algorithm,
+        toGDALGcps(georefObj)
+    )
+    if not os.path.exists(dstPath):
+        raise Exception('Something went wrong while trying to process georeference image')
+
+    logger.debug('Finished.')
 
 def runInitializationJob(dbsession, logger):
     """ This job checks the database and initially builds the index and missing georeference images.
@@ -24,21 +50,19 @@ def runInitializationJob(dbsession, logger):
     :rtype: bool
     """
     try:
-        logger.info('Check if there are missing georeference images ...')
-        missingMapObjs = []
+        logger.info('Start processing all active maps ...')
         for mapObj in Map.allActive(dbsession):
             if not os.path.exists(mapObj.getAbsGeorefPath()):
-                missingMapObjs.append(mapObj)
+                logger.debug('Map %s is missing a georeference image' % mapObj.id)
+                georefObj = Georeferenzierungsprozess.getActualGeoreferenceProcessForMapId(mapObj.id, dbsession)
+                _processGeoref(
+                    georefObj,
+                    mapObj.getAbsGeorefPath(),
+                    logger,
+                )
 
-        # Proces the georef images if missing
-        if len(missingMapObjs) == 0:
-            logger.info('There are no missing georeference images.')
-            return True
-        else:
-            logger.info('There %s maps currently missing the georeference image. Start processing ...' % len(missingMapObjs))
 
 
-            print("HALLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLl")
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')

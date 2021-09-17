@@ -13,10 +13,10 @@ from sqlalchemy import desc
 
 LOGGER = logging.getLogger(__name__)
 
-from ..settings import OAI_ID_PATTERN
-from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
-from ..models.map import Map
-from ..models.metadata import Metadata
+from georeference.settings import OAI_ID_PATTERN
+from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.map import Map
+from georeference.models.metadata import Metadata
 
 GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 

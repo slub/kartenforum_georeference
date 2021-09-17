@@ -13,11 +13,11 @@ import ast
 from datetime import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
-from ..utils.parser import toInt
-from ..utils.validations import isValidateGeorefConfirm
-from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
-from ..models.map import Map
-from ..settings import GLOBAL_ERROR_MESSAGE
+from georeference.utils.parser import toInt
+from georeference.utils.validations import isValidateGeorefConfirm
+from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.map import Map
+from georeference.settings import GLOBAL_ERROR_MESSAGE
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

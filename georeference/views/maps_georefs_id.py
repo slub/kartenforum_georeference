@@ -11,9 +11,9 @@ import json
 import os
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
-from ..utils.parser import toInt
-from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
-from ..settings import GLOBAL_ERROR_MESSAGE
+from georeference.utils.parser import toInt
+from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.settings import GLOBAL_ERROR_MESSAGE
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

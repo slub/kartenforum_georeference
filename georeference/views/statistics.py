@@ -11,10 +11,9 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError
 from sqlalchemy import desc
 from sqlalchemy import func
-from ..models.georeferenzierungsprozess import Georeferenzierungsprozess
-from ..models.map import Map
-from ..models.map import Map
-from ..settings import GLOBAL_ERROR_MESSAGE
+from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.map import Map
+from georeference.settings import GLOBAL_ERROR_MESSAGE
 LOGGER = logging.getLogger(__name__)
 
 @view_config(route_name='statistics', renderer='json')

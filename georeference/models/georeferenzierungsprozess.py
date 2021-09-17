@@ -11,10 +11,6 @@ from .meta import Base
 from .geometry import Geometry
 from .adminjobs import AdminJobs
 from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc, PickleType, JSON
-
-
-class JsonPickleType(PickleType):
-    impl = String
     
 class Georeferenzierungsprozess(Base):
     __tablename__ = 'georeferenzierungsprozess'
@@ -35,7 +31,6 @@ class Georeferenzierungsprozess(Base):
     algorithm = Column(String(255))
     # clippolygon = Column(JsonPickleType(pickler=json))
     # clip = Column(Geometry)
-    georef_params = Column(JSON)
     
     @classmethod
     def all(cls, session):
@@ -208,6 +203,14 @@ class Georeferenzierungsprozess(Base):
                 self.id
             )
         )
+
+    def getGeorefParamsAsDict(self):
+        """ Returns the georef parameters as a dict object.
+
+        :result: Georef Params
+        :rtype: dict
+        """
+        return json.loads(self.georefparams)
 
     def setActive(self):
         """ Sets the georeference process to active. If - isactive - is set to True - processed - has also to be set
