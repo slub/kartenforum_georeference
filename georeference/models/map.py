@@ -6,6 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import os
+import json
 from sqlalchemy import Column, Integer, Boolean, String
 from sqlalchemy import desc
 from ..settings import PATH_IMAGE_ROOT
@@ -73,6 +74,20 @@ class Map(Base):
             query = 'SELECT st_extent(st_transform(boundingbox, :srid)) FROM map WHERE id = :id;'
         pg_extent = dbsession.execute(query,{'id':self.id, 'srid':srid}).fetchone()[0]
         return pg_extent.replace(' ',',')[4:-1]
+
+    def getExtentAsGeoJSON(self, dbsession, srid=4326):
+        """ Function returns the extent as a GeoJSON polygon.
+
+        :param dbsession: Database conncetion
+        :type dbsession: sqlalchemy.orm.session.Session
+        :param srid: EPSG:Code for the output geometry
+        :type srid: int
+        :return: GeoJSON """
+        query = 'SELECT st_asgeojson(st_transform(boundingbox, :srid)) FROM map WHERE id = :id;'
+        response = dbsession.execute(query, {'id': self.id, 'srid': srid}).fetchone()[0]
+        if response is not None:
+            return json.loads(response)
+        return None
 
     def getSRID(self, dbsession):
         """ queries srid code for the map object

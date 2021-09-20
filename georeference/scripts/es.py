@@ -7,11 +7,14 @@
 # "LICENSE", which is part of this source code package
 import traceback
 import logging
+import os
+import traceback
 from elasticsearch import Elasticsearch
 from georeference.settings import OAI_ID_PATTERN
 from georeference.settings import TEMPLATE_OGC_SERVICE_LINK
 from georeference.settings import GEOREFERENCE_WCS_YEAR_LIMIT
 from georeference.settings import PERMALINK_RESOLVER
+from georeference.settings import GEOREFERENCE_PERSITENT_TMS_URL
 from georeference.utils.georeference import getImageSize
 
 LOGGER = logging.getLogger(__name__)
@@ -100,7 +103,7 @@ def _getOnlineResourceWCSForDownload(mapObj, coverageTitle, extent, srid):
     :result: A online resource which describes a wms
     :rtype: dict
     """
-    image_size = getImageSize(mapObj.georefimage)
+    image_size = getImageSize(mapObj.getAbsGeorefPath())
 
     # get srid and bbox
     return {
@@ -119,61 +122,76 @@ def _getOnlineResourceWCSForDownload(mapObj, coverageTitle, extent, srid):
     }
 
 
-def generateDocument(mapObj, georefObj, metadataObj, has_georeference, dbsession):
+def generateDocument(mapObj, metadataObj, has_georeference, dbsession, logger=LOGGER):
     """ Generates a document which matches the es mapping.
 
     :param mapObj: Map
     :type mapObj: georeference.models.map.Map
-    :param georefObj: Georeference process
-    :type georefObj: georeference.models.georeferenzierungsprozess.Georeferenzierungsprozess
     :param metadataObj: Metadata obj
     :type metadataObj: georeference.models.metadata.Metadata
     :param has_georeference: Signals if the map object is already georeferenced
     :type has_georeference: bool
     :param dbsession: Database session object.
     :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
     :result: Document matching the es mapping
     :rtype: dict
     """
-    # Create oai and get timepublish
-    oai = OAI_ID_PATTERN % mapObj.id
-    timePublished = metadataObj.timepublish.date()
+    try:
+        # Create oai and get timepublish
+        oai = OAI_ID_PATTERN % mapObj.id
+        timePublished = metadataObj.timepublish.date()
 
-    # Necessary for creating the online ressource
-    onlineResources = [_getOnlineResourcePermalink(metadataObj)]
-    if has_georeference:
-        onlineResources.append(_getOnlineResourceVK20Permalink(oai))
-        onlineResources.append(_getOnlineResourceWMS(mapObj))
-        if timePublished.year <= GEOREFERENCE_WCS_YEAR_LIMIT:
-            srid = mapObj.getSRID(dbsession)
-            extent = mapObj.getExtent(dbsession, srid)
-            onlineResources.append(_getOnlineResourceWCS(mapObj))
-            onlineResources.append(_getOnlineResourceWCSForDownload(
-                mapObj,
-                metadataObj.titleshort,
-                extent,
-                'epsg:%s' % srid
-            ))
+        # Necessary for creating the online ressource
+        onlineResources = [_getOnlineResourcePermalink(metadataObj)]
+        if has_georeference:
+            onlineResources.append(_getOnlineResourceVK20Permalink(oai))
+            onlineResources.append(_getOnlineResourceWMS(mapObj))
+            if timePublished.year <= GEOREFERENCE_WCS_YEAR_LIMIT:
+                srid = mapObj.getSRID(dbsession)
+                extent = mapObj.getExtent(dbsession, srid)
+                onlineResources.append(_getOnlineResourceWCS(mapObj))
+                onlineResources.append(_getOnlineResourceWCSForDownload(
+                    mapObj,
+                    metadataObj.titleshort,
+                    extent,
+                    'epsg:%s' % srid
+                ))
 
-    return {
-        'map_id': mapObj.id,
-        'file_id': mapObj.apsdateiname,
-        'description': metadataObj.description,
-        'map_scale': int(metadataObj.scale.split(':')[1]),
-        'zoomify_url': str(metadataObj.imagezoomify).replace('http:', ''),
-        'map_type': mapObj.maptype,
-        'orginal_url': str(metadataObj.imagejpg).replace('http:', ''),
-        'keywords': ';'.join([metadataObj.type,metadataObj.technic]),
-        'title_long': metadataObj.title,
-        'title': metadataObj.titleshort,
-        'permalink': metadataObj.apspermalink,
-        'online_resources': onlineResources,
-        'tms_url': { 'type': 'text', 'index': False }, #"http://vk2-cdn{s}.slub-dresden.de/tms/mtb/df_dk_0010001_5248_1933",
-        'thumb_url': str(metadataObj.thumbssmall).replace('http:', ''),
-        'geometry': {'type': 'geo_shape' }, # GeoJSON
-        'has_georeference': has_georeference,
-        'time_published': timePublished.timepublish.date().isoformat()
-    }
+        # Create tms link
+        tmsUrl = None
+        if has_georeference:
+            file_name, file_extension = os.path.splitext(os.path.basename(mapObj.georef_rel_path))
+            tmsUrl = GEOREFERENCE_PERSITENT_TMS_URL + '/' + os.path.join(
+                os.path.dirname(mapObj.georef_rel_path),
+                file_name
+            )
+
+        return {
+            'map_id': mapObj.id,
+            'file_id': mapObj.apsdateiname,
+            'description': metadataObj.description,
+            'map_scale': int(metadataObj.scale.split(':')[1]),
+            'zoomify_url': str(metadataObj.imagezoomify).replace('http:', ''),
+            'map_type': mapObj.maptype,
+            'orginal_url': str(metadataObj.imagejpg).replace('http:', ''),
+            'keywords': ';'.join([metadataObj.type,metadataObj.technic]),
+            'title_long': metadataObj.title,
+            'title': metadataObj.titleshort,
+            'permalink': metadataObj.apspermalink,
+            'online_resources': onlineResources,
+            'tms_url': tmsUrl,
+            'thumb_url': str(metadataObj.thumbssmall).replace('http:', ''),
+            'geometry': mapObj.getExtentAsGeoJSON(dbsession), #
+            'has_georeference': has_georeference,
+            'time_published': timePublished.isoformat()
+        }
+    except Exception as e:
+        logger.error('Failed creating a es document for mapObj %s.' % mapObj.id)
+        logger.error(e)
+        logger.error(traceback.format_exc())
+
 
 def getIndex(esConfig, indexName, forceRecreation, logger):
     """ Returns the index. If the index does not create the function creates it.
@@ -187,7 +205,7 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
     :param logger: Logger
     :type logger: logging.Logger
     :result: Reference on the index
-    :rtype: Elasticsearch.Index
+    :rtype: elasticsearch.Elasticsearch
     """
     try:
         logger.debug('Initialize elasticsearch')
@@ -211,7 +229,7 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
                     }
                 }
             )
-        return es.indices.get(indexName)
+        return es
     except Exception as e:
         logger.error('Failed to get index reference for index %s.' % indexName)
         logger.error(e)

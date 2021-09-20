@@ -113,6 +113,9 @@ def runInitializationJob(dbsession, logger):
     :rtype: bool
     """
     try:
+        logger.info('Create index ...')
+        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, True, logger)
+
         logger.info('Start processing all active maps ...')
         for mapObj in Map.allActive(dbsession):
             # Make sure to create the es index
@@ -122,18 +125,31 @@ def runInitializationJob(dbsession, logger):
             georefFile = mapObj.getAbsGeorefPath()
             if os.path.exists(georefFile) == False and georefObj != None:
                 logger.debug('Map %s is missing a georeference image' % mapObj.id)
-                # _syncMapObj(
-                #     mapObj,
-                #     georefObj,
-                #     dbsession,
-                #     logger
-                # )
-            # Testing
-            generateDocument(
+                _syncMapObj(
+                    mapObj,
+                    georefObj,
+                    dbsession,
+                    logger
+                )
+
+            # Write documents to es
+            logger.debug('Write mapObj %s to index ...' % (mapObj.id))
+            searchDocument = generateDocument(
                 mapObj,
-                georefObj,
-                Metadata.byId(mapObj.id, dbsession)
+                Metadata.byId(mapObj.id, dbsession),
+                True if os.path.exists(georefFile) else False,
+                dbsession=dbsession,
+                logger=logger
             )
+
+            logger.debug(searchDocument)
+            esIndex.index(
+                index=ES_INDEX_NAME,
+                doc_type=None,
+                id=mapObj.id,
+                body=searchDocument
+            )
+
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')

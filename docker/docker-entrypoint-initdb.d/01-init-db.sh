@@ -156,7 +156,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         hasgeorefparams integer DEFAULT 0,
         boundingbox public.geometry,
         recommendedsrid integer DEFAULT 4314 NOT NULL,
-        image_rel_path,
+        mage_rel_path character varying,
+		    georef_rel_path character varying,
+		    map_scale integer,,
         CONSTRAINT enforce_dims_boundingbox CHECK ((public.st_ndims(boundingbox) = 2)),
         CONSTRAINT enforce_geotype_boundingbox CHECK (((public.geometrytype(boundingbox) = 'POLYGON'::text) OR (boundingbox IS NULL)))
     );

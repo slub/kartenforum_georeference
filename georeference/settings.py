@@ -92,10 +92,13 @@ GEOREFERENCE_WCS_YEAR_LIMIT = 1900
 GEOREFERENCE_PATH_GDALWARP = 'gdalwarp'
 GEOREFERENCE_PATH_GDALADDO = 'gdaladdo'
 
+# Georeference TMS Cache url
+GEOREFERENCE_PERSITENT_TMS_URL = 'http://vk2-cdn{s}.slub-dresden.de/tms2'
+
 # Template which are used for the creating of metadata records
 TEMPLATE_OGC_SERVICE_LINK = {
     'wms_template':'http://localhost/cgi-bin/mtbows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Historische Messtischblaetter&TRANSPARENT=true&FORMAT=image/png&STYLES=&SRS=EPSG:%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&TIME=%(time)s',
-    'wcs_download':'http://localhost/cgi-bin/wcs?&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&TIME=%(time)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff',
+    'wcs_download':'http://localhost/cgi-bin/wcs?&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff',
     'dynamic_ows_template':'http://localhost/cgi-bin/dynamic-ows?map=%(mapid)s&SERVICE=%(service)s&VERSION=1.0.0&REQUEST=GetCapabilities'
 }
 
