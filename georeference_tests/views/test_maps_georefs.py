@@ -35,9 +35,8 @@ def test_postGereofs_success_newGeoref(testapp, dbsession):
 
     # Setup test data
     dbsession.add(
-        Map(id=map_id, apsobjectid=90015724, apsdateiname='df_dk_0010001_3352_191s8',
-            originalimage='', georefimage='', istaktiv=False, isttransformiert=False,
-            maptype='M', hasgeorefparams=0, recommendedsrid=4314, image_rel_path='')
+        Map(id=map_id, file_name='df_dk_0010001_3352_191s8', enabled=False,
+            map_type='M', default_srs=4314, image_rel_path='', georef_rel_path='')
     )
     dbsession.flush()
 
