@@ -10,7 +10,7 @@ import logging
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.utils.parser import toInt
-from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.models.map import Map
 from georeference.models.metadata import Metadata
 from georeference.settings import GLOBAL_ERROR_MESSAGE
@@ -46,18 +46,18 @@ def getMapsById(request):
 
         # Building basic json response
         responseObj = {
-            'file_name': mapObj.apsdateiname,
+            'file_name': mapObj.file_name,
             'georeference_id': None,
             'id': mapObj.id,
-            'map_type': mapObj.maptype,
+            'map_type': mapObj.map_type,
             'title_long': metadataObj.title,
             'title_short': metadataObj.titleshort,
             'zoomify_url': metadataObj.imagezoomify,
         }
 
         # In case there is currently a active georeference process for the map return the id
-        if Georeferenzierungsprozess.isGeoreferenced(mapObj.id, request.dbsession):
-            responseObj['georeference_id'] = Georeferenzierungsprozess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession).id
+        if GeoreferenceProcess.isGeoreferenced(mapObj.id, request.dbsession):
+            responseObj['georeference_id'] = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession).id
 
         return responseObj
     except Exception as e:

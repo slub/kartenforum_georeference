@@ -15,7 +15,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.utils.parser import toInt
 from georeference.utils.validations import isValidateGeorefConfirm
-from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.models.map import Map
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 
@@ -58,19 +58,20 @@ def getGeorefs(request):
         mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
 
         # Create default response
+        hasGeoreferenced = mapObj.getAbsGeorefPath() and os.path.exists(mapObj.getAbsGeorefPath())
         responseObj = {
-            'extent': mapObj.getExtent(request.dbsession, 4326) if mapObj.isttransformiert else None,
-            'default_srs': 'EPSG:%s' % mapObj.recommendedsrid,
+            'extent': mapObj.getExtent(request.dbsession, 4326) if hasGeoreferenced else None,
+            'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'items': [],
-            'pending_processes': Georeferenzierungsprozess.arePendingProcessForMapId(mapObj.id, request.dbsession)
+            'pending_processes': GeoreferenceProcess.arePendingProcessForMapId(mapObj.id, request.dbsession)
         }
 
         # In case there is currently a active georeference process for the map return the id
-        for process in request.dbsession.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapObj.id):
+        for process in request.dbsession.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapObj.id):
             # Create a georeference process object
             responseObj['items'].append({
-                'clip_polygon': json.loads(process.getClipAsGeoJSON(request.dbsession)),
-                'params': process.georefparams,
+                'clip_polygon': process.getClipAsGeoJSON(request.dbsession),
+                'params': process.georef_params,
                 'id': process.id,
                 'timestamp': str(process.timestamp),
                 'type': process.type,
@@ -121,25 +122,23 @@ def postGeorefs(request):
         userId = request.json_body['user_id']
 
         # If type is "new" make sure that there is no Georeferenprozess request
-        if type == 'new' and Georeferenzierungsprozess.isGeoreferenced(mapObj.id, request.dbsession):
+        if type == 'new' and GeoreferenceProcess.isGeoreferenced(mapObj.id, request.dbsession):
             return HTTPBadRequest('It is forbidden to register a new georeference process for a map, which already has a georeference process registered.')
 
         # Save to process
         timestamp = datetime.now().isoformat()
-        currentGeorefProcess = Georeferenzierungsprozess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession)
+        currentGeorefProcess = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession)
         overwrites = currentGeorefProcess.id if type == 'update' and currentGeorefProcess != None else 0
-        newGeorefProcess = Georeferenzierungsprozess(
-            messtischblattid=mapObj.apsobjectid,
-            nutzerid=userId,
-            georefparams=json.dumps(georefParams),
+        newGeorefProcess = GeoreferenceProcess(
+            user_id=userId,
+            georef_params=json.dumps(georefParams),
             timestamp=timestamp,
-            isactive=False,
+            enabled=False,
             type=type,
             overwrites=overwrites,
-            adminvalidation='',
+            validation='',
             processed=False,
-            mapid=mapObj.id,
-            algorithm=georefParams['algorithm']
+            map_id=mapObj.id,
         )
 
         # Add georef process

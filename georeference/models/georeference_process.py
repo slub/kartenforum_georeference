@@ -12,29 +12,24 @@ from .geometry import Geometry
 from .adminjobs import AdminJobs
 from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc, PickleType, JSON
     
-class Georeferenzierungsprozess(Base):
-    __tablename__ = 'georeferenzierungsprozess'
+class GeoreferenceProcess(Base):
+    __tablename__ = 'georeference_process'
     __table_args__ = {'extend_existing':True}
     id = Column(Integer, primary_key=True)
-    messtischblattid = Column(Integer)
-    georefparams = Column(String)
-    # clipparameter = Column(String(255))
+    georef_params = Column(String)
     timestamp = Column(DateTime(timezone=False))
     type = Column(String(255))
-    nutzerid = Column(String(255))
+    user_id = Column(String(255))
     processed = Column(Boolean)
-    isactive = Column(Boolean)
+    enabled = Column(Boolean)
     overwrites = Column(Integer)
-    adminvalidation = Column(String(20))
-    mapid = Column(Integer)
+    validation = Column(String(20))
+    map_id = Column(Integer)
     comment = Column(String(255))
-    algorithm = Column(String(255))
-    # clippolygon = Column(JsonPickleType(pickler=json))
-    # clip = Column(Geometry)
     
     @classmethod
     def all(cls, session):
-        return session.query(Georeferenzierungsprozess).order_by(desc(Georeferenzierungsprozess.id))
+        return session.query(GeoreferenceProcess).order_by(desc(GeoreferenceProcess.id))
     
     @classmethod
     def arePendingProcessForMapId(cls, mapId, session):
@@ -43,7 +38,7 @@ class Georeferenzierungsprozess(Base):
         Case 1.) Multiple unprocessed process processes with type "new" and overwrites 0
         Case 2.) Multiple unprocessed process processes with type "update" and the same overwrite id
          
-        :type cls: georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess
+        :type cls: georeference.models.vkdb.georeference_process.georeference_process
         :type mapId: str
         :type session: sqlalchemy.orm.session.Session
         :return: bool """
@@ -54,9 +49,9 @@ class Georeferenzierungsprozess(Base):
         if actualOverwriteProcess is None:
 
             # check if there exist unprocessed process process for this id with type new
-            unprocssedProcessOfTypeNew = session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapId)\
-                .filter(Georeferenzierungsprozess.processed == False)\
-                .filter(Georeferenzierungsprozess.type == "new").all()
+            unprocssedProcessOfTypeNew = session.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapId)\
+                .filter(GeoreferenceProcess.processed == False)\
+                .filter(GeoreferenceProcess.type == "new").all()
          
             # there are more than one unprocessed and new georeferences processes 
             if len(unprocssedProcessOfTypeNew) > 0:
@@ -66,10 +61,10 @@ class Georeferenzierungsprozess(Base):
          
         # now check if there exist concurrent update processes
         actualOverwriteId = actualOverwriteProcess.id
-        georefProcesses = session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapId)\
-            .filter(Georeferenzierungsprozess.overwrites == actualOverwriteId)\
-            .filter(Georeferenzierungsprozess.isactive == False)\
-            .filter(Georeferenzierungsprozess.processed == False).all()
+        georefProcesses = session.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapId)\
+            .filter(GeoreferenceProcess.overwrites == actualOverwriteId)\
+            .filter(GeoreferenceProcess.enabled == False)\
+            .filter(GeoreferenceProcess.processed == False).all()
         if len(georefProcesses) > 0:
             return True
         return False
@@ -78,14 +73,14 @@ class Georeferenzierungsprozess(Base):
     def clearRaceConditions(cls, georefObj, dbsession):
         """ Function clears race condition for a given process process
         
-        :type cls: georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess
-        :type georefObj: georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess
+        :type cls: georeference.models.vkdb.georeference_process.georeference_process
+        :type georefObj: georeference.models.vkdb.georeference_process.georeference_process
         :type dbsession: sqlalchemy.orm.session.Session
-        :return: georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess """
-        concurrentObjs = dbsession.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == georefObj.mapid)\
-            .filter(Georeferenzierungsprozess.type == georefObj.type)\
-            .filter(Georeferenzierungsprozess.overwrites == georefObj.overwrites)\
-            .order_by(desc(Georeferenzierungsprozess.timestamp)).all()
+        :return: georeference.models.vkdb.georeference_process.georeference_process """
+        concurrentObjs = dbsession.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == georefObj.mapid)\
+            .filter(GeoreferenceProcess.type == georefObj.type)\
+            .filter(GeoreferenceProcess.overwrites == georefObj.overwrites)\
+            .order_by(desc(GeoreferenceProcess.timestamp)).all()
             
         # there are no race conflicts
         if len(concurrentObjs) == 1:
@@ -103,68 +98,49 @@ class Georeferenzierungsprozess(Base):
     
     @classmethod
     def isGeoreferenced(cls, mapId, session):
-        georefProcess = session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapId)\
-            .filter(Georeferenzierungsprozess.isactive == True)\
-            .order_by(desc(Georeferenzierungsprozess.timestamp)).first()
+        georefProcess = session.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapId)\
+            .filter(GeoreferenceProcess.enabled == True)\
+            .order_by(desc(GeoreferenceProcess.timestamp)).first()
         if georefProcess is None:
             return False
         return True
      
     @classmethod
     def by_id(cls, id, session):
-        return session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.id == id).first()
+        return session.query(GeoreferenceProcess).filter(GeoreferenceProcess.id == id).first()
 
     @classmethod
     def getActualGeoreferenceProcessForMapId(cls, mapId, session):
-        return session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.mapid == mapId)\
-            .filter(Georeferenzierungsprozess.isactive == True).first()
-
-    def getClipAsString(self, dbsession, srid=4326):
-        """ Function returns the clip as a string.
-
-        :type sqlalchemy.orm.session.Session: dbsession
-        :type int: srid (Default: 4326)
-        :return: string """
-        query = 'SELECT st_astext(st_transform(clip, :srid)) FROM georeferenzierungsprozess WHERE id = :id;'
-        return dbsession.execute(query,{'id':self.id, 'srid':srid}).fetchone()[0]
-
-    def getSRIDClip(self, dbsession):
-        """ queries srid code for the georeferenzierungsprozess object
-        :type sqlalchemy.orm.session.Session: dbsession
-        :return:_ int|None """
-        query = "SELECT st_srid(clip) FROM georeferenzierungsprozess WHERE id = %s"%self.id
-        response = dbsession.execute(query).fetchone()
-        if response is not None:
-            return response[0]
-        return None
+        return session.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapId)\
+            .filter(GeoreferenceProcess.enabled == True).first()
 
     @classmethod
     def getUnprocessedObjectsOfTypeNew(cls, session):
         """ Gives back all process process of type "new" which are unprocessed. Important is the distinct operatore, which
         ignore race conflicts and gives in this case only one process back.
 
-        :type cls: georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess
+        :type cls: georeference.models.vkdb.georeference_process.georeference_process
         :type dbsession: sqlalchemy.orm.session.Session
-        :return: List.<georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess> """
-        return session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.processed == False)\
-            .filter(Georeferenzierungsprozess.adminvalidation != 'invalide')\
-            .filter(Georeferenzierungsprozess.type == 'new')\
-            .filter(Georeferenzierungsprozess.overwrites == 0)\
-            .distinct(Georeferenzierungsprozess.mapid)
+        :return: List.<georeference.models.vkdb.georeference_process.georeference_process> """
+        return session.query(GeoreferenceProcess).filter(GeoreferenceProcess.processed == False)\
+            .filter(GeoreferenceProcess.validation != 'invalide')\
+            .filter(GeoreferenceProcess.type == 'new')\
+            .filter(GeoreferenceProcess.overwrites == 0)\
+            .distinct(GeoreferenceProcess.map_id)
 
     @classmethod
     def getUnprocessedObjectsOfTypeUpdate(cls, session):
         """ Gives back all process process of type "Update" which are unprocessed. Important is the distinct operatore, which
         ignore race conflicts and gives in this case only one process back.
 
-        :type cls: georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess
+        :type cls: georeference.models.vkdb.georeference_process.georeference_process
         :type dbsession: sqlalchemy.orm.session.Session
-        :return: List.<georeference.models.vkdb.georeferenzierungsprozess.Georeferenzierungsprozess> """
-        return session.query(Georeferenzierungsprozess).filter(Georeferenzierungsprozess.processed == False)\
-            .filter(Georeferenzierungsprozess.adminvalidation != 'invalide')\
-            .filter(Georeferenzierungsprozess.type == 'update')\
-            .filter(Georeferenzierungsprozess.overwrites != 0)\
-            .distinct(Georeferenzierungsprozess.mapid)
+        :return: List.<georeference.models.vkdb.georeference_process.georeference_process> """
+        return session.query(GeoreferenceProcess).filter(GeoreferenceProcess.processed == False)\
+            .filter(GeoreferenceProcess.validation != 'invalide')\
+            .filter(GeoreferenceProcess.type == 'update')\
+            .filter(GeoreferenceProcess.overwrites != 0)\
+            .distinct(GeoreferenceProcess.map_id)
 
     def getClipAsGeoJSON(self, dbsession):
         """ Returns the clip geometry as geojson.
@@ -173,7 +149,7 @@ class Georeferenzierungsprozess(Base):
         :type dbsession: sqlalchemy.orm.session.Session
         :return: GeoJSON Geometry | None
         """
-        query = "SELECT st_asgeojson(clip) FROM georeferenzierungsprozess WHERE id = %s" % self.id
+        query = "SELECT st_asgeojson(clip) FROM georeference_process WHERE id = %s" % self.id
         response = dbsession.execute(query).fetchone()
         if response is not None:
             return json.loads(response[0])
@@ -198,7 +174,7 @@ class Georeferenzierungsprozess(Base):
 
         # Execute the insert process
         dbsession.execute(
-            "UPDATE georeferenzierungsprozess SET clip = ST_GeomFromGeoJSON('%s') WHERE id = %s" % (
+            "UPDATE georeference_process SET clip = ST_GeomFromGeoJSON('%s') WHERE id = %s" % (
                 json.dumps(geojsonGeom),
                 self.id
             )
@@ -210,19 +186,19 @@ class Georeferenzierungsprozess(Base):
         :result: Georef Params
         :rtype: dict
         """
-        return json.loads(self.georefparams)
+        return json.loads(self.georef_params)
 
     def setActive(self):
-        """ Sets the georeference process to active. If - isactive - is set to True - processed - has also to be set
+        """ Sets the georeference process to active. If - enabled - is set to True - processed - has also to be set
             to True, in any cases.
         :return:
         """
         self.processed = True
-        self.isactive = True
+        self.enabled = True
 
     def setDeactive(self):
         """ Sets the georeference process to deactive.
 
         :return:
         """
-        self.isactive = False
+        self.enabled = False

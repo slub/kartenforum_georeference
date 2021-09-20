@@ -18,16 +18,11 @@ class Map(Base):
     __tablename__ = 'map'
     __table_args__ = {'extend_existing':True}
     id = Column(Integer, primary_key=True)
-    apsobjectid = Column(Integer)
-    apsdateiname = Column(String(255))
-    originalimage = Column(String(255))
-    georefimage = Column(String(255))
-    isttransformiert = Column(Boolean)
-    istaktiv = Column(Boolean)
-    maptype = Column(String(255))
-    hasgeorefparams = Column(Integer)
+    file_name = Column(String(255))
+    enabled = Column(Boolean)
+    map_type = Column(String(255))
     boundingbox = Column(Geometry)
-    recommendedsrid = Column(Integer)
+    default_srs = Column(Integer)
     image_rel_path = Column(String(255))
     georef_rel_path = Column(String(255))
     map_scale = Column(Integer)
@@ -44,9 +39,9 @@ class Map(Base):
         """ Returns the absolute path to the georef image.
 
         :return: Absolute path to georef image
-        :rtype: str
+        :rtype: str | None
         """
-        return os.path.abspath(os.path.join(PATH_GEOREF_ROOT, self.georef_rel_path))
+        return os.path.abspath(os.path.join(PATH_GEOREF_ROOT, self.georef_rel_path)) if self.georef_rel_path != None else None
 
     def getExtent(self, dbsession, srid):
         """ Function returns the parsed extent.
@@ -127,16 +122,14 @@ class Map(Base):
         :type str: path New path to the georeference image
         :return:
         """
-        self.georefimage = path
-        self.isttransformiert = True
+        self.is_georeferenced = True
 
     def setDeactive(self):
         """ Methode sets the map object to deactive.
 
         :return:
         """
-        self.georefimage = ""
-        self.isttransformiert = False
+        self.is_georeferenced = False
 
     @classmethod
     def all(cls, dbsession):
@@ -149,21 +142,12 @@ class Map(Base):
 
     @classmethod
     def allActive(cls, dbsession):
-        """ Equivalent to an 'SELECT * FROM map WHERE isactive=True;'
+        """ Equivalent to an 'SELECT * FROM map WHERE enabled=True;'
 
         :type sqlalchemy.orm.session.Session: dbsession
         :return: List.<georeference.models.vkdb.map.Map>
         """
-        return dbsession.query(Map).filter(Map.istaktiv == True).order_by(desc(Map.id))
-
-    @classmethod
-    def allForType(cls, type, dbsession):
-        """
-        :type str: type
-        :type sqlalchemy.orm.session.Session: dbsession
-        :return: List.<georeference.models.vkdb.map.Map>
-         """
-        return dbsession.query(Map).filter(Map.maptype == str(type).upper())
+        return dbsession.query(Map).filter(Map.enabled == True).order_by(desc(Map.id))
 
     @classmethod
     def byId(cls, id, dbsession):

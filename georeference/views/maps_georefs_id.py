@@ -12,7 +12,7 @@ import os
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
 from georeference.utils.parser import toInt
-from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 
 # For correct resolving of the paths we use derive the base_path of the file
@@ -48,14 +48,14 @@ def getGeorefsForId(request):
             return HTTPBadRequest('Missing map_id or georef_id')
 
         # Query and return georef process
-        georefObj = Georeferenzierungsprozess.by_id(toInt(request.matchdict['georef_id']), request.dbsession)
+        georefObj = GeoreferenceProcess.by_id(toInt(request.matchdict['georef_id']), request.dbsession)
 
         if georefObj is None:
             return HTTPNotFound('Could not find georef process for given georef_id')
 
         return {
-            'clip_polygon': json.loads(georefObj.getClipAsGeoJSON(request.dbsession)),
-            'georef_params': georefObj.georefparams,
+            'clip_polygon': georefObj.getClipAsGeoJSON(request.dbsession),
+            'georef_params': georefObj.georef_params,
             'id': georefObj.id,
             'timestamp': str(georefObj.timestamp),
             'type': georefObj.type,

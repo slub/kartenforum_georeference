@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import traceback
 import os
-from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.models.map import Map
 from georeference.models.metadata import Metadata
 from georeference.settings import PATH_TMS_ROOT
@@ -89,7 +89,7 @@ def _syncMapObj(mapObj, georefObj, dbsession, logger):
         logger.debug('Process tile map service (TMS) ...')
         calculateCompressedTMS(
             georefFile,
-            os.path.join(PATH_TMS_ROOT, str(mapObj.maptype).lower()),
+            os.path.join(PATH_TMS_ROOT, str(mapObj.map_type).lower()),
             logger,
             GEOREFERENCE_TMS_PROCESSES,
             mapObj.map_scale
@@ -121,7 +121,7 @@ def runInitializationJob(dbsession, logger):
             # Make sure to create the es index
 
             # Now sync the georeference image, the tile map service and the es index
-            georefObj = Georeferenzierungsprozess.getActualGeoreferenceProcessForMapId(mapObj.id, dbsession)
+            georefObj = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, dbsession)
             georefFile = mapObj.getAbsGeorefPath()
             if os.path.exists(georefFile) == False and georefObj != None:
                 logger.debug('Map %s is missing a georeference image' % mapObj.id)
@@ -168,7 +168,7 @@ def runNewJobs(dbsession, logger):
     """
     try:
         logger.info('Check for new jobs ...')
-        newJobs = Georeferenzierungsprozess.getUnprocessedObjectsOfTypeNew(dbsession)
+        newJobs = GeoreferenceProcess.getUnprocessedObjectsOfTypeNew(dbsession)
 
 
         # Process the jobs
@@ -176,7 +176,7 @@ def runNewJobs(dbsession, logger):
         logger.info('Found %s new jobs. Start processing ...' % counter)
         for job in newJobs:
             logger.info('Process georeference process %s ("new") ...' % job.id)
-            georefObj = Georeferenzierungsprozess.clearRaceConditions(job, dbsession)
+            georefObj = GeoreferenceProcess.clearRaceConditions(job, dbsession)
             mapObj = Map.byId(georefObj.mapid, dbsession)
             activate(georefObj, mapObj, dbsession, logger)
             logger.info('Finish processing process %s ("new").' % job.id)

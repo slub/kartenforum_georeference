@@ -72,7 +72,7 @@ def postGeorefsValidate(request):
         gdalGcps = toGDALGcps(gcps)
         srs = target
         srcFile = mapObj.getAbsImagePath()
-        trgFileName = '%s::%s.tif' % (mapObj.apsdateiname, uuid.uuid4())
+        trgFileName = '%s::%s.tif' % (mapObj.file_name, uuid.uuid4())
         trgFile = os.path.abspath(
             os.path.join(
                 GEOREFERENCE_VALIDATION_FOLDER,
@@ -100,9 +100,9 @@ def postGeorefsValidate(request):
             os.path.join(GEOREFERENCE_VALIDATION_FOLDER, mapfileName),
             os.path.join(BASE_PATH, '../templates/wms_dynamic.map'),
             {
-                'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.apsdateiname,
+                'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.file_name,
                 'wmsUrl': wmsUrl,
-                'layerName': mapObj.apsdateiname,
+                'layerName': mapObj.file_name,
                 'layerDataPath': TEMPLATE_WMS_DATA_DIR % trgFileName,
                 'layerProjection': target
             }
@@ -111,7 +111,7 @@ def postGeorefsValidate(request):
 
         return {
             'extent': getImageExtent(trgFile),
-            'layer_name': mapObj.apsdateiname,
+            'layer_name': mapObj.file_name,
             'wms_url': wmsUrl,
         }
     except Exception as e:

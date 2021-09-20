@@ -12,7 +12,7 @@ from pyramid.view import view_config
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import or_
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
-from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.models.metadata import Metadata
 from georeference.utils.parser import toInt
 from georeference.settings import GLOBAL_ERROR_MESSAGE
@@ -71,31 +71,31 @@ def getAdminGeorefs(request):
 
         # Generate response data via map_id
         if 'map_id' in request.params:
-            queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata)\
-                .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
-                .filter(Georeferenzierungsprozess.mapid == toInt(request.params['map_id'])) \
-                .order_by(desc(Georeferenzierungsprozess.id))
+            queryData = request.dbsession.query(GeoreferenceProcess, Metadata)\
+                .join(Metadata, GeoreferenceProcess.mapid == Metadata.mapid) \
+                .filter(GeoreferenceProcess.mapid == toInt(request.params['map_id'])) \
+                .order_by(desc(GeoreferenceProcess.id))
 
         # Generate response data via user_id
         elif 'user_id' in request.params:
-            queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata)\
-                .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
-                .filter(Georeferenzierungsprozess.nutzerid == request.params['user_id']) \
-                .order_by(desc(Georeferenzierungsprozess.id))
+            queryData = request.dbsession.query(GeoreferenceProcess, Metadata)\
+                .join(Metadata, GeoreferenceProcess.mapid == Metadata.mapid) \
+                .filter(GeoreferenceProcess.nutzerid == request.params['user_id']) \
+                .order_by(desc(GeoreferenceProcess.id))
 
         # Generate response data via validation
         elif 'validation' in request.params:
-            queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata)\
-                .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
-                .filter(Georeferenzierungsprozess.adminvalidation == request.params['validation']) \
-                .order_by(desc(Georeferenzierungsprozess.id))
+            queryData = request.dbsession.query(GeoreferenceProcess, Metadata)\
+                .join(Metadata, GeoreferenceProcess.mapid == Metadata.mapid) \
+                .filter(GeoreferenceProcess.adminvalidation == request.params['validation']) \
+                .order_by(desc(GeoreferenceProcess.id))
 
         # Generate response data via pending
         elif 'pending' in request.params:
-            queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata)\
-                .join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid) \
-                .filter(or_(Georeferenzierungsprozess.adminvalidation == '', Georeferenzierungsprozess.adminvalidation == None)) \
-                .order_by(desc(Georeferenzierungsprozess.id))
+            queryData = request.dbsession.query(GeoreferenceProcess, Metadata)\
+                .join(Metadata, GeoreferenceProcess.mapid == Metadata.mapid) \
+                .filter(or_(GeoreferenceProcess.adminvalidation == '', GeoreferenceProcess.adminvalidation == None)) \
+                .order_by(desc(GeoreferenceProcess.id))
 
         if queryData == None:
             return HTTPBadRequest('Please pass values for one of the following query parameters: "map_id", "user_id", "pending", "validation"')

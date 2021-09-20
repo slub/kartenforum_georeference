@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 MAPPING = {
     'map_id': { 'type': 'long', 'index': True }, #10001387
-    'file_id': { 'type': 'keyword', 'index': True }, # df_dk_0010001_5248_1933
+    'file_name': { 'type': 'keyword', 'index': True }, # df_dk_0010001_5248_1933
     'description': { 'type': 'text', 'index': False }, # "Altenberg. - Umdr.-Ausg., aufgen. 1910, hrsg. 1912, au\u00dfers\u00e4chs. Teil 1919, bericht. 1923, einz. Nachtr. 1933. - 1:25000. - Leipzig, 1939. - 1 Kt."
     'map_scale': { 'type': 'long', 'index': True }, # 25000
     'zoomify_url': { 'type': 'text', 'index': False }, #"http://fotothek.slub-dresden.de/zooms/df/dk/0010000/df_dk_0010001_5248_1933/ImageProperties.xml"
@@ -170,11 +170,11 @@ def generateDocument(mapObj, metadataObj, has_georeference, dbsession, logger=LO
 
         return {
             'map_id': mapObj.id,
-            'file_id': mapObj.apsdateiname,
+            'file_name': mapObj.file_name,
             'description': metadataObj.description,
             'map_scale': int(metadataObj.scale.split(':')[1]),
             'zoomify_url': str(metadataObj.imagezoomify).replace('http:', ''),
-            'map_type': mapObj.maptype,
+            'map_type': mapObj.map_type,
             'orginal_url': str(metadataObj.imagejpg).replace('http:', ''),
             'keywords': ';'.join([metadataObj.type,metadataObj.technic]),
             'title_long': metadataObj.title,

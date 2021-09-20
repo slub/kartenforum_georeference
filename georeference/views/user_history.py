@@ -14,7 +14,7 @@ from sqlalchemy import desc
 LOGGER = logging.getLogger(__name__)
 
 from georeference.settings import OAI_ID_PATTERN
-from georeference.models.georeferenzierungsprozess import Georeferenzierungsprozess
+from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.models.map import Map
 from georeference.models.metadata import Metadata
 
@@ -30,10 +30,10 @@ def generateGeoreferenceHistory(request):
 
     try:
         LOGGER.debug('Query georeference profile information from database for user %s' % request.matchdict['user_id'])
-        queryData = request.dbsession.query(Georeferenzierungsprozess, Metadata, Map).join(Metadata, Georeferenzierungsprozess.mapid == Metadata.mapid)\
-            .join(Map, Georeferenzierungsprozess.mapid == Map.id)\
-            .filter(Georeferenzierungsprozess.nutzerid == request.matchdict['user_id'])\
-            .order_by(desc(Georeferenzierungsprozess.id))
+        queryData = request.dbsession.query(GeoreferenceProcess, Metadata, Map).join(Metadata, GeoreferenceProcess.mapid == Metadata.mapid)\
+            .join(Map, GeoreferenceProcess.mapid == Map.id)\
+            .filter(GeoreferenceProcess.nutzerid == request.matchdict['user_id'])\
+            .order_by(desc(GeoreferenceProcess.id))
 
         LOGGER.debug('Create response list')
         georef_profile = []
@@ -46,11 +46,12 @@ def generateGeoreferenceHistory(request):
             #
             # create response
             #
-            responseRecord = {'georefid':georef.id, 'mapid':OAI_ID_PATTERN%georef.mapid,
-                    'georefparams': georef.georefparams, 'time': str(metadata.timepublish), 'transformed': georef.processed,
-                    'isvalide': georef.adminvalidation, 'title': metadata.title, 'key': mapObj.apsdateiname,
-                    'georeftime':str(georef.timestamp),'type':georef.type,
-                    'published':georef.processed, 'thumbnail': metadata.thumbsmid}
+            responseRecord = {'georefid': georef.id, 'mapid': OAI_ID_PATTERN % georef.mapid,
+                              'georefparams': georef.georefparams, 'time': str(metadata.timepublish),
+                              'transformed': georef.processed,
+                              'isvalide': georef.adminvalidation, 'title': metadata.title, 'key': mapObj.file_name,
+                              'georeftime': str(georef.timestamp), 'type': georef.type,
+                              'published': georef.processed, 'thumbnail': metadata.thumbsmid}
 
             # add boundingbox if exists
             if mapObj.boundingbox is not None:
