@@ -36,44 +36,6 @@ The kartenforum_georeference application uses [pytest](https://docs.pytest.org/e
 
 Make sure that the project is properly installed beforehand.
 
-## API documentation
-
-### ROUTE_PREFIX
-
-```
-/georeference
-```
-
-The `ROUTE_PREFIX` can be configured within the `georeference/settings.py`. 
-
-### Georeference
-
-```
-GET     /georeference/process?mapId={id_of_the_mapobject}|georeferenceId={id_of_the_georeference_process} - Returns a new or the latest georeference process for a map object
-POST    /georeference/process/validate - Returns a temporary georeference result for a given set of georeference parameters
-POST    /georeference/process/confirm - Persists the parameters of a georeference process.
-```
-
-### Statistic 
-
-```
-GET     /georeference/statistics - Returns statistics about the overall georeference progress
-```
-
-### User
-
-```
-GET     /georeference/user/{userId}/history - Returns statistics about the specific user georeference history
-```
-
-### Admin
-
-```
-GET     /georeference/admin/process?mapid={id_of_the_mapobject}&userid={id_of_the_user}&validation={}
-GET     /georeference/admin/setinvalide?georeferenceid={id_of_the_georeference_process}
-GET     /georeference/admin/setisvalide?georeferenceid={id_of_the_georeference_process}
-```
-
 ## Processing- & Service-Engine (Daemon)
 
 The Processing- & Service-Engine is a daemon, which runs in the background and performs persistent updates of the search-index and the mapping data. It checks if something has changed

@@ -20,6 +20,17 @@ For accessing the database `vkdb` via pgAdmin you have to create a connection. T
 * Username: postgres
 * Password: postgres
 
+## Testing of the infrastructure
+
+To setup the full infrastructure. For that, before docker-compose is run, please run the following command within your
+root directory.
+
+> docker build -t kartenforum_georeference -f docker/Dockerfile .
+
+As an alternative run 
+
+> docker-compose build
+>
 ## Development
 
 As part of the deployment of the docker images a database creation script is mounted and executed. It can be found

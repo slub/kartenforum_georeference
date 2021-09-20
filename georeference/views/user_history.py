@@ -30,9 +30,9 @@ def generateGeoreferenceHistory(request):
 
     try:
         LOGGER.debug('Query georeference profile information from database for user %s' % request.matchdict['user_id'])
-        queryData = request.dbsession.query(GeoreferenceProcess, Metadata, Map).join(Metadata, GeoreferenceProcess.mapid == Metadata.mapid)\
-            .join(Map, GeoreferenceProcess.mapid == Map.id)\
-            .filter(GeoreferenceProcess.nutzerid == request.matchdict['user_id'])\
+        queryData = request.dbsession.query(GeoreferenceProcess, Metadata, Map).join(Metadata, GeoreferenceProcess.map_id == Metadata.mapid)\
+            .join(Map, GeoreferenceProcess.map_id == Map.id)\
+            .filter(GeoreferenceProcess.user_id == request.matchdict['user_id'])\
             .order_by(desc(GeoreferenceProcess.id))
 
         LOGGER.debug('Create response list')
@@ -46,10 +46,10 @@ def generateGeoreferenceHistory(request):
             #
             # create response
             #
-            responseRecord = {'georefid': georef.id, 'mapid': OAI_ID_PATTERN % georef.mapid,
-                              'georefparams': georef.georefparams, 'time': str(metadata.timepublish),
+            responseRecord = {'georefid': georef.id, 'mapid': OAI_ID_PATTERN % georef.map_id,
+                              'georefparams': georef.getGeorefParamsAsDict(), 'time': str(metadata.timepublish),
                               'transformed': georef.processed,
-                              'isvalide': georef.adminvalidation, 'title': metadata.title, 'key': mapObj.file_name,
+                              'isvalide': georef.validation, 'title': metadata.title, 'key': mapObj.file_name,
                               'georeftime': str(georef.timestamp), 'type': georef.type,
                               'published': georef.processed, 'thumbnail': metadata.thumbsmid}
 
@@ -58,7 +58,7 @@ def generateGeoreferenceHistory(request):
                 responseRecord['boundingbox'] = mapObj.getExtentAsString(request.dbsession, 4326)
 
             # calculate points
-            if georef.adminvalidation != 'invalide':
+            if georef.validation != 'invalide':
                 points += 20
 
             georef_profile.append(responseRecord)

@@ -63,15 +63,16 @@ def getGeorefs(request):
             'extent': mapObj.getExtent(request.dbsession, 4326) if hasGeoreferenced else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'items': [],
-            'pending_processes': GeoreferenceProcess.arePendingProcessForMapId(mapObj.id, request.dbsession)
+            'pending_processes': GeoreferenceProcess.arePendingProcessForMapId(mapObj.id, request.dbsession),
+            'enabled_georeference_id': GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession).id
         }
 
-        # In case there is currently a active georeference process for the map return the id
+        # Return process for the georeference endpoint
         for process in request.dbsession.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapObj.id):
             # Create a georeference process object
             responseObj['items'].append({
                 'clip_polygon': process.getClipAsGeoJSON(request.dbsession),
-                'params': process.georef_params,
+                'params': process.getGeorefParamsAsDict(),
                 'id': process.id,
                 'timestamp': str(process.timestamp),
                 'type': process.type,

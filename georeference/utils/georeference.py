@@ -12,12 +12,10 @@ import json
 import sys
 from osgeo import gdal
 from osgeo import osr
-from osgeo.gdalconst import GDT_Byte
 from osgeo.gdalconst import GA_ReadOnly
-from ..settings import GEOREFERENCE_PATH_GDALWARP
-from ..settings import GEOREFERENCE_PATH_GDALADDO
-from ..settings import SRC_DICT_WKT
-from ..settings import TMP_DIR
+from georeference.settings import GEOREFERENCE_PATH_GDALWARP
+from georeference.settings import GEOREFERENCE_PATH_GDALADDO
+from georeference.settings import SRC_DICT_WKT
 
 def _addOverviews(dstFile, overviewLevels, logger):
     """ Function adds overview to given geotiff.

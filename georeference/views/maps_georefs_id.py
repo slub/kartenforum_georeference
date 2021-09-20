@@ -55,7 +55,7 @@ def getGeorefsForId(request):
 
         return {
             'clip_polygon': georefObj.getClipAsGeoJSON(request.dbsession),
-            'georef_params': georefObj.georef_params,
+            'georef_params': georefObj.getGeorefParamsAsDict(),
             'id': georefObj.id,
             'timestamp': str(georefObj.timestamp),
             'type': georefObj.type,

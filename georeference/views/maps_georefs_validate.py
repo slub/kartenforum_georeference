@@ -80,6 +80,12 @@ def postGeorefsValidate(request):
             )
         )
 
+        if os.path.exists(srcFile) == False:
+            LOGGER.error('Could not found source file %s ...' % srcFile)
+            raise
+
+        LOGGER.info('Start processing source file %s ...' % srcFile)
+
         # Create a rectify image
         rectifyImage(
             srcFile,
