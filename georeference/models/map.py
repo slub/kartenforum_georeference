@@ -116,7 +116,7 @@ class Map(Base):
             )
         )
 
-    def setActive(self, path):
+    def setActive(self):
         """ Methode sets the map object to active.
 
         :type str: path New path to the georeference image

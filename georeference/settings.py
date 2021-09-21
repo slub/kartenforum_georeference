@@ -79,7 +79,8 @@ GEOREFERENCE_DAEMON_SETTINGS = {
     'stderr': os.path.join(BASE_PATH, '../tmp/tty'),
     'pidfile_path': os.path.join(BASE_PATH, '../tmp/daemon.pid'),
     'pidfile_timeout': 5,
-    'sleep_time': 60
+    'sleep_time': 60,
+    'wait_on_startup': 15
 }
 
 # Number of processes used for creating the tms

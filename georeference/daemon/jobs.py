@@ -22,7 +22,6 @@ from georeference.utils.georeference import getExtentFromGeoTIFF
 from georeference.utils.georeference import getSrsFromGeoTIFF
 from georeference.utils.georeference import rectifyImageWithClipAndOverviews
 from georeference.utils.parser import toGDALGcps
-from georeference.daemon.process import activate
 
 def _processGeoref(georefParams, clip, srcPath, dstPath, logger):
     """ Process a given georeference process.
@@ -102,6 +101,50 @@ def _syncMapObj(mapObj, georefObj, dbsession, logger):
         logger.error(e)
         logger.error(traceback.format_exc())
 
+def _processMapObj(mapObj, georefObj, dbsession, logger, esIndex, forceProcessing=False):
+    """ Functions performs the processing of a georeference process for a given georefObj and mapObj.
+
+    :param mapObj: Map object
+    :type mapObj: georeference.models.map.Map
+    :param georefObj: Georeference process. If passed, it syncs the georeference service to the given georeference process.
+    :type georefObj: georeference.models.georeference_process.GeoreferenceProcess|None
+    :param dbsession: Database session object
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :param esIndex: Elsaticsearch client
+    :type esIndex: elasticsearch.Elasticsearch
+    :param forceProcessing: Signals that the georeference process should also be processed, if there is already a file existing.
+    :type forceProcessing: bool
+    """
+    georefFile = mapObj.getAbsGeorefPath()
+    if georefFile != None and (os.path.exists(georefFile) == False or forceProcessing) and georefObj != None:
+        logger.debug('Map %s is missing a georeference image' % mapObj.id)
+        _syncMapObj(
+            mapObj,
+            georefObj,
+            dbsession,
+            logger
+        )
+
+    # Write documents to es
+    logger.debug('Write mapObj %s to index ...' % (mapObj.id))
+    searchDocument = generateDocument(
+        mapObj,
+        Metadata.byId(mapObj.id, dbsession),
+        True if georefFile != None and os.path.exists(georefFile) else False,
+        dbsession=dbsession,
+        logger=logger
+    )
+
+    logger.debug(searchDocument)
+    esIndex.index(
+        index=ES_INDEX_NAME,
+        doc_type=None,
+        id=mapObj.id,
+        body=searchDocument
+    )
+
 def runInitializationJob(dbsession, logger):
     """ This job checks the database and initially builds the index and missing georeference images.
 
@@ -118,38 +161,13 @@ def runInitializationJob(dbsession, logger):
 
         logger.info('Start processing all active maps ...')
         for mapObj in Map.allActive(dbsession):
-            # Make sure to create the es index
-
-            # Now sync the georeference image, the tile map service and the es index
-            georefObj = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, dbsession)
-            georefFile = mapObj.getAbsGeorefPath()
-            if os.path.exists(georefFile) == False and georefObj != None:
-                logger.debug('Map %s is missing a georeference image' % mapObj.id)
-                _syncMapObj(
-                    mapObj,
-                    georefObj,
-                    dbsession,
-                    logger
-                )
-
-            # Write documents to es
-            logger.debug('Write mapObj %s to index ...' % (mapObj.id))
-            searchDocument = generateDocument(
+            _processMapObj(
                 mapObj,
-                Metadata.byId(mapObj.id, dbsession),
-                True if os.path.exists(georefFile) else False,
-                dbsession=dbsession,
-                logger=logger
+                GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, dbsession),
+                dbsession,
+                logger,
+                esIndex
             )
-
-            logger.debug(searchDocument)
-            esIndex.index(
-                index=ES_INDEX_NAME,
-                doc_type=None,
-                id=mapObj.id,
-                body=searchDocument
-            )
-
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')
@@ -170,19 +188,89 @@ def runNewJobs(dbsession, logger):
         logger.info('Check for new jobs ...')
         newJobs = GeoreferenceProcess.getUnprocessedObjectsOfTypeNew(dbsession)
 
+        logger.info('Get index ...')
+        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=logger)
 
         # Process the jobs
         counter = 0
         logger.info('Found %s new jobs. Start processing ...' % counter)
         for job in newJobs:
             logger.info('Process georeference process %s ("new") ...' % job.id)
+            mapObj = Map.byId(job.map_id, dbsession)
             georefObj = GeoreferenceProcess.clearRaceConditions(job, dbsession)
-            mapObj = Map.byId(georefObj.mapid, dbsession)
-            activate(georefObj, mapObj, dbsession, logger)
+
+            # Set the rel_georef_path. If we miss this, there will be no processing of new georeference processes
+            mapObj.georef_rel_path = './%s/%s.tif' % (str(mapObj.map_type).lower(), mapObj.file_name)
+
+            _processMapObj(
+                mapObj,
+                georefObj,
+                dbsession,
+                logger,
+                esIndex,
+                forceProcessing=True
+            )
+
+            # Change the database
+            mapObj.setActive()
+            georefObj.setActive()
+
             logger.info('Finish processing process %s ("new").' % job.id)
             counter += 1
         return counter
     except Exception as e:
         logger.error('Error while trying to process new jobs.')
+        logger.error(e)
+        logger.error(traceback.format_exc())
+
+def runUpdateJobs(dbsession, logger):
+    """ Checks in the database for update registered jobs and runs them.
+
+    :param dbsession: Database session object
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :result: Count of processed jobs
+    :rtype: int
+    """
+    try:
+        logger.info('Check for update jobs ...')
+        newJobs = GeoreferenceProcess.getUnprocessedObjectsOfTypeUpdate(dbsession)
+
+        logger.info('Get index ...')
+        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=logger)
+
+        # Process the jobs
+        counter = 0
+        logger.info('Found %s update jobs. Start processing ...' % counter)
+        for job in newJobs:
+            logger.info('Process georeference process %s ("update") ...' % job.id)
+            mapObj = Map.byId(job.map_id, dbsession)
+            georefObj = GeoreferenceProcess.clearRaceConditions(job, dbsession)
+
+            # Check if there is an active georeference process and if yes disable it
+            activeGeorefProcess = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(job.map_id, dbsession)
+            if activeGeorefProcess != None:
+                logger.info('Deactivate georeference processes with id %s ...' % activeGeorefProcess.id)
+                activeGeorefProcess.setDeactive()
+
+            _processMapObj(
+                mapObj,
+                georefObj,
+                dbsession,
+                logger,
+                esIndex,
+                forceProcessing=True
+            )
+
+            # Change the database
+            mapObj.setActive()
+            georefObj.setActive()
+
+            logger.info('Finish processing process %s ("update").' % job.id)
+            counter += 1
+        return counter
+    except Exception as e:
+        logger.error('Error while trying to process update jobs.')
         logger.error(e)
         logger.error(traceback.format_exc())

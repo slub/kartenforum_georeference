@@ -79,7 +79,8 @@ GEOREFERENCE_DAEMON_SETTINGS = {
     'stderr': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/tty'),
     'pidfile_path': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/daemon.pid'),
     'pidfile_timeout': 5,
-    'sleep_time': 60
+    'sleep_time': 60,
+    'wait_on_startup': 60
 }
 
 # Number of processes used for creating the tms
@@ -111,7 +112,7 @@ PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
 
 # Root of the es instance
 ES_ROOT = {
-    'host': 'localhost',
+    'host': 'elasticsearch',
     'port': 9200
 }
 

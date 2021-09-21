@@ -12,10 +12,42 @@ import signal
 import daemon
 import lockfile
 import traceback
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from pyramid.paster import get_appsettings
 from logging.handlers import TimedRotatingFileHandler
 from georeference.settings import GEOREFERENCE_DAEMON_LOGGER
 from georeference.settings import GEOREFERENCE_DAEMON_SETTINGS
 from georeference.utils.logging import createLogger
+from georeference.daemon.jobs import runInitializationJob
+from georeference.daemon.jobs import runNewJobs
+from georeference.daemon.jobs import runUpdateJobs
+
+# For correct resolving of the paths we use derive the base_path of the file
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+def initializeDatabaseSession():
+    """ Functions loads and initialize a database session
+
+    :result: Database session object
+    :rtype: sqlalchemy.orm.session.Session
+    """
+    # Create database engine from production.ini configuration
+    iniFile = os.path.join(BASE_PATH, '../../production.ini')
+    dbengine = create_engine(
+        get_appsettings(iniFile)['sqlalchemy.url'],
+        encoding='utf8',
+        # Set echo=True if te sqlalchemy.url logging output sould be displayed
+        echo=False,
+    )
+
+    # Create and return session object
+    db_sessionmaker = sessionmaker(bind=dbengine)
+    Base = declarative_base()
+    Base.metadata.bind = dbengine
+    Base.metadata.create_all(dbengine)
+    return db_sessionmaker()
 
 def initializeLogger(handler):
     """ Function loads and create the logger for the daemon
@@ -58,7 +90,16 @@ if not os.path.exists(GEOREFERENCE_DAEMON_SETTINGS['stdin']):
 
 def onStartUp():
     try:
-        LOGGER.info("On Startup")
+        LOGGER.info('Starting the daemon ...')
+        LOGGER.info('Sync index and files ...')
+        dbsession = initializeDatabaseSession()
+        runInitializationJob(
+            dbsession=dbsession,
+            logger=LOGGER
+        )
+        dbsession.commit()
+        dbsession.close()
+        LOGGER.info('Daemon finish starting and is listen for changes')
     except Exception as e:
         LOGGER.error('Error while starting the daemon')
         LOGGER.error(e)
@@ -66,26 +107,45 @@ def onStartUp():
 
 def main():
     try:
-        LOGGER.info('Georeference daeomon is started.')
-        LOGGER.info('################################')
+        if GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'] > 0:
+            LOGGER.info('Start logger but waiting for %s seconds ...' % GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'])
+            time.sleep(GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'])
 
-        # @TODO Perform initial sync.
-        # @TODO Initial creation / resetting of the search index on startup
-        # @TODO Check if all georeferenced files are exists
-        LOGGER.info('Perform initial sync ...')
-        LOGGER.info('Initial sync done.')
+        # Start the daemon
+        onStartUp()
+
+        LOGGER.info('################################')
 
         while True:
             LOGGER.info('Looking for Looking for pending georeference processes ...')
+            dbsession = initializeDatabaseSession()
+            LOGGER.info('Check for new processes ...')
+            runNewJobs(
+                dbsession=dbsession,
+                logger=LOGGER
+            )
+            dbsession.commit()
+            LOGGER.info('Check for update processes ...')
+            runUpdateJobs(
+                dbsession=dbsession,
+                logger=LOGGER
+            )
+            dbsession.commit()
             LOGGER.info('Go to sleep ...')
+            dbsession.close()
             time.sleep(GEOREFERENCE_DAEMON_SETTINGS['sleep_time'])
     except Exception as e:
         LOGGER.error('Error while running the daemon')
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
 
+pidFileLock = '%s.lock' % GEOREFERENCE_DAEMON_SETTINGS['pidfile_path']
+pidFile = lockfile.FileLock(GEOREFERENCE_DAEMON_SETTINGS['pidfile_path'])
+
 def onCleanUp(a, b):
     LOGGER.info("Clean up")
+    if os.path.exists(pidFileLock):
+        pidFile.release()
 
 # Initialize the daemon context
 context = daemon.DaemonContext(
@@ -102,8 +162,9 @@ context.signal_map = {
     signal.SIGHUP: 'terminate',
 }
 
-# Start the daemon
-onStartUp()
+if os.path.exists(pidFileLock):
+    raise Exception('Please make sure old daemons are cancelled first and remove the pidfile %s.' % GEOREFERENCE_DAEMON_SETTINGS['pidfile_path'])
 
+# Starts the daemon
 with context:
     main()

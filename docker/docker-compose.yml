@@ -15,15 +15,6 @@ services:
       - 5432:5432
     volumes:
       - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
-#  pgadmin:
-#    container_name: pgadmin4_container
-#    image: dpage/pgadmin4
-#    restart: always
-#    environment:
-#      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-#      - PGADMIN_DEFAULT_PASSWORD=postgres
-#    ports:
-#      - 5050:80
   mapserver:
     container_name: mapserver
     image: camptocamp/mapserver
@@ -59,6 +50,7 @@ services:
     restart: always
     links:
       - db
+      - elasticsearch
     depends_on:
       - db
     command: ["./wait-for-it.sh", "db:5432", "--", "/bin/bash", "/opt/kartenforum_georeference/startup.sh"]

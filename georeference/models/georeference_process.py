@@ -77,7 +77,7 @@ class GeoreferenceProcess(Base):
         :type georefObj: georeference.models.vkdb.georeference_process.georeference_process
         :type dbsession: sqlalchemy.orm.session.Session
         :return: georeference.models.vkdb.georeference_process.georeference_process """
-        concurrentObjs = dbsession.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == georefObj.mapid)\
+        concurrentObjs = dbsession.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == georefObj.map_id)\
             .filter(GeoreferenceProcess.type == georefObj.type)\
             .filter(GeoreferenceProcess.overwrites == georefObj.overwrites)\
             .order_by(desc(GeoreferenceProcess.timestamp)).all()
@@ -106,7 +106,7 @@ class GeoreferenceProcess(Base):
         return True
      
     @classmethod
-    def by_id(cls, id, session):
+    def byId(cls, id, session):
         return session.query(GeoreferenceProcess).filter(GeoreferenceProcess.id == id).first()
 
     @classmethod

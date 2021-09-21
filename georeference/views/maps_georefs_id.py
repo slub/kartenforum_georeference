@@ -48,7 +48,7 @@ def getGeorefsForId(request):
             return HTTPBadRequest('Missing map_id or georef_id')
 
         # Query and return georef process
-        georefObj = GeoreferenceProcess.by_id(toInt(request.matchdict['georef_id']), request.dbsession)
+        georefObj = GeoreferenceProcess.byId(toInt(request.matchdict['georef_id']), request.dbsession)
 
         if georefObj is None:
             return HTTPNotFound('Could not find georef process for given georef_id')

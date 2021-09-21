@@ -216,7 +216,7 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
         # Force a reset of the index
         if forceRecreation and indexExists:
             logger.debug('Delete current index, because forceRecreation=True')
-            es.indices.delete(indexName)
+            es.indices.delete(indexName, ignore=404)
 
         # Check if index exists and if not create it
         if indexExists == False or forceRecreation:
@@ -227,7 +227,7 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
                     'mappings': {
                         'properties': MAPPING
                     }
-                }
+                },
             )
         return es
     except Exception as e:
