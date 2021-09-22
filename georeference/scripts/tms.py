@@ -54,6 +54,8 @@ def buildTMSCache(pathImage, targetPath, logger, processes, map_scale):
     :type map_scale: int
     :return: str  """
     logger.debug('------------------------------------------------------------------')
+    logger.debug('Source image %s' % pathImage)
+    logger.debug('Target dir %s' % targetPath)
     file_name, file_extension = os.path.splitext(os.path.basename(pathImage))
 
     # extract epsg from source file
@@ -124,8 +126,8 @@ def calculateCompressedTMS(inputImage, targetDir, logger, processes=1, map_scale
     addBaseTile(tmpCacheDir)
 
     logger.debug('Copy compressed cache to target dir ...')
-    if not os.path.exists(os.path.dirname(targetDir)):
-        os.makedirs(os.path.dirname(targetDir))
+    if not os.path.exists(targetDir):
+        os.makedirs(targetDir)
     subprocess.call(['rsync', '-rI', tmpCacheDir, targetDir])
 
     logger.debug('Clean up ...')

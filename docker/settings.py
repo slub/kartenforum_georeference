@@ -19,13 +19,13 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
 # Path to the image root directory
-PATH_IMAGE_ROOT = os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/org')
+PATH_IMAGE_ROOT = '/opt/kartenforum_georeference/data/org'
 
 # Path to the georef root directory
-PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/geo')
+PATH_GEOREF_ROOT = '/opt/kartenforum_georeference/data/geo'
 
 # Path to the tms root directo
-PATH_TMS_ROOT = os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tms')
+PATH_TMS_ROOT = '/opt/kartenforum_georeference/data/tms'
 
 # @TODO check if we can replace this dict through a system wide library
 # Definition of used srids
@@ -44,10 +44,10 @@ SRC_DICT_WKT = {
 ROUTE_PREFIX = ''
 
 # Directory where the mapfiles for the validation process are saved
-GEOREFERENCE_VALIDATION_FOLDER = os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp')
+GEOREFERENCE_VALIDATION_FOLDER = '/opt/kartenforum_georeference/data/tmp'
 
 # Service tmp
-TMP_DIR = os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp')
+TMP_DIR = '/opt/kartenforum_georeference/data/tmp'
 
 # WMS Service default url template
 TEMPLATE_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/%s'
@@ -66,21 +66,21 @@ OAI_ID_PATTERN = 'oai:de:slub-dresden:vk:id-%s'
 # Settings for logger of the georeference persistent
 GEOREFERENCE_DAEMON_LOGGER = {
     'name':'geoereference-daemon',
-    'file': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/daemon.log'),
+    'file': '/opt/kartenforum_georeference/data/tmp/daemon.log',
     # See supported log level https://docs.python.org/3/library/logging.html#levels
-    'level': logging.INFO,
+    'level': logging.DEBUG,
     'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 }
 
 # Settings for the georeference persistent
 GEOREFERENCE_DAEMON_SETTINGS = {
-    'stdin': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/null'),
-    'stdout': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/tty'),
-    'stderr': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/tty'),
-    'pidfile_path': os.path.join(BASE_PATH, '/opt/kartenforum_georeference/data/tmp/daemon.pid'),
+    'stdin': '/opt/kartenforum_georeference/data/tmp/null',
+    'stdout': '/opt/kartenforum_georeference/data/tmp/tty',
+    'stderr': '/opt/kartenforum_georeference/data/tmp/tty',
+    'pidfile_path': '/opt/kartenforum_georeference/data/tmp/daemon.pid',
     'pidfile_timeout': 5,
     'sleep_time': 60,
-    'wait_on_startup': 60
+    'wait_on_startup': 20
 }
 
 # Number of processes used for creating the tms

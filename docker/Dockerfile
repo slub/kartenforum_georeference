@@ -8,7 +8,7 @@ ENV src_dir /opt/kartenforum_georeference
 ENV data_dir /opt/kartenforum_georeference/data
 
 RUN apt-get update
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install -yq apt-transport-https wget gnupg2 software-properties-common curl vim less python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev postgresql-client
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -yq apt-transport-https wget gnupg2 software-properties-common curl vim less python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev postgresql-client rsync
 
 # Copy python files
 COPY ./georeference ${src_dir}/georeference

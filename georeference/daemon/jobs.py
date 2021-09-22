@@ -118,6 +118,10 @@ def _processMapObj(mapObj, georefObj, dbsession, logger, esIndex, forceProcessin
     :type forceProcessing: bool
     """
     georefFile = mapObj.getAbsGeorefPath()
+    logger.debug('%s %s' % (
+        georefFile,
+        'does not exist' if georefFile != None and (os.path.exists(georefFile) == False or forceProcessing) and georefObj != None else 'exist')
+    )
     if georefFile != None and (os.path.exists(georefFile) == False or forceProcessing) and georefObj != None:
         logger.debug('Map %s is missing a georeference image' % mapObj.id)
         _syncMapObj(

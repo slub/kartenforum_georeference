@@ -107,9 +107,9 @@ def onStartUp():
 
 def main():
     try:
-        if GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'] > 0:
-            LOGGER.info('Start logger but waiting for %s seconds ...' % GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'])
-            time.sleep(GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'])
+        timeToWait = GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'] if GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'] > 0 else 1
+        LOGGER.info('Start logger but waiting for %s seconds ...' % timeToWait)
+        time.sleep(timeToWait)
 
         # Start the daemon
         onStartUp()
