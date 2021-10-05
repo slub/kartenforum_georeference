@@ -11,43 +11,47 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError
 from sqlalchemy import desc
 from sqlalchemy import func
-from georeference.models.georeference_process import GeoreferenceProcess
-from georeference.models.map import Map
+from georeference.models.transformations import Transformation, ValidationValues
+from georeference.models.georef_maps import GeorefMap
+from georeference.models.original_maps import OriginalMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE
+
 LOGGER = logging.getLogger(__name__)
 
 @view_config(route_name='statistics', renderer='json')
 def getStatistics(request):
     LOGGER.info('Request - Get georeference points.')
     LOGGER.debug(request)
+
     try:
         #
         # Create the database queries
         #
 
-        # Query number of valide georeference processes for each user
-        qPoints = request.dbsession.query(GeoreferenceProcess.user_id.label('user'),
-                                          func.count(GeoreferenceProcess.user_id).label('occurrence'))\
-            .filter(GeoreferenceProcess.validation != 'invalide')\
-            .group_by(GeoreferenceProcess.user_id)\
+        # Query number of georeference processes for each user
+        qPoints = request.dbsession.query(
+                Transformation.user_id.label('user'), func.count(Transformation.user_id).label('occurrence')
+            )\
+            .filter(Transformation.validation != ValidationValues.INVALID.value)\
+            .group_by(Transformation.user_id)\
             .subquery()
 
-        # Query number of valide georeference processes for each user with type "new"
-        qNew = request.dbsession.query(GeoreferenceProcess.user_id.label('user'), func.count(GeoreferenceProcess.type).label('type'))\
-                    .filter(GeoreferenceProcess.validation != 'invalide')\
-                    .filter(GeoreferenceProcess.type == 'new')\
-                    .group_by(GeoreferenceProcess.user_id)\
+        # Query number of valid transformations for each user of type "new"
+        qNew = request.dbsession.query(Transformation.user_id.label('user'), func.count(Transformation.params).label('transformations'))\
+                    .filter(Transformation.validation != ValidationValues.INVALID.value)\
+                    .filter(Transformation.overwrites == 0)\
+                    .group_by(Transformation.user_id)\
                     .subquery()
 
-        # Query number of valide georeference processes for each user with type "update"
-        qUpdate = request.dbsession.query(GeoreferenceProcess.user_id.label('user'), func.count(GeoreferenceProcess.type).label('type'))\
-                    .filter(GeoreferenceProcess.validation != 'invalide')\
-                    .filter(GeoreferenceProcess.type == 'update')\
-                    .group_by(GeoreferenceProcess.user_id)\
+        # Query number of valid transformations for each user of type "update"
+        qUpdate = request.dbsession.query(Transformation.user_id.label('user'), func.count(Transformation.params).label('transformations'))\
+                    .filter(Transformation.validation != ValidationValues.INVALID.value)\
+                    .filter(Transformation.overwrites > 0)\
+                    .group_by(Transformation.user_id)\
                     .subquery()
 
         # Query the data
-        data = request.dbsession.query(qPoints.c.user, qPoints.c.occurrence, qNew.c.type, qUpdate.c.type)\
+        data = request.dbsession.query(qPoints.c.user, qPoints.c.occurrence, qNew.c.transformations, qUpdate.c.transformations)\
                 .outerjoin(qNew, qPoints.c.user == qNew.c.user)\
                 .outerjoin(qUpdate, qPoints.c.user == qUpdate.c.user)\
                 .order_by(desc(qPoints.c.occurrence)).limit(20)
@@ -59,23 +63,16 @@ def getStatistics(request):
             points = record[1] * 20
             new = record[2] if record[2] is not None else 0
             update = record[3] if record[3] is not None else 0
-            user_points.append({'userid':userid, 'points': points, 'new': new, 'update': update})
+            user_points.append({ 'user_id':userid, 'total_points': points, 'transformation_new': new, 'transformation_updates': update})
 
         LOGGER.debug('Get georeference map count')
-        queryData = request.dbsession.query(func.count(Map.enabled))\
-            .filter(Map.georef_rel_path != None)\
-            .filter(Map.enabled == True)
-        georeference_map_count = []
-        for record in queryData:
-            georeference_map_count = record[0]
+        georeference_map_count = request.dbsession.query(GeorefMap.original_map_id).count()
 
         LOGGER.debug('Get missing georeference map count')
-        queryData = request.dbsession.query(func.count(Map.enabled))\
-            .filter(Map.georef_rel_path == None)\
-            .filter(Map.enabled == True)
-        missing_georeference_map_count = []
-        for record in queryData:
-            missing_georeference_map_count = record[0]
+        missing_georeference_map_count = request.dbsession.query(OriginalMap)\
+            .join(GeorefMap, GeorefMap.original_map_id == OriginalMap.id, full=True)\
+            .filter(GeorefMap.original_map_id == None)\
+            .count()
 
         return {'georeference_points': user_points, 'georeference_map_count': georeference_map_count, 'not_georeference_map_count':missing_georeference_map_count}
     except Exception as e:

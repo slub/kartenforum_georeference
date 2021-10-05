@@ -10,8 +10,8 @@ import logging
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.utils.parser import toInt
-from georeference.models.georeference_process import GeoreferenceProcess
-from georeference.models.map import Map
+from georeference.models.transformations import GeoreferenceProcess
+from georeference.models.original_maps import Map
 from georeference.models.metadata import Metadata
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 

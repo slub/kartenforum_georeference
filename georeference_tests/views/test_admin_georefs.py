@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import json
 from georeference.settings import ROUTE_PREFIX
-from georeference.models.admin_jobs import AdminJobs
+from georeference.models.jobs import AdminJobs
 
 def test_getAdminGeorefs_success_mapId(testapp):
     # For clean test setup the test data should also be added to the database within this method

@@ -13,10 +13,10 @@ from sqlalchemy import desc
 
 LOGGER = logging.getLogger(__name__)
 
-from georeference.settings import OAI_ID_PATTERN
-from georeference.models.georeference_process import GeoreferenceProcess
-from georeference.models.map import Map
+from georeference.models.transformations import Transformation, ValidationValues
+from georeference.models.original_maps import OriginalMap
 from georeference.models.metadata import Metadata
+from georeference.models.georef_maps import GeorefMap
 
 GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
@@ -30,35 +30,42 @@ def generateGeoreferenceHistory(request):
 
     try:
         LOGGER.debug('Query georeference profile information from database for user %s' % request.matchdict['user_id'])
-        queryData = request.dbsession.query(GeoreferenceProcess, Metadata, Map).join(Metadata, GeoreferenceProcess.map_id == Metadata.mapid)\
-            .join(Map, GeoreferenceProcess.map_id == Map.id)\
-            .filter(GeoreferenceProcess.user_id == request.matchdict['user_id'])\
-            .order_by(desc(GeoreferenceProcess.id))
+        queryData = request.dbsession.query(Transformation, Metadata, OriginalMap, GeorefMap)\
+            .join(Metadata, Transformation.original_map_id == Metadata.mapid)\
+            .join(OriginalMap, Transformation.original_map_id == OriginalMap.id) \
+            .join(GeorefMap, GeorefMap.transformation_id == Transformation.id, full=True) \
+            .filter(Transformation.user_id == request.matchdict['user_id'])\
+            .order_by(desc(Transformation.id))
 
         LOGGER.debug('Create response list')
         georef_profile = []
         points = 0
         for record in queryData:
-            georef = record[0]
-            metadata = record[1]
+            transformationObj = record[0]
+            metadataObj = record[1]
             mapObj = record[2]
+            georefMapObj = record[3]
 
-            #
-            # create response
-            #
-            responseRecord = {'georefid': georef.id, 'mapid': OAI_ID_PATTERN % georef.map_id,
-                              'georefparams': georef.getGeorefParamsAsDict(), 'time': str(metadata.timepublish),
-                              'transformed': georef.processed,
-                              'isvalide': georef.validation, 'title': metadata.title, 'key': mapObj.file_name,
-                              'georeftime': str(georef.timestamp), 'type': georef.type,
-                              'published': georef.processed, 'thumbnail': metadata.thumbsmid}
-
-            # add boundingbox if exists
-            if mapObj.boundingbox is not None:
-                responseRecord['boundingbox'] = mapObj.getExtentAsString(request.dbsession, 4326)
+            # Create response
+            responseRecord = {
+                'file_name': mapObj.file_name,
+                'is_transformed': True if georefMapObj != None else False,
+                'map_id': mapObj.id,
+                'transformation': {
+                    'id': transformationObj.id,
+                    'params': transformationObj.getParamsAsDict(),
+                    'submitted': str(transformationObj.submitted),
+                    'validation': transformationObj.validation
+                },
+                'metadata': {
+                    'thumbnail': metadataObj.thumbsmid,
+                    'time_published': str(metadataObj.timepublish),
+                    'title': metadataObj.title,
+                }
+            }
 
             # calculate points
-            if georef.validation != 'invalide':
+            if transformationObj.validation != ValidationValues.INVALID.value:
                 points += 20
 
             georef_profile.append(responseRecord)

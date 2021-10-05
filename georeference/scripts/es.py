@@ -67,7 +67,7 @@ def _getOnlineResourceVK20Permalink(oai):
 def _getOnlineResourceWMS(mapObj):
     """
     :param mapObj: Map
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :result: A online resource which describes a wms
     :rtype: dict
     """
@@ -80,7 +80,7 @@ def _getOnlineResourceWMS(mapObj):
 def _getOnlineResourceWCS(mapObj):
     """
     :param mapObj: Map
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :result: A online resource which describes a wms
     :rtype: dict
     """
@@ -93,7 +93,7 @@ def _getOnlineResourceWCS(mapObj):
 def _getOnlineResourceWCSForDownload(mapObj, coverageTitle, extent, srid):
     """
     :param mapObj: Map
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :type coverageTitle: Title of the wcs coverage
     :param coverageTitle: str
     :param extent: Extent
@@ -126,7 +126,7 @@ def generateDocument(mapObj, metadataObj, has_georeference, dbsession, logger=LO
     """ Generates a document which matches the es mapping.
 
     :param mapObj: Map
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :param metadataObj: Metadata obj
     :type metadataObj: georeference.models.metadata.Metadata
     :param has_georeference: Signals if the map object is already georeferenced

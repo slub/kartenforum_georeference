@@ -16,7 +16,7 @@ from georeference.utils.georeference import rectifyImage
 from georeference.utils.mapfile import writeMapfile
 from georeference.utils.parser import toInt
 from georeference.utils.parser import toGDALGcps
-from georeference.models.map import Map
+from georeference.models.original_maps import Map
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.settings import GEOREFERENCE_VALIDATION_FOLDER
 from georeference.settings import TMP_DIR

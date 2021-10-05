@@ -8,8 +8,8 @@
 import logging
 import json
 from datetime import datetime
-from georeference.models.georeference_process import GeoreferenceProcess
-from georeference.models.map import Map
+from georeference.models.transformations import GeoreferenceProcess
+from georeference.models.original_maps import Map
 from georeference.daemon.jobs import runInitializationJob
 from georeference.daemon.jobs import runNewJobs
 from georeference.daemon.jobs import runUpdateJobs

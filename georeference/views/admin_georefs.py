@@ -13,8 +13,8 @@ from pyramid.view import view_config
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import or_
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
-from georeference.models.georeference_process import GeoreferenceProcess
-from georeference.models.admin_jobs import AdminJobs
+from georeference.models.transformations import GeoreferenceProcess
+from georeference.models.jobs import AdminJobs
 from georeference.models.metadata import Metadata
 from georeference.utils.parser import toInt
 from georeference.settings import GLOBAL_ERROR_MESSAGE

@@ -7,9 +7,9 @@
 # "LICENSE", which is part of this source code package
 import traceback
 import os
-from georeference.models.admin_jobs import AdminJobs
-from georeference.models.georeference_process import GeoreferenceProcess
-from georeference.models.map import Map
+from georeference.models.jobs import AdminJobs
+from georeference.models.transformations import GeoreferenceProcess
+from georeference.models.original_maps import Map
 from georeference.models.metadata import Metadata
 from georeference.settings import PATH_TMS_ROOT
 from georeference.settings import TMP_DIR
@@ -28,9 +28,9 @@ def _enableGeorefProcess(georefObj, mapObj, esIndex, dbsession, logger):
     """ Enables a given georeference process.
 
     :param georefObj: Georeference process
-    :type georefObj: georeference.models.georeference_process.GeoreferenceProcess
+    :type georefObj: georeference.models.transformations.GeoreferenceProcess
     :param mapObj: Map object
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :param esIndex: Elsaticsearch client
     :type esIndex: elasticsearch.Elasticsearch
     :param dbsession: Database session
@@ -59,9 +59,9 @@ def _disableGeorefProcess(georefObj, mapObj, esIndex, dbsession, logger):
     """ Disable a given georeference process.
 
     :param georefObj: Georeference process
-    :type georefObj: georeference.models.georeference_process.GeoreferenceProcess
+    :type georefObj: georeference.models.transformations.GeoreferenceProcess
     :param mapObj: Map object
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :param esIndex: Elsaticsearch client
     :type esIndex: elasticsearch.Elasticsearch
     :param dbsession: Database session
@@ -98,7 +98,7 @@ def _getLastValidGeoreferenceProcess(overwriteId, dbsession, logger):
     :param logger: Logger
     :type: logger: logging.Logger
     :result: Returns a valid georeference process if existing
-    :rtype: georeference.models.georeference_process.GeoreferenceProcess|None
+    :rtype: georeference.models.transformations.GeoreferenceProcess|None
     """
     georefProcess = GeoreferenceProcess.by_id(overwriteId, dbsession)
     if georefProcess.validation == 'valid' or georefProcess.validation == '':
@@ -190,9 +190,9 @@ def _processMapObj(mapObj, georefObj, dbsession, logger, esIndex, forceProcessin
     """ Functions performs the processing of a georeference process for a given georefObj and mapObj.
 
     :param mapObj: Map object
-    :type mapObj: georeference.models.map.Map
+    :type mapObj: georeference.models.original_maps.Map
     :param georefObj: Georeference process. If passed, it syncs the georeference service to the given georeference process.
-    :type georefObj: georeference.models.georeference_process.GeoreferenceProcess|None
+    :type georefObj: georeference.models.transformations.GeoreferenceProcess|None
     :param dbsession: Database session object
     :type dbsession: sqlalchemy.orm.session.Session
     :param logger: Logger
@@ -238,7 +238,7 @@ def _setInValid(job, dbsession, logger, esIndex):
     """ This function sets a georeference process as 'invalid'.
 
     :param job: AdminJob
-    :type job: georeference.models.admin_jobs.AdminJobs
+    :type job: georeference.models.jobs.AdminJobs
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
     :param logger: Logger
@@ -289,7 +289,7 @@ def _setValid(job, dbsession, logger, esIndex):
     """ This function sets a georeference process as 'valid'.
 
     :param job: AdminJob
-    :type job: georeference.models.admin_jobs.AdminJobs
+    :type job: georeference.models.jobs.AdminJobs
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
     :param logger: Logger
