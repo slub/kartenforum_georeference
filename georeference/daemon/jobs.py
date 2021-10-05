@@ -7,6 +7,7 @@
 # "LICENSE", which is part of this source code package
 import traceback
 import os
+from georeference.models.admin_jobs import AdminJobs
 from georeference.models.georeference_process import GeoreferenceProcess
 from georeference.models.map import Map
 from georeference.models.metadata import Metadata
@@ -22,6 +23,90 @@ from georeference.utils.georeference import getExtentFromGeoTIFF
 from georeference.utils.georeference import getSrsFromGeoTIFF
 from georeference.utils.georeference import rectifyImageWithClipAndOverviews
 from georeference.utils.parser import toGDALGcps
+
+def _enableGeorefProcess(georefObj, mapObj, esIndex, dbsession, logger):
+    """ Enables a given georeference process.
+
+    :param georefObj: Georeference process
+    :type georefObj: georeference.models.georeference_process.GeoreferenceProcess
+    :param mapObj: Map object
+    :type mapObj: georeference.models.map.Map
+    :param esIndex: Elsaticsearch client
+    :type esIndex: elasticsearch.Elasticsearch
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    """
+    # Set the rel_georef_path. If we miss this, there will be no processing of new georeference processes
+    if mapObj.georef_rel_path == None or len(mapObj.georef_rel_path) == 0:
+        mapObj.georef_rel_path = './%s/%s.tif' % (str(mapObj.map_type).lower(), mapObj.file_name)
+
+    _processMapObj(
+        mapObj,
+        georefObj,
+        dbsession,
+        logger,
+        esIndex,
+        forceProcessing=True
+    )
+
+    # Change the database
+    mapObj.enalbeMap()
+    georefObj.setActive()
+
+def _disableGeorefProcess(georefObj, mapObj, esIndex, dbsession, logger):
+    """ Disable a given georeference process.
+
+    :param georefObj: Georeference process
+    :type georefObj: georeference.models.georeference_process.GeoreferenceProcess
+    :param mapObj: Map object
+    :type mapObj: georeference.models.map.Map
+    :param esIndex: Elsaticsearch client
+    :type esIndex: elasticsearch.Elasticsearch
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    """
+    mapObj.disableMap()
+    georefObj.disableGeorefProcess()
+
+    # Flush the changes for proper working of the index update
+    dbsession.flush()
+    esIndex.index(
+        index=ES_INDEX_NAME,
+        doc_type=None,
+        id=mapObj.id,
+        body=generateDocument(
+            mapObj,
+            Metadata.byId(mapObj.id, dbsession),
+            None,
+            dbsession=dbsession,
+            logger=logger
+        )
+    )
+
+def _getLastValidGeoreferenceProcess(overwriteId, dbsession, logger):
+    """ This function goes down the overwrite chain and looks for the last valid
+        georeference process
+
+    :param overwriteId: Last overwrite id
+    :type overwriteId: int
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type: logger: logging.Logger
+    :result: Returns a valid georeference process if existing
+    :rtype: georeference.models.georeference_process.GeoreferenceProcess|None
+    """
+    georefProcess = GeoreferenceProcess.by_id(overwriteId, dbsession)
+    if georefProcess.validation == 'valid' or georefProcess.validation == '':
+        return georefProcess
+    elif georefProcess.overwrites > 0:
+        return _getLastValidGeoreferenceProcess(georefProcess.overwrites, dbsession, logger)
+    else:
+        return None
 
 def _processGeoref(georefParams, clip, srcPath, dstPath, logger):
     """ Process a given georeference process.
@@ -149,6 +234,111 @@ def _processMapObj(mapObj, georefObj, dbsession, logger, esIndex, forceProcessin
         body=searchDocument
     )
 
+def _setInValid(job, dbsession, logger, esIndex):
+    """ This function sets a georeference process as 'invalid'.
+
+    :param job: AdminJob
+    :type job: georeference.models.admin_jobs.AdminJobs
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :param esIndex: Elsaticsearch client
+    :type esIndex: elasticsearch.Elasticsearch
+    """
+    logger.debug('Set georeference process for id %s to invalid ...' % job.georef_id)
+
+    # Query georefObj and mapObj
+    georefObj = GeoreferenceProcess.by_id(job.geref_id, dbsession)
+    mapObj = Map.by_id(georefObj.map_id, dbsession)
+
+    # If the georefObj is enabled disable it
+    if georefObj.enabled == True:
+        logger.debug('Disable georeference process for id %s ...' % job.georef_id)
+        _disableGeorefProcess(
+            georefObj,
+            mapObj,
+            esIndex,
+            dbsession,
+            logger
+        )
+
+    # If the georef process overwrites another active the old one.
+    if georefObj.overwrites > 0:
+        logger.debug('Enable overwriten georeference process ...')
+        logger.debug('Check for a valid overwriten georeference process')
+        overwritenGeorefObj = _getLastValidGeoreferenceProcess(georefObj.overwrites, dbsession, logger)
+
+        if overwritenGeorefObj != None:
+            logger.debug('Enable a overwriten georeference process with id %s.' % (overwritenGeorefObj.id))
+
+            # Enable the georeference process
+            _enableGeorefProcess(
+                overwritenGeorefObj,
+                mapObj,
+                esIndex,
+                dbsession,
+                logger
+            )
+
+    logger.debug('Update validation state for georeference process %s.' % georefObj.id)
+    georefObj.validation = job.state
+    dbsession.flush()
+
+def _setValid(job, dbsession, logger, esIndex):
+    """ This function sets a georeference process as 'valid'.
+
+    :param job: AdminJob
+    :type job: georeference.models.admin_jobs.AdminJobs
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :param esIndex: Elsaticsearch client
+    :type esIndex: elasticsearch.Elasticsearch
+    """
+    logger.debug('Set georeference process for id %s to valid ...' % job.georef_id)
+
+    # Query georefObj and mapObj
+    georefObj = GeoreferenceProcess.by_id(job.geref_id, dbsession)
+    mapObj = Map.by_id(georefObj.map_id, dbsession)
+
+    # Query also current active georeference process
+    activeGeorefObj = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(georefObj.map_id, dbsession)
+
+    if activeGeorefObj and activeGeorefObj.id >= georefObj.id:
+        logger.debug('The georeference process with the id %s or younger process is already active for this map object.'% georefObj.id)
+        pass
+    elif activeGeorefObj and activeGeorefObj.id < georefObj.id:
+        logger.info('Activate the is valide georeference process and deactive old one ...')
+        _disableGeorefProcess(
+            activeGeorefObj,
+            mapObj,
+            esIndex,
+            dbsession,
+            logger
+        )
+        _enableGeorefProcess(
+            georefObj,
+            mapObj,
+            esIndex,
+            dbsession,
+            logger
+        )
+    else:
+        logger.info('Activate georeference process %s for the map object %s ...' % (georefObj.id, georefObj.map_id))
+        _enableGeorefProcess(
+            georefObj,
+            mapObj,
+            esIndex,
+            dbsession,
+            logger
+        )
+
+    logger.debug('Update validation state for georeference process %s.' % georefObj.id)
+    georefObj.validation = job.state
+    dbsession.flush()
+
 def runInitializationJob(dbsession, logger):
     """ This job checks the database and initially builds the index and missing georeference images.
 
@@ -203,21 +393,14 @@ def runNewJobs(dbsession, logger):
             mapObj = Map.byId(job.map_id, dbsession)
             georefObj = GeoreferenceProcess.clearRaceConditions(job, dbsession)
 
-            # Set the rel_georef_path. If we miss this, there will be no processing of new georeference processes
-            mapObj.georef_rel_path = './%s/%s.tif' % (str(mapObj.map_type).lower(), mapObj.file_name)
-
-            _processMapObj(
-                mapObj,
+            # Enable the georeference process
+            _enableGeorefProcess(
                 georefObj,
-                dbsession,
-                logger,
+                mapObj,
                 esIndex,
-                forceProcessing=True
+                dbsession,
+                logger
             )
-
-            # Change the database
-            mapObj.setActive()
-            georefObj.setActive()
 
             logger.info('Finish processing process %s ("new").' % job.id)
             counter += 1
@@ -258,23 +441,58 @@ def runUpdateJobs(dbsession, logger):
                 logger.info('Deactivate georeference processes with id %s ...' % activeGeorefProcess.id)
                 activeGeorefProcess.setDeactive()
 
-            _processMapObj(
-                mapObj,
+            # Enable the georeference process
+            _enableGeorefProcess(
                 georefObj,
-                dbsession,
-                logger,
+                mapObj,
                 esIndex,
-                forceProcessing=True
+                dbsession,
+                logger
             )
-
-            # Change the database
-            mapObj.setActive()
-            georefObj.setActive()
 
             logger.info('Finish processing process %s ("update").' % job.id)
             counter += 1
         return counter
     except Exception as e:
         logger.error('Error while trying to process update jobs.')
+        logger.error(e)
+        logger.error(traceback.format_exc())
+
+def runAdminJobs(dbsession, logger):
+    """ Checks in the database for new admin jobs and runs them.
+
+    :param dbsession: Database session object
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :result: Count of processed jobs
+    :rtype: int
+    """
+    try:
+        logger.info('Check for admin jobs ...')
+        newJobs = AdminJobs.getUnprocessedJobs(dbsession)
+
+        logger.info('Get index ...')
+        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=logger)
+
+        # Process the jobs
+        counter = 0
+        logger.info('Found %s update jobs. Start processing ...' % counter)
+        for job in newJobs:
+            if job.state == 'invalid':
+                _setInValid(
+                    job,
+                    dbsession,
+                    logger,
+                    esIndex
+                )
+                job.processed = True
+            elif job.state == 'valid':
+                job.processed = True
+            logger.info('Finish processing process %s ("admin").' % job.id)
+            counter += 1
+        return counter
+    except Exception as e:
+        logger.error('Error while trying to process admin jobs.')
         logger.error(e)
         logger.error(traceback.format_exc())

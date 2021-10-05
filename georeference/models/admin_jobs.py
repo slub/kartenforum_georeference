@@ -9,14 +9,14 @@ from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc
 from .meta import Base
 
 class AdminJobs(Base):
-    __tablename__ = 'adminjobs'
+    __tablename__ = 'admin_jobs'
     __table_args__ = {'extend_existing':True}
     id = Column(Integer, primary_key=True)
-    georefid = Column(Integer)
+    georef_id = Column(Integer)
     timestamp = Column(DateTime(timezone=False))
-    userid = Column(String(255))
+    user_id = Column(String(255))
     processed = Column(Boolean)
-    setto = Column(String(255))
+    state = Column(String(255))
     comment = Column(String(255))
     
     @classmethod
@@ -24,8 +24,8 @@ class AdminJobs(Base):
         return session.query(AdminJobs).order_by(desc(AdminJobs.id))
 
     @classmethod
-    def allForGeoreferenceid(cls, id, session):
-        return session.query(AdminJobs).filter(AdminJobs.georefid == id)
+    def allForGeoreferenceId(cls, id, session):
+        return session.query(AdminJobs).filter(AdminJobs.georef_id == id)
 
     @classmethod
     def by_id(cls, id, session):

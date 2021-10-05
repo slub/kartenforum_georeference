@@ -9,7 +9,7 @@ import json
 import ast
 from .meta import Base
 from .geometry import Geometry
-from .adminjobs import AdminJobs
+from .admin_jobs import AdminJobs
 from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc, PickleType, JSON
     
 class GeoreferenceProcess(Base):
@@ -196,7 +196,7 @@ class GeoreferenceProcess(Base):
         self.processed = True
         self.enabled = True
 
-    def setDeactive(self):
+    def disableGeorefProcess(self):
         """ Sets the georeference process to deactive.
 
         :return:

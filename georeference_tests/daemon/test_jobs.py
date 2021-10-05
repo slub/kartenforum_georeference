@@ -124,7 +124,7 @@ def test_runUpdateJobs_success(dbsession_only):
 
     dbsession_only.rollback()
 
-def test_runInitializationJob_success(dbsession_only):
-    success = runInitializationJob(dbsession_only, LOGGER)
-    dbsession_only.rollback()
-    assert success == True
+# def test_runInitializationJob_success(dbsession_only):
+#     success = runInitializationJob(dbsession_only, LOGGER)
+#     dbsession_only.rollback()
+#     assert success == True

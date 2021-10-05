@@ -28,7 +28,7 @@ virtualenv python_env
 
 ## Testing
 
-The kartenforum_georeference application uses [pytest](https://docs.pytest.org/en/6.2.x/) as a Test-Runner. For performing a full test run, perform the following command.
+The kartenforum_georeference application uses [pytest](https://docs.pytest.org/en/6.2.x/) as a Test-Runner. For performing a full test run, perform the following command. Make sure that the docker-setup is started before.
 
 ```
 ./python_env/bin/pytest --cov --cov-report=term-missing

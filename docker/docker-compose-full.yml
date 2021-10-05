@@ -42,4 +42,26 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+  georeference:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: kartenforum_georeference
+    restart: always
+    links:
+      - db
+      - elasticsearch
+    depends_on:
+      - db
+    command: ["./wait-for-it.sh", "db:5432", "--", "/bin/bash", "/opt/kartenforum_georeference/startup.sh"]
+    volumes:
+      - ../tmp/:/opt/kartenforum_georeference/data
+    ports:
+      - 6543:6543
+    environment:
+      - WAIT_HOSTS=db:5432
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=30
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+
 

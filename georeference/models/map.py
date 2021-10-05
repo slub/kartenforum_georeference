@@ -116,7 +116,7 @@ class Map(Base):
             )
         )
 
-    def setActive(self):
+    def enalbeMap(self):
         """ Methode sets the map object to active.
 
         :type str: path New path to the georeference image
@@ -124,12 +124,13 @@ class Map(Base):
         """
         self.is_georeferenced = True
 
-    def setDeactive(self):
+    def disableMap(self):
         """ Methode sets the map object to deactive.
 
         :return:
         """
         self.is_georeferenced = False
+        self.georef_rel_path = ''
 
     @classmethod
     def all(cls, dbsession):

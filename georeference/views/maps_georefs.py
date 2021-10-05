@@ -58,12 +58,13 @@ def getGeorefs(request):
 
         # Create default response
         hasGeoreferenced = mapObj.getAbsGeorefPath() and os.path.exists(mapObj.getAbsGeorefPath())
+        currentGeorefenceProcess = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession)
         responseObj = {
             'extent': mapObj.getExtent(request.dbsession, 4326) if hasGeoreferenced else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'items': [],
             'pending_processes': GeoreferenceProcess.arePendingProcessForMapId(mapObj.id, request.dbsession),
-            'enabled_georeference_id': GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession).id
+            'enabled_georeference_id': currentGeorefenceProcess.id if currentGeorefenceProcess != None else None
         }
 
         # Return process for the georeference endpoint
