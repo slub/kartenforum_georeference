@@ -14,8 +14,10 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.utils.parser import toInt
 from georeference.utils.validations import isValidateGeorefConfirm
-from georeference.models.transformations import GeoreferenceProcess
-from georeference.models.original_maps import Map
+from georeference.models.transformations import Transformation, ValidationValues
+from georeference.models.original_maps import OriginalMap
+from georeference.models.georef_maps import GeorefMap
+from georeference.models.jobs import Job, TaskValues
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 
 # For correct resolving of the paths we use derive the base_path of the file
@@ -34,14 +36,18 @@ def getGeorefs(request):
     :type map_id: int
     :result: JSON object describing the map object
     :rtype: {{
+      active_transformation_id: int,
       extent: Extent,
       default_srs: int,
       items: {
-        clip_polygon: GeoJSON,
-        georef_params: *,
-        id: int,
+        transformation: {
+            transformation_id: int,
+            clip: GeoJSON,
+            params: dict,
+            submitted: str,
+        }
+        map_id: int,
         timestamp: str,
-        type: 'new' | 'update',
       }[],
       pending_processes: boolean,
     }}
@@ -54,28 +60,30 @@ def getGeorefs(request):
             return HTTPBadRequest('Missing map_id')
 
         # query map object and metadata
-        mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        mapObj = OriginalMap.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        georefMapObj = GeorefMap.byOriginalMapId(mapObj.id, request.dbsession)
 
         # Create default response
-        hasGeoreferenced = mapObj.getAbsGeorefPath() and os.path.exists(mapObj.getAbsGeorefPath())
-        currentGeorefenceProcess = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession)
         responseObj = {
-            'extent': mapObj.getExtent(request.dbsession, 4326) if hasGeoreferenced else None,
+            'active_transformation_id': georefMapObj.transformation_id if georefMapObj != None else None,
+            'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'items': [],
-            'pending_processes': GeoreferenceProcess.arePendingProcessForMapId(mapObj.id, request.dbsession),
-            'enabled_georeference_id': currentGeorefenceProcess.id if currentGeorefenceProcess != None else None
+            'pending_jobs': Job.hasPendingJobsForMapId(request.dbsession, mapObj.id)
         }
 
         # Return process for the georeference endpoint
-        for process in request.dbsession.query(GeoreferenceProcess).filter(GeoreferenceProcess.map_id == mapObj.id):
+        queryTransformations = request.dbsession.query(Transformation)\
+            .filter(Transformation.original_map_id == mapObj.id)\
+            .filter(Transformation.validation != ValidationValues.INVALID.value)
+        for transformation in queryTransformations:
             # Create a georeference process object
             responseObj['items'].append({
-                'clip_polygon': process.getClipAsGeoJSON(request.dbsession),
-                'params': process.getGeorefParamsAsDict(),
-                'id': process.id,
-                'timestamp': str(process.timestamp),
-                'type': process.type,
+                'transformation_id': transformation.id,
+                'clip': json.loads(transformation.clip),
+                'params': transformation.getParamsAsDict(),
+                'submitted': str(transformation.submitted),
+                'overwrites': transformation.overwrites
             })
 
         return responseObj

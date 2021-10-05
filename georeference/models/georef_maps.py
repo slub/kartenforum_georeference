@@ -7,12 +7,21 @@
 # "LICENSE", which is part of this source code package
 import os
 import json
-from sqlalchemy import Column, Integer, Boolean, String, DateTime
-from sqlalchemy import desc
-from ..settings import PATH_IMAGE_ROOT
-from ..settings import PATH_GEOREF_ROOT
-from .meta import Base
-from .geometry import Geometry
+from sqlalchemy import Column, Integer, Boolean, String, DateTime, func
+from sqlalchemy.types import UserDefinedType
+from georeference.settings import PATH_GEOREF_ROOT
+from georeference.models.meta import Base
+
+class ExtentType(UserDefinedType):
+
+    def get_col_spec(self):
+        return "GEOMETRY"
+
+    def bind_expression(self, bindvalue):
+        return func.ST_GeomFromGeoJSON(bindvalue, type_=self)
+
+    def column_expression(self, col):
+        return func.ST_AsGeoJSON(func.ST_Transform(func.ST_Envelope(col, type_=self), 4326))
 
 class GeorefMap(Base):
     __tablename__ = 'georef_maps'
@@ -20,16 +29,29 @@ class GeorefMap(Base):
     original_map_id = Column(Integer, primary_key=True)
     transformation_id = Column(Integer)
     rel_path = Column(String(255))
-    extent = Column(Geometry)
+    extent = Column(ExtentType)
     last_processed = Column(DateTime(timezone=False))
 
     def getAbsPath(self):
         """ Returns the absolute path to the georeference image
 
-        :return: Absolute path to georeference image
+        :result: Absolute path to georeference image
         :rtype: str
         """
         return os.path.abspath(os.path.join(PATH_GEOREF_ROOT, self.rel_path))
+
+    @classmethod
+    def byOriginalMapId(cls, mapId, dbsession):
+        """ Returns the georef map for a given map id.
+
+        :param mapId: Original map id
+        :type mapId: str
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: None or reference on the georeference map associated to the original map
+        :rtype: georeference.models.georef_maps.GeorefMap
+        """
+        return dbsession.query(GeorefMap).filter(GeorefMap.original_map_id == mapId).first()
 
     #
     # def getExtent(self, dbsession, srid):
@@ -139,11 +161,3 @@ class GeorefMap(Base):
     #     """
     #     return dbsession.query(Map).filter(Map.enabled == True).order_by(desc(Map.id))
     #
-    # @classmethod
-    # def byId(cls, id, dbsession):
-    #     """
-    #     :type str: id
-    #     :type sqlalchemy.orm.session.Session: dbsession
-    #     :return: georeference.models.vkdb.map.Map
-    #     """
-    #     return dbsession.query(Map).filter(Map.id == id).first()

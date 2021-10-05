@@ -6,29 +6,43 @@
 # This file is subject to the terms and conditions defined in file
 # 'LICENSE', which is part of this source code package
 import json
-from georeference.models.original_maps import Map
+from datetime import datetime
+from georeference.models.original_maps import OriginalMap
+from georeference.models.jobs import Job, TaskValues
 from georeference.settings import ROUTE_PREFIX
 
-def test_getGereofs_success_emptyResult(testapp):
+def test_getGeorefs_success_emptyResult(testapp):
     # For clean test setup the test data should also be added to the database within this method
     # @TODO
     map_id = 10003265
 
     # Build test request
     res = testapp.get(ROUTE_PREFIX + '/maps/%s/georefs' % map_id, status=200)
-    print(res.json)
     assert res.status_int == 200
     assert len(res.json['items']) == 0
 
-def test_getGereofs_success_georefResults(testapp):
-    # For clean test setup the test data should also be added to the database within this method
-    # @TODO
+def test_getGeorefs_success_georefResults(testapp, dbsession):
     map_id = 10001556
+
+    # Insert an unprocessed job for the map_id
+    dbsession.add(
+        Job(
+            id=1,
+            processed=False,
+            submitted=datetime.now().isoformat(),
+            user_id='test',
+            task_name=TaskValues.PROCESS_TRANSFORMATION.value,
+            task='{ "transformation_id": 123, "original_map_id": %s }' % map_id
+        )
+    )
+    dbsession.flush()
 
     # Build test request
     res = testapp.get(ROUTE_PREFIX + '/maps/%s/georefs' % map_id, status=200)
     assert res.status_int == 200
-    assert len(res.json['items']) == 2
+    assert len(res.json['items']) == 4
+
+    dbsession.rollback()
 
 def test_postGereofs_success_newGeoref(testapp, dbsession):
     map_id = 10001558

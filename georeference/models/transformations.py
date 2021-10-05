@@ -6,18 +6,28 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package.
 import json
-import ast
-from .meta import Base
-from .geometry import Geometry
-from .jobs import Jobs
+from georeference.models.meta import Base
+from .jobs import Job
 from enum import Enum
-from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc, PickleType, JSON
+from sqlalchemy import Column, Integer, String, DateTime, desc, func
+from sqlalchemy.types import UserDefinedType
 
 class ValidationValues(Enum):
     """ Enum for valid validations values. """
     MISSING = 'missing'
     VALID = 'valid'
     INVALID = 'invalid'
+
+class ClipType(UserDefinedType):
+
+    def get_col_spec(self):
+        return "GEOMETRY"
+
+    def bind_expression(self, bindvalue):
+        return func.ST_GeomFromGeoJSON(bindvalue, type_=self)
+
+    def column_expression(self, col):
+        return func.ST_AsGeoJSON(col, type_=self)
 
 class Transformation(Base):
     __tablename__ = 'transformations'
@@ -30,6 +40,7 @@ class Transformation(Base):
     overwrites = Column(Integer)
     original_map_id = Column(Integer)
     comment = Column(String(255))
+    clip = Column(ClipType)
 
     def getParamsAsDict(self):
         """ Returns the transformations parameters as a dict object.
