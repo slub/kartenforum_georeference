@@ -52,8 +52,32 @@ class Transformation(Base):
 
     @classmethod
     def all(cls, session):
+        """ Queries all transformations.
+
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: Transformations
+        :rtype: georeference.models.transformations.Transformation[]
+        """
         return session.query(Transformation).order_by(desc(Transformation.id))
 
+    @classmethod
+    def hasTransformation(cls, mapId, session):
+        """ Queries all transformations.
+
+        :param mapId: Id of the original map
+        :type mapId: int
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: True or False signaling if there exist a valid transformation for the given original map id.
+        :rtype: bool
+        """
+        transformation = session.query(Transformation).filter(Transformation.original_map_id == mapId)\
+            .filter(Transformation.validation != ValidationValues.INVALID.value)\
+            .order_by(desc(Transformation.submitted)).first()
+        if transformation is None:
+            return False
+        return True
 
     # @classmethod
     # def arePendingProcessForMapId(cls, mapId, session):

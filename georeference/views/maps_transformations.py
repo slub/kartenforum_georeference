@@ -11,9 +11,9 @@ import json
 import os
 from datetime import datetime
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
+from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
 from georeference.utils.parser import toInt
-from georeference.utils.validations import isValidateGeorefConfirm
+from georeference.utils.validations import isValidTransformationRequest
 from georeference.models.transformations import Transformation, ValidationValues
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
@@ -26,13 +26,11 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='maps_georefs', renderer='json', request_method='GET')
-def getGeorefs(request):
-    """ Endpoint for getting a list of registered georef processes for a given map_id. Expects the following:
+@view_config(route_name='maps_transformations', renderer='json', request_method='GET')
+def GET_TransformationsForMapId(request):
+    """ Endpoint for getting a list of all transformations for a given id of an original_map.
 
-        GET     {route_prefix}/map/{map_id}/georefs
-
-    :param map_id: Id of the map object
+    :param map_id: Id of the original map object
     :type map_id: int
     :result: JSON object describing the map object
     :rtype: {{
@@ -93,23 +91,25 @@ def getGeorefs(request):
         LOGGER.error(traceback.format_exc())
         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)
 
-@view_config(route_name='maps_georefs', renderer='json', request_method='POST', accept='application/json')
-def postGeorefs(request):
-    """ Endpoint for POST a new georef process and save it for a given map_id. Expects the following:
-
-        POST     {route_prefix}/map/{map_id}/georefs
+@view_config(route_name='maps_transformations', renderer='json', request_method='POST', accept='application/json')
+def POST_TransformationForMapId(request):
+    """ Endpoint for POST a new transformation for a given id of an original map and creates a job for signaling the daemon
+        to process it.
 
     :param map_id: Id of the map object
     :type map_id: int
     :param params: Json object containing the parameters
     :type params: {{
-        clip_polygon: GeoJSON,
-        georef_params: *,
-        type: 'new' | 'update',
+        clip: GeoJSON,
+        params: *,
+        overwrites: int,
         user_id: str,
-      }}
+    }}
     :result: JSON object describing the map object
-    :rtype: {...}
+    :rtype: {{
+        transformation_id: int,
+        job_id: int
+    }}
     """
     try:
         # Validate request
@@ -119,51 +119,58 @@ def postGeorefs(request):
             return HTTPBadRequest('Missing map_id')
 
         # Validate input
-        valid = isValidateGeorefConfirm(request.json_body)
-        if valid['isValid'] == False:
-            return HTTPBadRequest(valid['errorMsg'])
+        isValidRequest = isValidTransformationRequest(request.json_body)
+        if isValidRequest['valid'] == False:
+            return HTTPBadRequest(isValidRequest['error_msg'])
 
-        # Process response
-        mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
-        clipPolygon = request.json_body['clip_polygon']
-        georefParams = request.json_body['georef_params']
-        type = request.json_body['type'].lower()
+        # Check if original map exists for given id
+        mapId = toInt(request.matchdict['map_id'])
+        mapObj = OriginalMap.byId(mapId, request.dbsession)
+        if mapObj is None:
+            return HTTPNotFound('Could not detect original map for passed map id.')
+
+        clip = request.json_body['clip']
+        params = request.json_body['params']
+        overwrites = request.json_body['overwrites']
         userId = request.json_body['user_id']
+        submitted = datetime.now().isoformat()
 
-        # If type is "new" make sure that there is no Georeferenprozess request
-        if type == 'new' and GeoreferenceProcess.isGeoreferenced(mapObj.id, request.dbsession):
-            return HTTPBadRequest('It is forbidden to register a new georeference process for a map, which already has a georeference process registered.')
+        # If overwrites == 0, we check if there is already a valid transformation registered for the original map id.
+        if overwrites == 0 and Transformation.hasTransformation(mapId, request.dbsession):
+            return HTTPBadRequest('It is forbidden to register a new transformation for an original map, which already has a transformation registered.')
 
-        # Save to process
-        timestamp = datetime.now().isoformat()
-        currentGeorefProcess = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, request.dbsession)
-        overwrites = currentGeorefProcess.id if type == 'update' and currentGeorefProcess != None else 0
-        newGeorefProcess = GeoreferenceProcess(
+        # Save to transformations
+        newTransformation = Transformation(
+            submitted=submitted,
             user_id=userId,
-            georef_params=json.dumps(georefParams),
-            timestamp=timestamp,
-            enabled=False,
-            type=type,
+            params=json.dumps(params),
+            clip=json.dumps(clip),
+            validation=ValidationValues.MISSING.value,
+            original_map_id=mapId,
             overwrites=overwrites,
-            validation='',
-            processed=False,
-            map_id=mapObj.id,
+            comment=None
         )
-
-        # Add georef process
-        request.dbsession.add(newGeorefProcess)
+        request.dbsession.add(newTransformation)
         request.dbsession.flush()
 
-        if clipPolygon != None:
-            newGeorefProcess.setClipFromGeoJSON(
-                clipPolygon,
-                request.dbsession
-            )
+        # Save to jobs
+        newJob = Job(
+            processed=False,
+            task=json.dumps({
+                'transformation_id': newTransformation.id
+            }),
+            task_name=TaskValues.PROCESS_TRANSFORMATION.value,
+            submitted=submitted,
+            user_id=userId,
+            comment=None
+        )
+        request.dbsession.add(newJob)
+        request.dbsession.flush()
 
-        # Build response
         return {
-            'id': newGeorefProcess.id,
-            'points': int(len(georefParams['gcps'])) * 5,
+            'transformation_id': newTransformation.id,
+            'job_id': newJob.id,
+            'points': int(len(params['gcps'])) * 5,
         }
     except Exception as e:
         LOGGER.error('Error while trying to process POST request')

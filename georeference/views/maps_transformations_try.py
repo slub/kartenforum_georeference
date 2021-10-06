@@ -16,7 +16,7 @@ from georeference.utils.georeference import rectifyImage
 from georeference.utils.mapfile import writeMapfile
 from georeference.utils.parser import toInt
 from georeference.utils.parser import toGDALGcps
-from georeference.models.original_maps import Map
+from georeference.models.original_maps import OriginalMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.settings import GEOREFERENCE_VALIDATION_FOLDER
 from georeference.settings import TMP_DIR
@@ -29,17 +29,26 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='maps_georefs_validate', renderer='json', request_method='POST', accept='application/json')
-def postGeorefsValidate(request):
-    """ Endpoint for processing a temporary validation results for a georef process. Expects the following url pattern:
-
-        POST     {route_prefix}/map/{map_id}/georefs
+@view_config(route_name='maps_transformations_try', renderer='json', request_method='POST', accept='application/json')
+def POST_TransformationTryForMapId(request):
+    """ Endpoint for processing a temporary georeference result based on the passed transformations parameters and the
+        passed original map id.
 
     :param map_id: Id of the map object
     :type map_id: int
-
+    :param params: Json object containing the transformation parameters
+    :type params: {{
+        source: str,
+        target: str,
+        algorithm: str,
+        gcps: { source: int[], target: [] }[]
+    }}
     :result: JSON object describing the map object
-    :rtype: {...}
+    :rtype: {{
+        extent: float[],
+        layer_name: str,
+        wms_url: str,
+    }}
     """
     try:
         if request.method != 'POST':
@@ -49,7 +58,7 @@ def postGeorefsValidate(request):
             return HTTPBadRequest('Missing map_id')
 
         # Query mapObj and return error if not exists
-        mapObj = Map.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        mapObj = OriginalMap.byId(toInt(request.matchdict['map_id']), request.dbsession)
         if mapObj is None:
             return HTTPNotFound('Could not found map_id')
 
@@ -71,7 +80,7 @@ def postGeorefsValidate(request):
         LOGGER.debug('Create temporary validation result ...')
         gdalGcps = toGDALGcps(gcps)
         srs = target
-        srcFile = mapObj.getAbsImagePath()
+        srcFile = mapObj.getAbsPath()
         trgFileName = '%s::%s.tif' % (mapObj.file_name, uuid.uuid4())
         trgFile = os.path.abspath(
             os.path.join(

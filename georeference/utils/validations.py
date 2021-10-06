@@ -6,20 +6,24 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 
-def isValidateGeorefConfirm(obj):
-    """ Function validates a given obj, if it matches the criteria of a georef confirm request.
+def isValidTransformationRequest(obj):
+    """ Function validates a given python dictionary, for matching a transformation request. If not it tries to produce
+        an error message.
 
     :param obj: Dictionary containing the georef process information
     :type obj: Dict
-    :return: Answer if it is a valid georeference request.
-    :rtype: Dict """
+    :result: Answer if it is a valid transformation request.
+    :rtype: {{
+        valid: bool,
+        error_msg: str,
+    }} """
     isValid = True
     errorMsg = ''
 
     # Parse parameter
-    clipPolygon = obj['clip_polygon']
-    georefParams = obj['georef_params']
-    type = obj['type']
+    clipPolygon = obj['clip']
+    georefParams = obj['params']
+    overwrites = obj['overwrites']
     userId = obj['user_id']
     if clipPolygon != None:
         if clipPolygon['type'] != 'Polygon':
@@ -50,14 +54,14 @@ def isValidateGeorefConfirm(obj):
         if georefParams['gcps'] != None and len(georefParams['gcps']) <= 3:
             isValid = False
             errorMsg = 'Georeference process with less then 3 gcps are not allowed.'
-    if type.lower() not in ['new', 'update']:
+    if isinstance(overwrites, int) == False:
         isValid = False
-        errorMsg = 'Only "new" and "update" are supported values for type'
+        errorMsg = 'Only integeter types are are supported as values for overwrites'
     if userId == None:
         isValid = False
         errorMsg = 'Missing "user_id".'
 
     return {
-        'errorMsg': errorMsg,
-        'isValid': isValid,
+        'error_msg': errorMsg,
+        'valid': isValid,
     }

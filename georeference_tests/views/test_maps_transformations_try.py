@@ -8,9 +8,7 @@
 import json
 from georeference.settings import ROUTE_PREFIX
 
-def test_postGeorefsValidate_success(testapp):
-    # For clean test setup the test data should also be added to the database within this method
-    # @TODO
+def test_POST_POST_TransformationTryForMapId_success(testapp):
     map_id = 10001556
     params = {'source': 'pixel', 'target': 'EPSG:4314', 'algorithm': 'tps',
               'gcps': [{'source': [6700, 998], 'target': [14.809598142072, 50.897193140898]},
@@ -19,5 +17,5 @@ def test_postGeorefsValidate_success(testapp):
                        {'source': [6687, 1160], 'target': [14.809553411787, 50.894672081543]}]}
 
     # Build test request
-    res = testapp.post(ROUTE_PREFIX + '/maps/%s/georefs_validate' % map_id, json.dumps(params), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(ROUTE_PREFIX + '/maps/%s/transformations/try' % map_id, json.dumps(params), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200

@@ -22,10 +22,9 @@ GET     /user/{user_id}/history - Returns data about the georeference history of
 ### Georeference 
 
 ``` 
-GET     /maps/{map_id}/georefs - Returns georeference process for a given mapId
-POST    /maps/{map_id}/georefs - Create a new georeference process for a given mapId
-GET     /maps/{map_id}/georefs/{georef_id} - Returns georeference process for a given mapId and georefId
-POST    /maps/{map_id}/georefs_validate - Produces a temporary georefernence results for validation
+GET     /maps/{map_id}/transformations - Returns transformations for a given original map id
+POST    /maps/{map_id}/transformations - Create a new transformations for a given original map id
+POST    /maps/{map_id}/transformations/try - Produces a temporary georefernence results for a given transformation
 ```
 
 ### Admin
