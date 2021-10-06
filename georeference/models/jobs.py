@@ -7,13 +7,15 @@
 # "LICENSE", which is part of this source code package.
 import json
 from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc
-from .meta import Base
+from georeference.models.meta import Base
+from georeference.utils import EnumMeta
 from enum import Enum
 
-class TaskValues(Enum):
+class TaskValues(Enum, metaclass=EnumMeta):
     """ Enum for valid task names. """
-    PROCESS_TRANSFORMATION = 'process_transformation'
-    UPDATE_VALIDATION = 'update_validation'
+    TRANSFORMATION_PROCESS = 'transformation_process'
+    TRANSFORMATION_SET_VALID = 'transformation_set_valid'
+    TRANSFORMATION_SET_INVALID = 'transformation_invalid'
 
 class Job(Base):
     __tablename__ = 'jobs'
@@ -42,7 +44,7 @@ class Job(Base):
         :rtype: bool
         """
         hasPendingJobs = False
-        for job in session.query(Job).filter(Job.task_name == TaskValues.PROCESS_TRANSFORMATION.value):
+        for job in session.query(Job).filter(Job.task_name == TaskValues.TRANSFORMATION_PROCESS.value):
             task = json.loads(job.task)
             if task['original_map_id'] == mapId:
                 hasPendingJobs = True

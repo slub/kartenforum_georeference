@@ -17,6 +17,7 @@ from georeference.utils.validations import isValidTransformationRequest
 from georeference.models.transformations import Transformation, ValidationValues
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
+from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, TaskValues
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 
@@ -26,7 +27,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='maps_transformations', renderer='json', request_method='GET')
+@view_config(route_name='transformations_map', renderer='json', request_method='GET')
 def GET_TransformationsForMapId(request):
     """ Endpoint for getting a list of all transformations for a given id of an original_map.
 
@@ -38,15 +39,25 @@ def GET_TransformationsForMapId(request):
       extent: Extent,
       default_srs: int,
       items: {
+        map_id: int,
+        metadata: {
+          time_publish: str,
+          title: str,
+        }
         transformation: {
             transformation_id: int,
             clip: GeoJSON,
             params: dict,
             submitted: str,
+            overwrites: int,
+            user_id: str,
         }
-        map_id: int,
-        timestamp: str,
       }[],
+      map_id: int,
+      metadata: {
+        time_publish: str,
+        title: str,
+      }
       pending_processes: boolean,
     }}
     """
@@ -59,7 +70,10 @@ def GET_TransformationsForMapId(request):
 
         # query map object and metadata
         mapObj = OriginalMap.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        if mapObj is None:
+            return HTTPBadRequest('There is no map object for the passed map id.')
         georefMapObj = GeorefMap.byOriginalMapId(mapObj.id, request.dbsession)
+        metadataObj = Metadata.byId(mapObj.id, request.dbsession)
 
         # Create default response
         responseObj = {
@@ -67,6 +81,11 @@ def GET_TransformationsForMapId(request):
             'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'items': [],
+            'map_id': mapObj.id,
+            'metadata': {
+                'time_publish': str(metadataObj.timepublish),
+                'title': metadataObj.title,
+            },
             'pending_jobs': Job.hasPendingJobsForMapId(request.dbsession, mapObj.id)
         }
 
@@ -77,11 +96,19 @@ def GET_TransformationsForMapId(request):
         for transformation in queryTransformations:
             # Create a georeference process object
             responseObj['items'].append({
-                'transformation_id': transformation.id,
-                'clip': json.loads(transformation.clip),
-                'params': transformation.getParamsAsDict(),
-                'submitted': str(transformation.submitted),
-                'overwrites': transformation.overwrites
+                'map_id': mapObj.id,
+                'metadata': {
+                    'time_publish': str(metadataObj.timepublish),
+                    'title': metadataObj.title,
+                },
+                'transformation': {
+                    'transformation_id': transformation.id,
+                    'clip': json.loads(transformation.clip),
+                    'params': transformation.getParamsAsDict(),
+                    'submitted': str(transformation.submitted),
+                    'overwrites': transformation.overwrites,
+                    'user_id': transformation.user_id
+                }
             })
 
         return responseObj
@@ -91,15 +118,15 @@ def GET_TransformationsForMapId(request):
         LOGGER.error(traceback.format_exc())
         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)
 
-@view_config(route_name='maps_transformations', renderer='json', request_method='POST', accept='application/json')
+@view_config(route_name='transformations_map', renderer='json', request_method='POST', accept='application/json')
 def POST_TransformationForMapId(request):
     """ Endpoint for POST a new transformation for a given id of an original map and creates a job for signaling the daemon
         to process it.
 
     :param map_id: Id of the map object
     :type map_id: int
-    :param params: Json object containing the parameters
-    :type params: {{
+    :param json_body: Json object containing the parameters
+    :type json_body: {{
         clip: GeoJSON,
         params: *,
         overwrites: int,
@@ -159,7 +186,7 @@ def POST_TransformationForMapId(request):
             task=json.dumps({
                 'transformation_id': newTransformation.id
             }),
-            task_name=TaskValues.PROCESS_TRANSFORMATION.value,
+            task_name=TaskValues.TRANSFORMATION_PROCESS.value,
             submitted=submitted,
             user_id=userId,
             comment=None

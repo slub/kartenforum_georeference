@@ -10,7 +10,6 @@ import logging
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.utils.parser import toInt
-from georeference.models.transformations import Transformation
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
@@ -19,10 +18,8 @@ from georeference.settings import GLOBAL_ERROR_MESSAGE
 LOGGER = logging.getLogger(__name__)
 
 @view_config(route_name='maps', renderer='json')
-def getMapsById(request):
-    """ Endpoint for accessing map metadata for a given mapid. Expects the following:
-
-        GET     {route_prefix}/map/{map_id}
+def GET_MapsById(request):
+    """ Endpoint for accessing map metadata for a given id of an original map.
 
     :param map_id: Id of the map object
     :type map_id: int

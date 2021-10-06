@@ -15,7 +15,7 @@ def test_GET_TransformationsForMapId_success_emptyResult(testapp):
     map_id = 10003265
 
     # Build test request
-    res = testapp.get(ROUTE_PREFIX + '/maps/%s/transformations' % map_id, status=200)
+    res = testapp.get(ROUTE_PREFIX + '/transformations/maps/%s' % map_id, status=200)
     assert res.status_int == 200
     assert len(res.json['items']) == 0
 
@@ -29,16 +29,17 @@ def test_GET_TransformationsForMapId_success_transformationResults(testapp, dbse
             processed=False,
             submitted=datetime.now().isoformat(),
             user_id='test',
-            task_name=TaskValues.PROCESS_TRANSFORMATION.value,
+            task_name=TaskValues.TRANSFORMATION_PROCESS.value,
             task='{ "transformation_id": 123, "original_map_id": %s }' % map_id
         )
     )
     dbsession.flush()
 
     # Build test request
-    res = testapp.get(ROUTE_PREFIX + '/maps/%s/transformations' % map_id, status=200)
+    res = testapp.get(ROUTE_PREFIX + '/transformations/maps/%s' % map_id, status=200)
     assert res.status_int == 200
     assert len(res.json['items']) == 4
+    assert res.json['pending_jobs'] == True
 
     dbsession.rollback()
 
@@ -76,7 +77,7 @@ def test_POST_TransformationForMapId_success_newTransformation(testapp, dbsessio
     }
 
     # Build test request
-    res = testapp.post(ROUTE_PREFIX + '/maps/%s/transformations' % map_id, params=json.dumps(params), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(ROUTE_PREFIX + '/transformations/maps/%s' % map_id, params=json.dumps(params), content_type='application/json; charset=utf-8', status=200)
 
     # First of all rollback session
     dbsession.rollback()

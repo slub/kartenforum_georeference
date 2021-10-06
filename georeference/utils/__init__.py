@@ -6,7 +6,11 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import os
-from georeference.settings import PATH_TMS_ROOT
+import enum
+
+class EnumMeta(enum.EnumMeta):
+    def __contains__(cls, item):
+        return item in [v.value for v in cls.__members__.values()]
 
 def createPathIfNotExists(path):
     """ Given a path, this functions make sure that the directory structure of

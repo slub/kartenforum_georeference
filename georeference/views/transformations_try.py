@@ -29,19 +29,20 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@view_config(route_name='maps_transformations_try', renderer='json', request_method='POST', accept='application/json')
+@view_config(route_name='transformations_try', renderer='json', request_method='POST', accept='application/json')
 def POST_TransformationTryForMapId(request):
     """ Endpoint for processing a temporary georeference result based on the passed transformations parameters and the
         passed original map id.
 
-    :param map_id: Id of the map object
-    :type map_id: int
-    :param params: Json object containing the transformation parameters
-    :type params: {{
-        source: str,
-        target: str,
-        algorithm: str,
-        gcps: { source: int[], target: [] }[]
+    :param json_body: Json object containing the transformation parameters
+    :type json_body: {{
+        map_id: int,
+        params: {
+            source: str,
+            target: str,
+            algorithm: str,
+            gcps: { source: int[], target: [] }[]
+        }
     }}
     :result: JSON object describing the map object
     :rtype: {{
@@ -54,19 +55,23 @@ def POST_TransformationTryForMapId(request):
         if request.method != 'POST':
             return HTTPBadRequest('The endpoint only supports "POST" requests.')
 
-        if request.matchdict['map_id'] == None:
+        if request.json_body['map_id'] == None:
             return HTTPBadRequest('Missing map_id')
 
         # Query mapObj and return error if not exists
-        mapObj = OriginalMap.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        mapObj = OriginalMap.byId(toInt(request.json_body['map_id']), request.dbsession)
         if mapObj is None:
-            return HTTPNotFound('Could not found map_id')
+            return HTTPBadRequest('Could not found map_id')
 
         # Validate requests params
-        algorithm = request.json_body['algorithm']
-        gcps = request.json_body['gcps']
-        source = request.json_body['source']
-        target = request.json_body['target'].lower()
+        params = request.json_body['params']
+        if params is None:
+            return HTTPBadRequest('Could not found params.')
+
+        algorithm = params['algorithm']
+        gcps = params['gcps']
+        source = params['source']
+        target = params['target'].lower()
         if algorithm is None:
             return HTTPBadRequest('Missing algorithm')
         if gcps is None or len(gcps) < 3:

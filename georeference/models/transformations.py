@@ -7,12 +7,12 @@
 # "LICENSE", which is part of this source code package.
 import json
 from georeference.models.meta import Base
-from .jobs import Job
+from georeference.utils import EnumMeta
 from enum import Enum
 from sqlalchemy import Column, Integer, String, DateTime, desc, func
 from sqlalchemy.types import UserDefinedType
 
-class ValidationValues(Enum):
+class ValidationValues(Enum, metaclass=EnumMeta):
     """ Enum for valid validations values. """
     MISSING = 'missing'
     VALID = 'valid'

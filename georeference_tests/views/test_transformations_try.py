@@ -17,5 +17,5 @@ def test_POST_POST_TransformationTryForMapId_success(testapp):
                        {'source': [6687, 1160], 'target': [14.809553411787, 50.894672081543]}]}
 
     # Build test request
-    res = testapp.post(ROUTE_PREFIX + '/maps/%s/transformations/try' % map_id, json.dumps(params), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(ROUTE_PREFIX + '/transformations/try', json.dumps({ 'params': params, 'map_id': map_id}), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200

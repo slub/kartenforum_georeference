@@ -19,22 +19,27 @@ GET     /statistics - Returns statistics about the managed georeference data and
 GET     /user/{user_id}/history - Returns data about the georeference history of the user
 ```
 
-### Georeference 
+### Map 
 
 ``` 
-GET     /maps/{map_id}/transformations - Returns transformations for a given original map id
-POST    /maps/{map_id}/transformations - Create a new transformations for a given original map id
-POST    /maps/{map_id}/transformations/try - Produces a temporary georefernence results for a given transformation
+GET     /maps/{map_id} - Returns basic metadata for a given map id
 ```
 
 ### Admin
 
 ``` 
-GET     /admin/georefs?map_id={map_id} - Get all georeference process for a specific map_id
-GET     /admin/georefs?user_id={user_id} - Get all georeference process for a specific user_id
-GET     /admin/georefs?validation={validation} - Get all georeference process for a specific validation value (isvalide|invalide)
-GET     /admin/georefs?pending=true - Get all georeference process which are missing a validation
-POST    /admin/georefs/{georef_id} - Set validation to "invalide" or "isvalide"
+GET     /transformations/maps/{map_id}  - Get all transformations for a specific map_id
+POST    /transformations/maps/{map_id}  - Create a new transformation for a given original map id
+GET     /transformations/users/{user_id} - Get all transformations for a specific user_id
+GET     /transformations/validations/{missing|valid|invalid} - Get all transformations for a specific validation value
+POST    /transformations/try - Produces a temporary georefernence results for a given transformation
+```
+
+### Jobs
+
+```
+GET     /jobs?pending={true|false}&limit={int} - Get list of jobs
+POST    /jobs - Create a new job
 ```
 
 ## Statistics and User History
