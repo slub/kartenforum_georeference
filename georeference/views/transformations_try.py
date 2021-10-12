@@ -22,6 +22,7 @@ from georeference.settings import GEOREFERENCE_VALIDATION_FOLDER
 from georeference.settings import TMP_DIR
 from georeference.settings import TEMPLATE_WMS_URL
 from georeference.settings import TEMPLATE_WMS_DATA_DIR
+from georeference.utils.parser import fromPublicOAI
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -59,7 +60,8 @@ def POST_TransformationTryForMapId(request):
             return HTTPBadRequest('Missing map_id')
 
         # Query mapObj and return error if not exists
-        mapObj = OriginalMap.byId(toInt(request.json_body['map_id']), request.dbsession)
+        mapId = toInt(fromPublicOAI(request.json_body['map_id']))
+        mapObj = OriginalMap.byId(mapId, request.dbsession)
         if mapObj is None:
             return HTTPBadRequest('Could not found map_id')
 

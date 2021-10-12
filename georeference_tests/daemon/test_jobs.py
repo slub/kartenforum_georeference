@@ -158,7 +158,7 @@ def test_runProcessJobs_success(dbsession_only):
     dbsession_only.flush()
 
     # Get the index object
-    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
+    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=True, logger=LOGGER)
 
     # Build test request
     subject = runProcessJobs(
@@ -176,7 +176,6 @@ def test_runProcessJobs_success(dbsession_only):
     assert g != None
 
     # Check if the index was pushed to the es
-    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
     assert esIndex.get(ES_INDEX_NAME, id=toPublicOAI(mapId)) != None
 
     dbsession_only.rollback()
@@ -204,7 +203,7 @@ def test_runValidationJobs_success_withOverwrite(dbsession_only):
     dbsession_only.flush()
 
     # Get the index object
-    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
+    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=True, logger=LOGGER)
 
     # Build test request
     subject = runValidationJobs(
@@ -228,7 +227,6 @@ def test_runValidationJobs_success_withOverwrite(dbsession_only):
     assert g.transformation_id == t.overwrites
 
     # Check if the index was pushed to the es
-    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
     esDoc = esIndex.get(ES_INDEX_NAME, id=toPublicOAI(mapId))
     assert esDoc != None
     assert esDoc['_source']['geometry'] != None
@@ -257,7 +255,7 @@ def test_runValidationJobs_success_withoutOverwrite(dbsession_only):
     dbsession_only.flush()
 
     # Get the index object
-    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
+    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=True, logger=LOGGER)
 
     # Build test request
     subject = runValidationJobs(
@@ -280,7 +278,6 @@ def test_runValidationJobs_success_withoutOverwrite(dbsession_only):
     assert g == None
 
     # Check if the index was pushed to the es
-    esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
     esDoc = esIndex.get(ES_INDEX_NAME, id=toPublicOAI(mapId))
     assert esDoc != None
     assert esDoc['_source']['geometry'] == None

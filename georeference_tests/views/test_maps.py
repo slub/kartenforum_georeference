@@ -6,11 +6,12 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 from georeference.settings import ROUTE_PREFIX
+from georeference.utils.parser import toPublicOAI
 
 def test_getMapsById_success_withoutGeorefId(testapp):
     # For clean test setup the test data should also be added to the database within this method
     # @TODO
-    mapid = 10003265
+    mapid = toPublicOAI(10003265)
 
     # Build test request
     res = testapp.get(ROUTE_PREFIX + '/maps/%s' % mapid, status=200)
@@ -21,7 +22,7 @@ def test_getMapsById_success_withoutGeorefId(testapp):
 def test_getMapsById_success_withGeorefId(testapp):
     # For clean test setup the test data should also be added to the database within this method
     # @TODO
-    mapid = 10001556
+    mapid = toPublicOAI(10001556)
 
     # Build test request
     res = testapp.get(ROUTE_PREFIX + '/maps/%s' % mapid, status=200)

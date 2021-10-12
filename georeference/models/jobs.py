@@ -8,6 +8,7 @@
 import json
 from sqlalchemy import Column, Integer, Boolean, String, DateTime, desc
 from georeference.models.meta import Base
+from georeference.models.transformations import Transformation
 from georeference.utils import EnumMeta
 from enum import Enum
 
@@ -46,6 +47,7 @@ class Job(Base):
         hasPendingJobs = False
         for job in session.query(Job).filter(Job.task_name == TaskValues.TRANSFORMATION_PROCESS.value):
             task = json.loads(job.task)
-            if task['original_map_id'] == mapId:
+            transformation= Transformation.byId(task['transformation_id'], session)
+            if transformation.original_map_id == mapId:
                 hasPendingJobs = True
         return hasPendingJobs

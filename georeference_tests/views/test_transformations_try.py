@@ -7,6 +7,7 @@
 # "LICENSE", which is part of this source code package
 import json
 from georeference.settings import ROUTE_PREFIX
+from georeference.utils.parser import toPublicOAI
 
 def test_POST_POST_TransformationTryForMapId_success(testapp):
     map_id = 10001556
@@ -17,5 +18,5 @@ def test_POST_POST_TransformationTryForMapId_success(testapp):
                        {'source': [6687, 1160], 'target': [14.809553411787, 50.894672081543]}]}
 
     # Build test request
-    res = testapp.post(ROUTE_PREFIX + '/transformations/try', json.dumps({ 'params': params, 'map_id': map_id}), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(ROUTE_PREFIX + '/transformations/try', json.dumps({ 'params': params, 'map_id': toPublicOAI(map_id)}), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200

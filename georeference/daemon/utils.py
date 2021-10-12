@@ -16,10 +16,8 @@ from georeference.models.transformations import Transformation, ValidationValues
 from georeference.settings import PATH_TMS_ROOT
 from georeference.settings import TMP_DIR
 from georeference.settings import GEOREFERENCE_TMS_PROCESSES
-from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
 from georeference.scripts.es import generateDocument
-from georeference.scripts.es import getIndex
 from georeference.scripts.tms import calculateCompressedTMS
 from georeference.utils.georeference import getExtentFromGeoTIFF
 from georeference.utils.georeference import getSrsFromGeoTIFF
@@ -142,7 +140,7 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
     esIndex.index(
         index=ES_INDEX_NAME,
         doc_type=None,
-        id=searchDocument['id'],
+        id=searchDocument['map_id'],
         body=searchDocument
     )
 
@@ -197,6 +195,6 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
     esIndex.index(
         index=ES_INDEX_NAME,
         doc_type=None,
-        id=searchDocument['id'],
+        id=searchDocument['map_id'],
         body=searchDocument
     )

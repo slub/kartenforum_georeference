@@ -21,8 +21,7 @@ from georeference.utils.parser import toPublicOAI
 LOGGER = logging.getLogger(__name__)
 
 MAPPING = {
-    'id': { 'type': 'text', 'index': True }, # string id
-    'map_id': { 'type': 'long', 'index': True }, #10001387
+    'map_id': { 'type': 'text', 'index': True }, # string id
     'file_name': { 'type': 'keyword', 'index': True }, # df_dk_0010001_5248_1933
     'description': { 'type': 'text', 'index': False }, # "Altenberg. - Umdr.-Ausg., aufgen. 1910, hrsg. 1912, au\u00dfers\u00e4chs. Teil 1919, bericht. 1923, einz. Nachtr. 1933. - 1:25000. - Leipzig, 1939. - 1 Kt."
     'map_scale': { 'type': 'long', 'index': True }, # 25000
@@ -167,8 +166,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             )
 
         return {
-            'id': toPublicOAI(originalMapObj.id),
-            'map_id': originalMapObj.id,
+            'map_id': toPublicOAI(originalMapObj.id),
             'file_name': originalMapObj.file_name,
             'description': metadataObj.description,
             'map_scale': int(metadataObj.scale.split(':')[1]),

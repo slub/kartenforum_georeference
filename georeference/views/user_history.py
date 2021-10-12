@@ -17,6 +17,7 @@ from georeference.models.transformations import Transformation, ValidationValues
 from georeference.models.original_maps import OriginalMap
 from georeference.models.metadata import Metadata
 from georeference.models.georef_maps import GeorefMap
+from georeference.utils.parser import toPublicOAI
 
 GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
@@ -50,7 +51,7 @@ def generateGeoreferenceHistory(request):
             responseRecord = {
                 'file_name': mapObj.file_name,
                 'is_transformed': True if georefMapObj != None else False,
-                'map_id': mapObj.id,
+                'map_id': toPublicOAI(mapObj.id),
                 'transformation': {
                     'id': transformationObj.id,
                     'params': transformationObj.getParamsAsDict(),

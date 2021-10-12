@@ -20,6 +20,7 @@ from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, TaskValues
 from georeference.settings import GLOBAL_ERROR_MESSAGE
+from georeference.utils.parser import fromPublicOAI, toPublicOAI
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -69,7 +70,8 @@ def GET_TransformationsForMapId(request):
             return HTTPBadRequest('Missing map_id')
 
         # query map object and metadata
-        mapObj = OriginalMap.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        mapId = toInt(fromPublicOAI(request.matchdict['map_id']))
+        mapObj = OriginalMap.byId(mapId, request.dbsession)
         if mapObj is None:
             return HTTPBadRequest('There is no map object for the passed map id.')
         georefMapObj = GeorefMap.byOriginalMapId(mapObj.id, request.dbsession)
@@ -81,7 +83,7 @@ def GET_TransformationsForMapId(request):
             'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'items': [],
-            'map_id': mapObj.id,
+            'map_id': toPublicOAI(mapObj.id),
             'metadata': {
                 'time_publish': str(metadataObj.timepublish),
                 'title': metadataObj.title,
@@ -96,14 +98,14 @@ def GET_TransformationsForMapId(request):
         for transformation in queryTransformations:
             # Create a georeference process object
             responseObj['items'].append({
-                'map_id': mapObj.id,
+                'map_id': toPublicOAI(mapObj.id),
                 'metadata': {
                     'time_publish': str(metadataObj.timepublish),
                     'title': metadataObj.title,
                 },
                 'transformation': {
                     'transformation_id': transformation.id,
-                    'clip': json.loads(transformation.clip),
+                    'clip': json.loads(transformation.clip) if transformation.clip != None else None,
                     'params': transformation.getParamsAsDict(),
                     'submitted': str(transformation.submitted),
                     'overwrites': transformation.overwrites,
@@ -151,7 +153,7 @@ def POST_TransformationForMapId(request):
             return HTTPBadRequest(isValidRequest['error_msg'])
 
         # Check if original map exists for given id
-        mapId = toInt(request.matchdict['map_id'])
+        mapId = toInt(fromPublicOAI(request.matchdict['map_id']))
         mapObj = OriginalMap.byId(mapId, request.dbsession)
         if mapObj is None:
             return HTTPNotFound('Could not detect original map for passed map id.')

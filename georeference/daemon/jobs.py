@@ -270,7 +270,7 @@ def loadInitialData(dbsession, logger):
             esIndex.index(
                 index=ES_INDEX_NAME,
                 doc_type=None,
-                id=searchDocument['id'],
+                id=searchDocument['map_id'],
                 body=searchDocument
             )
         return True

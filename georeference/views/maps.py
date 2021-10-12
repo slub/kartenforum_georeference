@@ -14,6 +14,7 @@ from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
 from georeference.settings import GLOBAL_ERROR_MESSAGE
+from georeference.utils.parser import toPublicOAI, fromPublicOAI
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +40,15 @@ def GET_MapsById(request):
             return HTTPBadRequest('Missing map_id')
 
         # query map object and metadata
-        mapObj = OriginalMap.byId(toInt(request.matchdict['map_id']), request.dbsession)
+        mapId = toInt(fromPublicOAI(request.matchdict['map_id']))
+        mapObj = OriginalMap.byId(mapId, request.dbsession)
         metadataObj = Metadata.byId(mapObj.id, request.dbsession)
 
         # Building basic json response
         responseObj = {
             'file_name': mapObj.file_name,
             'transformation_id': None,
-            'map_id': mapObj.id,
+            'map_id': toPublicOAI(mapObj.id),
             'map_type': mapObj.map_type,
             'title_long': metadataObj.title,
             'title_short': metadataObj.titleshort,
