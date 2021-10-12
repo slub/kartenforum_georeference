@@ -9,17 +9,19 @@ import traceback
 import logging
 import os
 import traceback
+import json
 from elasticsearch import Elasticsearch
-from georeference.settings import OAI_ID_PATTERN
 from georeference.settings import TEMPLATE_OGC_SERVICE_LINK
 from georeference.settings import GEOREFERENCE_WCS_YEAR_LIMIT
 from georeference.settings import PERMALINK_RESOLVER
 from georeference.settings import GEOREFERENCE_PERSITENT_TMS_URL
 from georeference.utils.georeference import getImageSize
+from georeference.utils.parser import toPublicOAI
 
 LOGGER = logging.getLogger(__name__)
 
 MAPPING = {
+    'id': { 'type': 'text', 'index': True }, # string id
     'map_id': { 'type': 'long', 'index': True }, #10001387
     'file_name': { 'type': 'keyword', 'index': True }, # df_dk_0010001_5248_1933
     'description': { 'type': 'text', 'index': False }, # "Altenberg. - Umdr.-Ausg., aufgen. 1910, hrsg. 1912, au\u00dfers\u00e4chs. Teil 1919, bericht. 1923, einz. Nachtr. 1933. - 1:25000. - Leipzig, 1939. - 1 Kt."
@@ -64,55 +66,55 @@ def _getOnlineResourceVK20Permalink(oai):
         'type': 'Permalink'
     }
 
-def _getOnlineResourceWMS(mapObj):
+def _getOnlineResourceWMS(originalMapObj):
     """
-    :param mapObj: Map
-    :type mapObj: georeference.models.original_maps.Map
+    :param originalMapObj: Map
+    :type originalMapObj: georeference.models.original_maps.Map
     :result: A online resource which describes a wms
     :rtype: dict
     """
     # append WMS
     return {
-        'url': TEMPLATE_OGC_SERVICE_LINK['dynamic_ows_template'] % ({ 'mapid': mapObj.id, 'service': 'WMS' }),
+        'url': TEMPLATE_OGC_SERVICE_LINK['dynamic_ows_template'] % ({ 'mapid': originalMapObj.id, 'service': 'WMS' }),
         'type': 'WMS'
     }
 
-def _getOnlineResourceWCS(mapObj):
+def _getOnlineResourceWCS(originalMapObj):
     """
-    :param mapObj: Map
-    :type mapObj: georeference.models.original_maps.Map
+    :param originalMapObj: Map
+    :type originalMapObj: georeference.models.original_maps.Map
     :result: A online resource which describes a wms
     :rtype: dict
     """
     # append WCS
     return {
-        'url': TEMPLATE_OGC_SERVICE_LINK['dynamic_ows_template'] % ({ 'mapid': mapObj.id, 'service': 'WCS' }),
+        'url': TEMPLATE_OGC_SERVICE_LINK['dynamic_ows_template'] % ({ 'mapid': originalMapObj.id, 'service': 'WCS' }),
         'type': 'WCS'
     }
 
-def _getOnlineResourceWCSForDownload(mapObj, coverageTitle, extent, srid):
+def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
     """
-    :param mapObj: Map
-    :type mapObj: georeference.models.original_maps.Map
+    :param georefMapObj: Georeference map
+    :type georefMapObj: georeference.models.georef_maps.GeorefMap
     :type coverageTitle: Title of the wcs coverage
     :param coverageTitle: str
-    :param extent: Extent
-    :type extent: number[]
-    :param srid: EPSG code
-    :type srid: str
+    :param extent: GeoJSON describing the extent
+    :type extent: GeoJSON
     :result: A online resource which describes a wms
     :rtype: dict
     """
-    image_size = getImageSize(mapObj.getAbsGeorefPath())
+    image_size = getImageSize(georefMapObj.getAbsPath())
 
     # get srid and bbox
+    coordinates = extent['coordinates'][0]
+    srid = extent['crs']['properties']['name']
     return {
         'url': TEMPLATE_OGC_SERVICE_LINK['wcs_download'] % ({
-            'mapid': mapObj.id,
-            'westBoundLongitude': str(extent[0]),
-            'southBoundLatitude': str(extent[1]),
-            'eastBoundLongitude': str(extent[2]),
-            'northBoundLatitude': str(extent[3]),
+            'mapid': georefMapObj.original_map_id,
+            'westBoundLongitude': str(coordinates[0][0]),
+            'southBoundLatitude': str(coordinates[0][1]),
+            'eastBoundLongitude': str(coordinates[2][0]),
+            'northBoundLatitude': str(coordinates[2][1]),
             'srid': srid,
             'width': str(image_size['x']),
             'height': str(image_size['y']),
@@ -122,17 +124,15 @@ def _getOnlineResourceWCSForDownload(mapObj, coverageTitle, extent, srid):
     }
 
 
-def generateDocument(mapObj, metadataObj, has_georeference, dbsession, logger=LOGGER):
+def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGGER):
     """ Generates a document which matches the es mapping.
 
-    :param mapObj: Map
-    :type mapObj: georeference.models.original_maps.Map
+    :param originalMapObj: Original map
+    :type originalMapObj: georeference.models.original_maps.OriginalMap
     :param metadataObj: Metadata obj
     :type metadataObj: georeference.models.metadata.Metadata
-    :param has_georeference: Signals if the map object is already georeferenced
-    :type has_georeference: bool
-    :param dbsession: Database session object.
-    :type dbsession: sqlalchemy.orm.session.Session
+    :param georefMapObj: Georef map
+    :type georefMapObj: georeference.models.original_maps.GeorefMap | None
     :param logger: Logger
     :type logger: logging.Logger
     :result: Document matching the es mapping
@@ -140,41 +140,40 @@ def generateDocument(mapObj, metadataObj, has_georeference, dbsession, logger=LO
     """
     try:
         # Create oai and get timepublish
-        oai = OAI_ID_PATTERN % mapObj.id
+        oai = toPublicOAI(originalMapObj.id)
         timePublished = metadataObj.timepublish.date()
 
         # Necessary for creating the online ressource
         onlineResources = [_getOnlineResourcePermalink(metadataObj)]
-        if has_georeference:
+        if georefMapObj != None:
             onlineResources.append(_getOnlineResourceVK20Permalink(oai))
-            onlineResources.append(_getOnlineResourceWMS(mapObj))
+            onlineResources.append(_getOnlineResourceWMS(originalMapObj))
             if timePublished.year <= GEOREFERENCE_WCS_YEAR_LIMIT:
-                srid = mapObj.getSRID(dbsession)
-                extent = mapObj.getExtent(dbsession, srid)
-                onlineResources.append(_getOnlineResourceWCS(mapObj))
+                extent = json.loads(georefMapObj.extent)
+                onlineResources.append(_getOnlineResourceWCS(originalMapObj))
                 onlineResources.append(_getOnlineResourceWCSForDownload(
-                    mapObj,
+                    georefMapObj,
                     metadataObj.titleshort,
                     extent,
-                    'epsg:%s' % srid
                 ))
 
         # Create tms link
         tmsUrl = None
-        if has_georeference:
-            file_name, file_extension = os.path.splitext(os.path.basename(mapObj.georef_rel_path))
+        if georefMapObj != None:
+            file_name, file_extension = os.path.splitext(os.path.basename(georefMapObj.getAbsPath()))
             tmsUrl = GEOREFERENCE_PERSITENT_TMS_URL + '/' + os.path.join(
-                os.path.dirname(mapObj.georef_rel_path),
+                os.path.dirname(georefMapObj.getAbsPath()),
                 file_name
             )
 
         return {
-            'map_id': mapObj.id,
-            'file_name': mapObj.file_name,
+            'id': toPublicOAI(originalMapObj.id),
+            'map_id': originalMapObj.id,
+            'file_name': originalMapObj.file_name,
             'description': metadataObj.description,
             'map_scale': int(metadataObj.scale.split(':')[1]),
             'zoomify_url': str(metadataObj.imagezoomify).replace('http:', ''),
-            'map_type': mapObj.map_type,
+            'map_type': originalMapObj.map_type,
             'orginal_url': str(metadataObj.imagejpg).replace('http:', ''),
             'keywords': ';'.join([metadataObj.type,metadataObj.technic]),
             'title_long': metadataObj.title,
@@ -183,12 +182,12 @@ def generateDocument(mapObj, metadataObj, has_georeference, dbsession, logger=LO
             'online_resources': onlineResources,
             'tms_url': tmsUrl,
             'thumb_url': str(metadataObj.thumbssmall).replace('http:', ''),
-            'geometry': mapObj.getExtentAsGeoJSON(dbsession), #
-            'has_georeference': has_georeference,
+            'geometry': json.loads(georefMapObj.extent) if georefMapObj != None else None, #
+            'has_georeference': georefMapObj != None,
             'time_published': timePublished.isoformat()
         }
     except Exception as e:
-        logger.error('Failed creating a es document for mapObj %s.' % mapObj.id)
+        logger.error('Failed creating a es document for original map %s.' % originalMapObj.id)
         logger.error(e)
         logger.error(traceback.format_exc())
 

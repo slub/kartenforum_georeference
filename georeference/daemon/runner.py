@@ -20,9 +20,13 @@ from logging.handlers import TimedRotatingFileHandler
 from georeference.settings import GEOREFERENCE_DAEMON_LOGGER
 from georeference.settings import GEOREFERENCE_DAEMON_SETTINGS
 from georeference.utils.logging import createLogger
-from georeference.daemon.jobs import runInitializationJob
-from georeference.daemon.jobs import runNewJobs
-from georeference.daemon.jobs import runUpdateJobs
+from georeference.daemon.jobs import loadInitialData
+from georeference.daemon.jobs import getUnprocessedJobs
+from georeference.daemon.jobs import runProcessJobs
+from georeference.daemon.jobs import runValidationJobs
+from georeference.settings import ES_ROOT
+from georeference.settings import ES_INDEX_NAME
+from georeference.scripts.es import getIndex
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -93,7 +97,7 @@ def onStartUp():
         LOGGER.info('Starting the daemon ...')
         LOGGER.info('Sync index and files ...')
         dbsession = initializeDatabaseSession()
-        runInitializationJob(
+        loadInitialData(
             dbsession=dbsession,
             logger=LOGGER
         )
@@ -117,20 +121,33 @@ def main():
         LOGGER.info('################################')
 
         while True:
-            LOGGER.info('Looking for Looking for pending georeference processes ...')
             dbsession = initializeDatabaseSession()
-            LOGGER.info('Check for new processes ...')
-            runNewJobs(
+            esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
+
+            LOGGER.info('Looking for Looking for pending jobs ...')
+            jobs = getUnprocessedJobs(
                 dbsession=dbsession,
-                logger=LOGGER
+                logger=LOGGER,
             )
+
+            if len(jobs['process']) > 0:
+                LOGGER.info('Process %s jobs with task_name="transformation_process" ...' % jobs['process'])
+                runProcessJobs(
+                    jobs['process'],
+                    esIndex,
+                    dbsession=dbsession,
+                    logger=LOGGER
+                )
             dbsession.commit()
-            LOGGER.info('Check for update processes ...')
-            runUpdateJobs(
-                dbsession=dbsession,
-                logger=LOGGER
-            )
-            dbsession.commit()
+            if len(jobs['validation']) > 0:
+                LOGGER.info('Process %s jobs with task_name="transformation_set_valid" or "transformation_set_invalid" ...' % jobs['validation'])
+                runValidationJobs(
+                    jobs['validation'],
+                    esIndex,
+                    dbsession=dbsession,
+                    logger=LOGGER
+                )
+
             LOGGER.info('Go to sleep ...')
             dbsession.close()
             time.sleep(GEOREFERENCE_DAEMON_SETTINGS['sleep_time'])

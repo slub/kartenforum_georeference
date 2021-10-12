@@ -45,7 +45,7 @@ class GeorefMap(Base):
         """ Returns the georef map for a given map id.
 
         :param mapId: Original map id
-        :type mapId: str
+        :type mapId: int
         :param dbsession: Database session
         :type dbsession: sqlalchemy.orm.session.Session
         :result: None or reference on the georeference map associated to the original map
@@ -53,111 +53,15 @@ class GeorefMap(Base):
         """
         return dbsession.query(GeorefMap).filter(GeorefMap.original_map_id == mapId).first()
 
-    #
-    # def getExtent(self, dbsession, srid):
-    #     """ Function returns the parsed extent.
-    #
-    #     :type sqlalchemy.orm.session.Session: dbsession
-    #     :type int: srid
-    #     :return: list """
-    #     extent = self.getExtentAsString(dbsession, srid).split(',')
-    #     extentAsList = []
-    #     for i in range(0,len(extent)):
-    #         extentAsList.append(float(extent[i]))
-    #     return extentAsList
-    #
-    # def getExtentAsString(self, dbsession, srid):
-    #     """ Function returns the extent as a string.
-    #
-    #     :type sqlalchemy.orm.session.Session: dbsession
-    #     :type int: srid
-    #     :return: string """
-    #     mapObjSrid = self.getSRID(dbsession)
-    #     if srid == -1 or mapObjSrid == -1:
-    #         # It is not possible to transform a geometry with missing coordinate information
-    #         query = 'SELECT st_extent(boundingbox) FROM map WHERE id = :id;'
-    #     else:
-    #         query = 'SELECT st_extent(st_transform(boundingbox, :srid)) FROM map WHERE id = :id;'
-    #     pg_extent = dbsession.execute(query,{'id':self.id, 'srid':srid}).fetchone()[0]
-    #     return pg_extent.replace(' ',',')[4:-1]
-    #
-    # def getExtentAsGeoJSON(self, dbsession, srid=4326):
-    #     """ Function returns the extent as a GeoJSON polygon.
-    #
-    #     :param dbsession: Database conncetion
-    #     :type dbsession: sqlalchemy.orm.session.Session
-    #     :param srid: EPSG:Code for the output geometry
-    #     :type srid: int
-    #     :return: GeoJSON """
-    #     query = 'SELECT st_asgeojson(st_transform(boundingbox, :srid)) FROM map WHERE id = :id;'
-    #     response = dbsession.execute(query, {'id': self.id, 'srid': srid}).fetchone()[0]
-    #     if response is not None:
-    #         return json.loads(response)
-    #     return None
-    #
-    # def getSRID(self, dbsession):
-    #     """ queries srid code for the map object
-    #     :type sqlalchemy.orm.session.Session: dbsession
-    #     :return:_ int|None """
-    #     query = "SELECT st_srid(boundingbox) FROM map WHERE id = %s"%self.id
-    #     response = dbsession.execute(query).fetchone()
-    #     if response is not None:
-    #         return response[0]
-    #     return None
-    #
-    # def setExtent(self, extent, srs, dbsession):
-    #     """ Set the bounding box
-    #
-    #     :param extent: Boundingbox coordinates
-    #     :type extent: number[]
-    #     :param srs: EPSG code of the coordinate system of the boundingbox
-    #     :type srs: str
-    #     :param dbsession: Database session
-    #     :type dbsession: sqlalchemy.orm.session.Session
-    #     :return: """
-    #     if len(extent) != 4:
-    #         raise Exception('The given extent array has more or less then 4 numbers.')
-    #
-    #     dbsession.execute(
-    #         "UPDATE map SET boundingbox = ST_GeomFromText('%s', %s) WHERE id = %s" % (
-    #             'POLYGON((%(lx)s %(ly)s, %(lx)s %(uy)s, %(ux)s %(uy)s, %(ux)s %(ly)s, %(lx)s %(ly)s))' % {
-    #                 'lx': extent[0], 'ly': extent[1], 'ux': extent[2], 'uy': extent[3]},
-    #             int(srs.split(':')[1]),
-    #             self.id
-    #         )
-    #     )
-    #
-    # def enalbeMap(self):
-    #     """ Methode sets the map object to active.
-    #
-    #     :type str: path New path to the georeference image
-    #     :return:
-    #     """
-    #     self.is_georeferenced = True
-    #
-    # def disableMap(self):
-    #     """ Methode sets the map object to deactive.
-    #
-    #     :return:
-    #     """
-    #     self.is_georeferenced = False
-    #     self.georef_rel_path = ''
-    #
-    # @classmethod
-    # def all(cls, dbsession):
-    #     """ Equivalent to an 'SELECT * FROM map;'
-    #
-    #     :type sqlalchemy.orm.session.Session: dbsession
-    #     :return: List.<georeference.models.vkdb.map.Map>
-    #     """
-    #     return dbsession.query(Map).order_by(desc(Map.id))
-    #
-    # @classmethod
-    # def allActive(cls, dbsession):
-    #     """ Equivalent to an 'SELECT * FROM map WHERE enabled=True;'
-    #
-    #     :type sqlalchemy.orm.session.Session: dbsession
-    #     :return: List.<georeference.models.vkdb.map.Map>
-    #     """
-    #     return dbsession.query(Map).filter(Map.enabled == True).order_by(desc(Map.id))
-    #
+    @classmethod
+    def byTransformationId(cls, transformationId, dbsession):
+        """ Returns the georef map for a given transformation id.
+
+        :param transformationId: Transformation id
+        :type transformationId: int
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: None or reference on the georeference map associated to the original map
+        :rtype: georeference.models.georef_maps.GeorefMap
+        """
+        return dbsession.query(GeorefMap).filter(GeorefMap.transformation_id == transformationId).first()

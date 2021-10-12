@@ -6,90 +6,24 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import traceback
-import os
-from georeference.models.jobs import AdminJobs
-from georeference.models.transformations import GeoreferenceProcess
-from georeference.models.original_maps import Map
+import json
+from sqlalchemy import or_
+from georeference.models.jobs import Job, TaskValues
+from georeference.models.transformations import Transformation, ValidationValues
+from georeference.daemon.utils import disableTransformation
+from georeference.daemon.utils import enableTransformation
+from georeference.daemon.utils import _processGeoTransformation
+from georeference.models.georef_maps import GeorefMap
+from georeference.models.original_maps import OriginalMap
 from georeference.models.metadata import Metadata
-from georeference.settings import PATH_TMS_ROOT
-from georeference.settings import TMP_DIR
-from georeference.settings import GEOREFERENCE_TMS_PROCESSES
 from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
 from georeference.scripts.es import generateDocument
 from georeference.scripts.es import getIndex
-from georeference.scripts.tms import calculateCompressedTMS
-from georeference.utils.georeference import getExtentFromGeoTIFF
-from georeference.utils.georeference import getSrsFromGeoTIFF
-from georeference.utils.georeference import rectifyImageWithClipAndOverviews
-from georeference.utils.parser import toGDALGcps
 
-def _enableGeorefProcess(georefObj, mapObj, esIndex, dbsession, logger):
-    """ Enables a given georeference process.
-
-    :param georefObj: Georeference process
-    :type georefObj: georeference.models.transformations.GeoreferenceProcess
-    :param mapObj: Map object
-    :type mapObj: georeference.models.original_maps.Map
-    :param esIndex: Elsaticsearch client
-    :type esIndex: elasticsearch.Elasticsearch
-    :param dbsession: Database session
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    """
-    # Set the rel_georef_path. If we miss this, there will be no processing of new georeference processes
-    if mapObj.georef_rel_path == None or len(mapObj.georef_rel_path) == 0:
-        mapObj.georef_rel_path = './%s/%s.tif' % (str(mapObj.map_type).lower(), mapObj.file_name)
-
-    _processMapObj(
-        mapObj,
-        georefObj,
-        dbsession,
-        logger,
-        esIndex,
-        forceProcessing=True
-    )
-
-    # Change the database
-    mapObj.enalbeMap()
-    georefObj.setActive()
-
-def _disableGeorefProcess(georefObj, mapObj, esIndex, dbsession, logger):
-    """ Disable a given georeference process.
-
-    :param georefObj: Georeference process
-    :type georefObj: georeference.models.transformations.GeoreferenceProcess
-    :param mapObj: Map object
-    :type mapObj: georeference.models.original_maps.Map
-    :param esIndex: Elsaticsearch client
-    :type esIndex: elasticsearch.Elasticsearch
-    :param dbsession: Database session
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    """
-    mapObj.disableMap()
-    georefObj.disableGeorefProcess()
-
-    # Flush the changes for proper working of the index update
-    dbsession.flush()
-    esIndex.index(
-        index=ES_INDEX_NAME,
-        doc_type=None,
-        id=mapObj.id,
-        body=generateDocument(
-            mapObj,
-            Metadata.byId(mapObj.id, dbsession),
-            None,
-            dbsession=dbsession,
-            logger=logger
-        )
-    )
-
-def _getLastValidGeoreferenceProcess(overwriteId, dbsession, logger):
+def _getLastValidTransformation(overwriteId, dbsession, logger):
     """ This function goes down the overwrite chain and looks for the last valid
-        georeference process
+        transformation
 
     :param overwriteId: Last overwrite id
     :type overwriteId: int
@@ -98,248 +32,204 @@ def _getLastValidGeoreferenceProcess(overwriteId, dbsession, logger):
     :param logger: Logger
     :type: logger: logging.Logger
     :result: Returns a valid georeference process if existing
-    :rtype: georeference.models.transformations.GeoreferenceProcess|None
+    :rtype: georeference.models.transformations.Transformation|None
     """
-    georefProcess = GeoreferenceProcess.by_id(overwriteId, dbsession)
-    if georefProcess.validation == 'valid' or georefProcess.validation == '':
-        return georefProcess
-    elif georefProcess.overwrites > 0:
-        return _getLastValidGeoreferenceProcess(georefProcess.overwrites, dbsession, logger)
+    if overwriteId == 0:
+        return None
+
+    transformationObj = Transformation.byId(overwriteId, dbsession)
+    if transformationObj.validation == ValidationValues.VALID.value or transformationObj.validation == ValidationValues.MISSING.value:
+        return transformationObj
+    elif transformationObj.overwrites > 0:
+        return _getLastValidTransformation(transformationObj.overwrites, dbsession, logger)
     else:
         return None
 
-def _processGeoref(georefParams, clip, srcPath, dstPath, logger):
-    """ Process a given georeference process.
+def getUnprocessedJobs(dbsession, logger):
+    """ Checks for unprocssed jobs, groups them and clears race condition for new transformations.
 
-    :param georefParams: Georeference parameters as dict
-    :type georefParams: dict
-    :param clip: Clip polygon as GeoJSON dict
-    :type clip: dict
-    :param srcPath: Path to the source image
-    :type srcPath: str
-    :param dstPath: Path of the georeferenced image
-    :type dstPath: str
-    :param logger: Logger
-    :type logger: logging.Logger
-    """
-    rectifyImageWithClipAndOverviews(
-        srcPath,
-        dstPath,
-        georefParams['algorithm'],
-        toGDALGcps(georefParams['gcps']),
-        georefParams['target'],
-        logger,
-        TMP_DIR,
-        clip
-    )
-
-    if not os.path.exists(dstPath):
-        raise Exception('Something went wrong while trying to process georeference image')
-
-    return True
-
-def _syncMapObj(mapObj, georefObj, dbsession, logger):
-    """ Syncs the georeference, tms and es record for a given mapObj.
-
-    :param mapObj: Map object
-    :type mapObj: georeference.model.map.Map
-    :param georefObj: Georeference process object
-    :type georefObj: georeference.model.georeferenzierungsprozess.Georeferenzierungsprozess
-    :param dbsession: Database session object
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    :result: True if performed successfully
-    :rtype: bool
-    """
-    try:
-        georefFile = mapObj.getAbsGeorefPath()
-        logger.debug('Process georefence process wit id "%s" ...' % georefObj.id)
-        _processGeoref(
-            georefObj.getGeorefParamsAsDict(),
-            georefObj.getClipAsGeoJSON(dbsession),
-            mapObj.getAbsImagePath(),
-            mapObj.getAbsGeorefPath(),
-            logger,
-        )
-
-        logger.debug('Update the boundingbox of the mapObj ...')
-        mapObj.setExtent(
-            getExtentFromGeoTIFF(georefFile),
-            getSrsFromGeoTIFF(georefFile),
-            dbsession
-        )
-
-        logger.debug('Process tile map service (TMS) ...')
-        calculateCompressedTMS(
-            georefFile,
-            os.path.join(PATH_TMS_ROOT, str(mapObj.map_type).lower()),
-            logger,
-            GEOREFERENCE_TMS_PROCESSES,
-            mapObj.map_scale
-        )
-
-        logger.debug('Finished.')
-        return True
-    except Exception as e:
-        logger.error('Error while trying to snyc a map object.')
-        logger.error(e)
-        logger.error(traceback.format_exc())
-
-def _processMapObj(mapObj, georefObj, dbsession, logger, esIndex, forceProcessing=False):
-    """ Functions performs the processing of a georeference process for a given georefObj and mapObj.
-
-    :param mapObj: Map object
-    :type mapObj: georeference.models.original_maps.Map
-    :param georefObj: Georeference process. If passed, it syncs the georeference service to the given georeference process.
-    :type georefObj: georeference.models.transformations.GeoreferenceProcess|None
-    :param dbsession: Database session object
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    :param esIndex: Elsaticsearch client
-    :type esIndex: elasticsearch.Elasticsearch
-    :param forceProcessing: Signals that the georeference process should also be processed, if there is already a file existing.
-    :type forceProcessing: bool
-    """
-    georefFile = mapObj.getAbsGeorefPath()
-    logger.debug('%s %s' % (
-        georefFile,
-        'does not exist' if georefFile != None and (os.path.exists(georefFile) == False or forceProcessing) and georefObj != None else 'exist')
-    )
-    if georefFile != None and (os.path.exists(georefFile) == False or forceProcessing) and georefObj != None:
-        logger.debug('Map %s is missing a georeference image' % mapObj.id)
-        _syncMapObj(
-            mapObj,
-            georefObj,
-            dbsession,
-            logger
-        )
-
-    # Write documents to es
-    logger.debug('Write mapObj %s to index ...' % (mapObj.id))
-    searchDocument = generateDocument(
-        mapObj,
-        Metadata.byId(mapObj.id, dbsession),
-        True if georefFile != None and os.path.exists(georefFile) else False,
-        dbsession=dbsession,
-        logger=logger
-    )
-
-    logger.debug(searchDocument)
-    esIndex.index(
-        index=ES_INDEX_NAME,
-        doc_type=None,
-        id=mapObj.id,
-        body=searchDocument
-    )
-
-def _setInValid(job, dbsession, logger, esIndex):
-    """ This function sets a georeference process as 'invalid'.
-
-    :param job: AdminJob
-    :type job: georeference.models.jobs.AdminJobs
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
     :param logger: Logger
     :type logger: logging.Logger
-    :param esIndex: Elsaticsearch client
-    :type esIndex: elasticsearch.Elasticsearch
+    :result: Dictionary containing unprocessed jobs group by "process" and "validation"
+    :rtype: {{
+        process: Transformation[],
+        validation: Transformation[]
+    }}
     """
-    logger.debug('Set georeference process for id %s to invalid ...' % job.georef_id)
+    try:
+        # Extract all unprocessed jobs and group them
+        rawProcess =  dbsession.query(Job).filter(Job.processed == False)\
+            .filter(Job.task_name == TaskValues.TRANSFORMATION_PROCESS.value)\
+            .all()
+        rawValidation = dbsession.query(Job).filter(Job.processed == False)\
+            .filter(or_(Job.task_name == TaskValues.TRANSFORMATION_SET_INVALID.value, Job.task_name == TaskValues.TRANSFORMATION_SET_VALID.value))\
+            .all()
 
-    # Query georefObj and mapObj
-    georefObj = GeoreferenceProcess.by_id(job.geref_id, dbsession)
-    mapObj = Map.by_id(georefObj.map_id, dbsession)
+        # It is possible that there are race conditions between different raw process. A race condition means a case,
+        # where are two unprocessed transformations for the same original_map_id. In this case, the last one should be transformed
+        unique_process = {}
+        for rp in rawProcess:
+            # Query transformation and get mapId
+            task = json.loads(rp.task)
+            transformation = Transformation.byId(task['transformation_id'], dbsession)
+            mapId = str(transformation.original_map_id)
 
-    # If the georefObj is enabled disable it
-    if georefObj.enabled == True:
-        logger.debug('Disable georeference process for id %s ...' % job.georef_id)
-        _disableGeorefProcess(
-            georefObj,
-            mapObj,
-            esIndex,
-            dbsession,
-            logger
-        )
+            # Make sure that only on job of kind "transformation_process" is processed for each mapId
+            if mapId in unique_process:
+                if unique_process[mapId].submitted > rp.submitted:
+                    # Hold the alreay registered process and set the new process to processed
+                    rp.processed = True
+                else:
+                    # Skip the current registered process and set it to processed
+                    unique_process[mapId].processed = True
+                    unique_process[mapId] = rp
+            else:
+                unique_process[mapId] = rp
 
-    # If the georef process overwrites another active the old one.
-    if georefObj.overwrites > 0:
-        logger.debug('Enable overwriten georeference process ...')
-        logger.debug('Check for a valid overwriten georeference process')
-        overwritenGeorefObj = _getLastValidGeoreferenceProcess(georefObj.overwrites, dbsession, logger)
+        # Make sure to flush any database changes.
+        dbsession.flush()
 
-        if overwritenGeorefObj != None:
-            logger.debug('Enable a overwriten georeference process with id %s.' % (overwritenGeorefObj.id))
+        return {
+            'process': list(unique_process.values()),
+            'validation': rawValidation,
+        }
+    except Exception as e:
+        logger.error('Error while trying to extract unprocessed jobs.')
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
-            # Enable the georeference process
-            _enableGeorefProcess(
-                overwritenGeorefObj,
-                mapObj,
+def runProcessJobs(jobs, esIndex, dbsession, logger):
+    """ Runs jobs of type "transformation_process"
+
+    :param jobs: Jobs
+    :type jobs: georeference.models.jobs.Job
+    :param esIndex: Elasticsearch client
+    :type esIndex: elasticsearch.Elasticsearch
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :result: Dictionary containing processed jobs
+    :rtype: {{
+        process: Transformation[],
+    }}
+    """
+    try:
+        processed_transformations = []
+        for job in jobs:
+            # Query the associated transformation process
+            task = json.loads(job.task)
+            transformation = Transformation.byId(task['transformation_id'], dbsession)
+
+            # Process the transformation
+            enableTransformation(
+                transformation,
                 esIndex,
                 dbsession,
                 logger
             )
 
-    logger.debug('Update validation state for georeference process %s.' % georefObj.id)
-    georefObj.validation = job.state
-    dbsession.flush()
+            processed_transformations.append(transformation)
+            job.processed = True
 
-def _setValid(job, dbsession, logger, esIndex):
-    """ This function sets a georeference process as 'valid'.
+        return {
+            'processed_transformations': processed_transformations,
+        }
+    except Exception as e:
+        logger.error('Error while trying to process jobs of type "transformation_process".')
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
-    :param job: AdminJob
-    :type job: georeference.models.jobs.AdminJobs
-    :param dbsession: Database session
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    :param esIndex: Elsaticsearch client
-    :type esIndex: elasticsearch.Elasticsearch
-    """
-    logger.debug('Set georeference process for id %s to valid ...' % job.georef_id)
+def runValidationJobs(jobs, esIndex, dbsession, logger):
+        """ Runs jobs of type "transformation_set_valid" or "transformation_set_invalid"
 
-    # Query georefObj and mapObj
-    georefObj = GeoreferenceProcess.by_id(job.geref_id, dbsession)
-    mapObj = Map.by_id(georefObj.map_id, dbsession)
+        :param jobs: Jobs
+        :type jobs: georeference.models.jobs.Job
+        :param esIndex: Elasticsearch client
+        :type esIndex: elasticsearch.Elasticsearch
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :param logger: Logger
+        :type logger: logging.Logger
+        :result: Dictionary containing processed jobs
+        :rtype: {{
+            process: Transformation[],
+        }}
+        """
+        try:
+            validation_transformations = []
+            for job in jobs:
+                # Query the associated transformation process
+                task = json.loads(job.task)
+                transformation = Transformation.byId(task['transformation_id'], dbsession)
 
-    # Query also current active georeference process
-    activeGeorefObj = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(georefObj.map_id, dbsession)
+                if job.task_name == TaskValues.TRANSFORMATION_SET_VALID.value:
+                    logger.debug('Set transformation %s to valid.' % transformation.id)
+                    transformation.validation = ValidationValues.VALID.value
+                    transformation.comment = task['comment'] if 'comment' in task else None
 
-    if activeGeorefObj and activeGeorefObj.id >= georefObj.id:
-        logger.debug('The georeference process with the id %s or younger process is already active for this map object.'% georefObj.id)
-        pass
-    elif activeGeorefObj and activeGeorefObj.id < georefObj.id:
-        logger.info('Activate the is valide georeference process and deactive old one ...')
-        _disableGeorefProcess(
-            activeGeorefObj,
-            mapObj,
-            esIndex,
-            dbsession,
-            logger
-        )
-        _enableGeorefProcess(
-            georefObj,
-            mapObj,
-            esIndex,
-            dbsession,
-            logger
-        )
-    else:
-        logger.info('Activate georeference process %s for the map object %s ...' % (georefObj.id, georefObj.map_id))
-        _enableGeorefProcess(
-            georefObj,
-            mapObj,
-            esIndex,
-            dbsession,
-            logger
-        )
+                    # Check if there is a georef map registered for the given transformation and if not activate one. If
+                    # not we finish here simply with update the validation
+                    if GeorefMap.byOriginalMapId(transformation.original_map_id, dbsession) == None:
+                        # Process the transformation
+                        enableTransformation(
+                            transformation,
+                            esIndex,
+                            dbsession,
+                            logger
+                        )
 
-    logger.debug('Update validation state for georeference process %s.' % georefObj.id)
-    georefObj.validation = job.state
-    dbsession.flush()
+                    validation_transformations.append(transformation)
+                    job.processed = True
+                elif job.task_name == TaskValues.TRANSFORMATION_SET_INVALID.value:
+                    logger.debug('Set transformation %s to invalid.' % transformation.id)
+                    transformation.validation = ValidationValues.INVALID.value
+                    transformation.comment = task['comment'] if 'comment' in task else None
 
-def runInitializationJob(dbsession, logger):
+                    # Query older georeference process
+                    olderValidTransformationObj = _getLastValidTransformation(
+                        transformation.overwrites,
+                        dbsession,
+                        logger
+                    )
+
+                    # If there is no older valid transformation make sure that there is no georeference map
+                    if GeorefMap.byTransformationId(transformation.id, dbsession) != None and olderValidTransformationObj == None:
+                        logger.debug('Disable georef map for transformation with id %s ...' % transformation.id)
+                        disableTransformation(
+                            transformation,
+                            esIndex,
+                            dbsession,
+                            logger
+                        )
+
+                    # If there is an older valid transformation for the georeference process enable it
+                    if GeorefMap.byTransformationId(transformation.id, dbsession) != None and olderValidTransformationObj != None:
+                        logger.debug('Enable older transformation with id %s ...' % olderValidTransformationObj.id)
+                        enableTransformation(
+                            olderValidTransformationObj,
+                            esIndex,
+                            dbsession,
+                            logger
+                        )
+
+
+                    validation_transformations.append(transformation)
+                    job.processed = True
+
+
+
+            return {
+                'validation_transformations': validation_transformations,
+            }
+        except Exception as e:
+            logger.error('Error while trying to process jobs of type "transformation_process".')
+            logger.error(e)
+            logger.error(traceback.format_exc())
+
+def loadInitialData(dbsession, logger):
     """ This job checks the database and initially builds the index and missing georeference images.
 
     :param dbsession: Database session object
@@ -354,13 +244,34 @@ def runInitializationJob(dbsession, logger):
         esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, True, logger)
 
         logger.info('Start processing all active maps ...')
-        for mapObj in Map.allActive(dbsession):
-            _processMapObj(
-                mapObj,
-                GeoreferenceProcess.getActualGeoreferenceProcessForMapId(mapObj.id, dbsession),
-                dbsession,
-                logger,
-                esIndex
+        for originalMapObj in dbsession.query(OriginalMap).filter(OriginalMap.enabled == True):
+            georefMapObj = GeorefMap.byOriginalMapId(originalMapObj.id, dbsession)
+
+            if georefMapObj != None:
+                logger.info('Process transformation %s ...' % georefMapObj.transformation_id)
+                # Process the geo image
+                _processGeoTransformation(
+                    Transformation.byId(georefMapObj.transformation_id, dbsession),
+                    originalMapObj,
+                    georefMapObj,
+                    dbsession,
+                    logger
+                )
+
+
+            # Write document to es
+            logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
+            searchDocument = generateDocument(
+                originalMapObj,
+                Metadata.byId(originalMapObj.id, dbsession),
+                georefMapObj=georefMapObj,
+                logger=logger
+            )
+            esIndex.index(
+                index=ES_INDEX_NAME,
+                doc_type=None,
+                id=searchDocument['id'],
+                body=searchDocument
             )
         return True
     except Exception as e:
@@ -368,131 +279,4 @@ def runInitializationJob(dbsession, logger):
         logger.error(e)
         logger.error(traceback.format_exc())
 
-def runNewJobs(dbsession, logger):
-    """ Checks in the database for new registered jobs and runs them.
 
-    :param dbsession: Database session object
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    :result: Count of processed jobs
-    :rtype: int
-    """
-    try:
-        logger.info('Check for new jobs ...')
-        newJobs = GeoreferenceProcess.getUnprocessedObjectsOfTypeNew(dbsession)
-
-        logger.info('Get index ...')
-        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=logger)
-
-        # Process the jobs
-        counter = 0
-        logger.info('Found %s new jobs. Start processing ...' % counter)
-        for job in newJobs:
-            logger.info('Process georeference process %s ("new") ...' % job.id)
-            mapObj = Map.byId(job.map_id, dbsession)
-            georefObj = GeoreferenceProcess.clearRaceConditions(job, dbsession)
-
-            # Enable the georeference process
-            _enableGeorefProcess(
-                georefObj,
-                mapObj,
-                esIndex,
-                dbsession,
-                logger
-            )
-
-            logger.info('Finish processing process %s ("new").' % job.id)
-            counter += 1
-        return counter
-    except Exception as e:
-        logger.error('Error while trying to process new jobs.')
-        logger.error(e)
-        logger.error(traceback.format_exc())
-
-def runUpdateJobs(dbsession, logger):
-    """ Checks in the database for update registered jobs and runs them.
-
-    :param dbsession: Database session object
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    :result: Count of processed jobs
-    :rtype: int
-    """
-    try:
-        logger.info('Check for update jobs ...')
-        newJobs = GeoreferenceProcess.getUnprocessedObjectsOfTypeUpdate(dbsession)
-
-        logger.info('Get index ...')
-        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=logger)
-
-        # Process the jobs
-        counter = 0
-        logger.info('Found %s update jobs. Start processing ...' % counter)
-        for job in newJobs:
-            logger.info('Process georeference process %s ("update") ...' % job.id)
-            mapObj = Map.byId(job.map_id, dbsession)
-            georefObj = GeoreferenceProcess.clearRaceConditions(job, dbsession)
-
-            # Check if there is an active georeference process and if yes disable it
-            activeGeorefProcess = GeoreferenceProcess.getActualGeoreferenceProcessForMapId(job.map_id, dbsession)
-            if activeGeorefProcess != None:
-                logger.info('Deactivate georeference processes with id %s ...' % activeGeorefProcess.id)
-                activeGeorefProcess.setDeactive()
-
-            # Enable the georeference process
-            _enableGeorefProcess(
-                georefObj,
-                mapObj,
-                esIndex,
-                dbsession,
-                logger
-            )
-
-            logger.info('Finish processing process %s ("update").' % job.id)
-            counter += 1
-        return counter
-    except Exception as e:
-        logger.error('Error while trying to process update jobs.')
-        logger.error(e)
-        logger.error(traceback.format_exc())
-
-def runAdminJobs(dbsession, logger):
-    """ Checks in the database for new admin jobs and runs them.
-
-    :param dbsession: Database session object
-    :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
-    :result: Count of processed jobs
-    :rtype: int
-    """
-    try:
-        logger.info('Check for admin jobs ...')
-        newJobs = AdminJobs.getUnprocessedJobs(dbsession)
-
-        logger.info('Get index ...')
-        esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=logger)
-
-        # Process the jobs
-        counter = 0
-        logger.info('Found %s update jobs. Start processing ...' % counter)
-        for job in newJobs:
-            if job.state == 'invalid':
-                _setInValid(
-                    job,
-                    dbsession,
-                    logger,
-                    esIndex
-                )
-                job.processed = True
-            elif job.state == 'valid':
-                job.processed = True
-            logger.info('Finish processing process %s ("admin").' % job.id)
-            counter += 1
-        return counter
-    except Exception as e:
-        logger.error('Error while trying to process admin jobs.')
-        logger.error(e)
-        logger.error(traceback.format_exc())

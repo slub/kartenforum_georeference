@@ -59,9 +59,8 @@ TEMPLATE_WMS_DATA_DIR = '/mapdata/%s'
 # Parameter for the georeference persistent / persistent georeferencing
 #
 
-# @TODO Check if we can replace this through a better configuration injection
-# Pattern for building the correct oai id
-OAI_ID_PATTERN = 'oai:de:slub-dresden:vk:id-%s'
+# Template for proper building of ids
+OAI_ID_TEMPLATE = 'oai:de:slub-dresden:vk:id-%s'
 
 # Settings for logger of the georeference persistent
 GEOREFERENCE_DAEMON_LOGGER = {

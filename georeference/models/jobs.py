@@ -15,7 +15,7 @@ class TaskValues(Enum, metaclass=EnumMeta):
     """ Enum for valid task names. """
     TRANSFORMATION_PROCESS = 'transformation_process'
     TRANSFORMATION_SET_VALID = 'transformation_set_valid'
-    TRANSFORMATION_SET_INVALID = 'transformation_invalid'
+    TRANSFORMATION_SET_INVALID = 'transformation_set_invalid'
 
 class Job(Base):
     __tablename__ = 'jobs'
@@ -49,18 +49,3 @@ class Job(Base):
             if task['original_map_id'] == mapId:
                 hasPendingJobs = True
         return hasPendingJobs
-
-
-    # @classmethod
-    # def allForGeoreferenceId(cls, id, session):
-    #     return session.query(AdminJobs).filter(AdminJobs.georef_id == id)
-    #
-    # @classmethod
-    # def by_id(cls, id, session):
-    #     return session.query(AdminJobs).filter(AdminJobs.id == id).first()
-    #
-    # @classmethod
-    # def getUnprocessedJobs(cls, session):
-    #     return session.query(AdminJobs).filter(AdminJobs.processed == False).order_by(desc(AdminJobs.id))
-
-    
