@@ -12,7 +12,6 @@ from datetime import datetime
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
-from georeference.models.transformations import Transformation, ValidationValues
 from georeference.settings import PATH_TMS_ROOT
 from georeference.settings import TMP_DIR
 from georeference.settings import GEOREFERENCE_TMS_PROCESSES
