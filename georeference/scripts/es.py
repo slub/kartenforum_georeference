@@ -194,7 +194,12 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
     """ Returns the index. If the index does not create the function creates it.
 
     :param esConfig: Configuration of the elasticsearch node
-    :type esConfig: dict
+    :type esConfig: {{
+        host: str,
+        port: number,
+        username: str|None,
+        password: str|None
+    }}
     :param indexName: Name of the index
     :type indexName: str
     :param forceRecreation: Signals that the index should be created fresh
@@ -206,8 +211,12 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
     """
     try:
         logger.debug('Initialize elasticsearch')
-        es = Elasticsearch([esConfig], timeout=5000)
-
+        es = Elasticsearch(
+            [{ 'host': esConfig['host'], 'port': esConfig['port']}],
+            http_auth=(esConfig['username'],esConfig['password']) if 'username' in esConfig and 'password' in esConfig else None,
+            use_ssl=esConfig['ssl'],
+            timeout=5000,
+        )
         indexExists = es.indices.exists(indexName)
 
         # Force a reset of the index

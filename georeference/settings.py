@@ -112,7 +112,10 @@ PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
 # Root of the es instance
 ES_ROOT = {
     'host': 'localhost',
-    'port': 9200
+    'port': 9200,
+    'ssl': False,
+    # 'username': 'username',
+    # 'password': 'password'
 }
 
 # Name of the search index
