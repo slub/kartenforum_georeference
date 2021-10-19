@@ -71,12 +71,12 @@ ALTER TABLE public.georef_maps_id_seq OWNER TO postgres;
 
 CREATE TABLE public.jobs (
     id integer NOT NULL,
-    processed boolean DEFAULT false,
-    task character varying,
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
+    task character varying,
+    task_name character varying NOT NULL,
     comment character varying DEFAULT ''::character varying,
-    task_name character varying NOT NULL
+    processed boolean DEFAULT false
 );
 
 
@@ -118,12 +118,12 @@ CREATE TABLE public.metadata (
     type character varying,
     technic character varying,
     ppn character varying,
-    permalink character varying,
     license character varying,
+    time_of_publication timestamp without time zone,
     owner character varying,
+    permalink character varying,
     link_jpg character varying,
     link_zoomify character varying,
-    time_of_publication timestamp without time zone,
     link_thumb_small character varying,
     link_thumb_mid character varying
 );
@@ -138,10 +138,10 @@ ALTER TABLE public.metadata OWNER TO postgres;
 CREATE TABLE public.original_maps (
     id integer NOT NULL,
     file_name character varying,
+    rel_path character varying,
     enabled boolean,
     map_type character varying,
     default_srs integer DEFAULT 4326 NOT NULL,
-    rel_path character varying,
     map_scale integer
 );
 
@@ -175,14 +175,14 @@ ALTER SEQUENCE public.original_maps_id_seq OWNED BY public.original_maps.id;
 
 CREATE TABLE public.transformations (
     id integer NOT NULL,
+    original_map_id integer NOT NULL,
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
     params character varying NOT NULL,
-    validation character varying NOT NULL,
-    original_map_id integer NOT NULL,
-    overwrites integer NOT NULL,
-    comment character varying,
     clip public.geometry,
+    overwrites integer NOT NULL,
+    validation character varying NOT NULL,
+    comment character varying,
     CONSTRAINT enforce_dims_clip CHECK ((public.st_ndims(clip) = 2)),
     CONSTRAINT enforce_geotype_clip CHECK (((public.geometrytype(clip) = 'POLYGON'::text) OR (clip IS NULL)))
 );

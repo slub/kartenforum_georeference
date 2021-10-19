@@ -19,13 +19,13 @@ GET     /statistics - Returns statistics about the managed georeference data and
 GET     /user/{user_id}/history - Returns data about the georeference history of the user
 ```
 
-### Map 
+### Maps
 
 ``` 
 GET     /maps/{map_id} - Returns basic metadata for a given map id
 ```
 
-### Admin
+### Transformations
 
 ``` 
 GET     /transformations/maps/{map_id}  - Get all transformations for a specific map_id
@@ -127,6 +127,93 @@ Curl Example:
 ``` 
 curl -XGET 'http://localhost:6543/user/user_1/history' -H 'Content-Type: application/json'
 ```
+
+## Jobs
+
+Endpoint for querying and creating jobs. A job is a task, which is executed by the _daemon_ in an
+asynchronous manner. Currently the georeference service supportes three different kinds of jobs:
+
+ <table>
+    <tbody>
+        <tr>
+            <th align="left">Task name</th>
+            <th align="left">Task</th>
+            <th align="left">Description</th>
+        </tr>
+        <tr>
+            <td align="">transformation_process/td>
+            <td align="">
+                GeoJSON with parameter:<br /><br />
+                <ul>
+                    <li><code>transformation_id</code>: Number of a transformation process which should be processed. (Mandatory)</li>
+                    <li><code>comment</code>: Comment (Optional)</li>
+                </ul>
+                <br />
+                Example:<br /><br />
+                <code>
+                    { "transformation_id": 123 }
+                </code>
+            </td>
+            <td align="">Is set by the service api, if a new transformation is created. This task signals the _daemon_ that a new transformation is available and should be processed. 
+            </td>
+        </tr>
+        <tr>
+            <td align="">transformation_set_invalid/td>
+            <td align="">
+                GeoJSON with parameter:<br /><br />
+                <ul>
+                    <li><code>transformation_id</code>: Number of a transformation process which should be marked as invalid. (Mandatory)</li>
+                    <li><code>comment</code>: Comment (Optional)</li>
+                </ul>
+                <br />
+                Example:<br /><br />
+                <code>
+                    { "transformation_id": 123 }
+                </code>
+            </td>
+            <td align="">This task can be set via the jobs api. It signals that a transformation process should be set as invalid. If the transformation is currently in used by a <code>GeorefMap</code> it is disabled. If there is an older valid transformation for the <code>OriginalMap</code> it is activated or the <code>OriginalMap</code> will be marked as not georeferenced.</td>
+        </tr>
+    </tbody>
+ </table>
+
+#### GET jobs
+
+The GET Endpoint offers two query parameters. `limit` allows the restrict the response count of jobs. The default `limit` is 100. `pending` signals that only pending jobs should be returned.
+
+HTTP Request:
+
+```
+GET     /jobs?pending={true|false}&limit={int} - Get list of jobs
+```
+
+HTTP Response:
+
+```
+[
+    {
+        "id": 1,
+        "processed": true,
+        "task": {
+            "transformation_id": 2,
+        },
+        "task_name": "transformation_set_invalid",
+        "user_id": "test_user",
+        "submitted": "2021-10-01T00:00:00.000"
+    }
+]
+```
+
+Curl Example:
+
+``` 
+curl -XGET 'http://localhost:6543/jobs?pending=true' -H 'Content-Type: application/json'
+```
+
+#### POST job
+
+TODO
+
+
 
 ## Georeference
 
