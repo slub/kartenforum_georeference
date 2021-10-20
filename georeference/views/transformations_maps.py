@@ -85,7 +85,7 @@ def GET_TransformationsForMapId(request):
             'items': [],
             'map_id': toPublicOAI(mapObj.id),
             'metadata': {
-                'time_publish': str(metadataObj.timepublish),
+                'time_publish': str(metadataObj.time_of_publication),
                 'title': metadataObj.title,
             },
             'pending_jobs': Job.hasPendingJobsForMapId(request.dbsession, mapObj.id)
@@ -100,7 +100,7 @@ def GET_TransformationsForMapId(request):
             responseObj['items'].append({
                 'map_id': toPublicOAI(mapObj.id),
                 'metadata': {
-                    'time_publish': str(metadataObj.timepublish),
+                    'time_publish': str(metadataObj.time_of_publication),
                     'title': metadataObj.title,
                 },
                 'transformation': {

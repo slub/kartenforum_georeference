@@ -32,7 +32,7 @@ def generateGeoreferenceHistory(request):
     try:
         LOGGER.debug('Query georeference profile information from database for user %s' % request.matchdict['user_id'])
         queryData = request.dbsession.query(Transformation, Metadata, OriginalMap, GeorefMap)\
-            .join(Metadata, Transformation.original_map_id == Metadata.mapid)\
+            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id)\
             .join(OriginalMap, Transformation.original_map_id == OriginalMap.id) \
             .join(GeorefMap, GeorefMap.transformation_id == Transformation.id, full=True) \
             .filter(Transformation.user_id == request.matchdict['user_id'])\
@@ -59,8 +59,8 @@ def generateGeoreferenceHistory(request):
                     'validation': transformationObj.validation
                 },
                 'metadata': {
-                    'thumbnail': metadataObj.thumbsmid,
-                    'time_published': str(metadataObj.timepublish),
+                    'thumbnail': metadataObj.link_thumb_mid,
+                    'time_published': str(metadataObj.time_of_publication),
                     'title': metadataObj.title,
                 }
             }

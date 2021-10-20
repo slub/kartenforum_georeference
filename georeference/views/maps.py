@@ -51,8 +51,8 @@ def GET_MapsById(request):
             'map_id': toPublicOAI(mapObj.id),
             'map_type': mapObj.map_type,
             'title_long': metadataObj.title,
-            'title_short': metadataObj.titleshort,
-            'zoomify_url': metadataObj.imagezoomify,
+            'title_short': metadataObj.title_short,
+            'zoomify_url': metadataObj.link_zoomify,
         }
 
         # In case there is currently a active georeference process for the map return the id

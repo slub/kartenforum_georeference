@@ -7,6 +7,7 @@
 # "LICENSE", which is part of this source code package
 import traceback
 import json
+import os
 from sqlalchemy import or_
 from georeference.models.jobs import Job, TaskValues
 from georeference.models.transformations import Transformation, ValidationValues
@@ -247,7 +248,7 @@ def loadInitialData(dbsession, logger):
         for originalMapObj in dbsession.query(OriginalMap).filter(OriginalMap.enabled == True):
             georefMapObj = GeorefMap.byOriginalMapId(originalMapObj.id, dbsession)
 
-            if georefMapObj != None:
+            if georefMapObj != None and os.path.exists(originalMapObj.getAbsPath()) and os.path.exists(georefMapObj.getAbsPath()) == False:
                 logger.info('Process transformation %s ...' % georefMapObj.transformation_id)
                 # Process the geo image
                 _processGeoTransformation(
@@ -264,7 +265,7 @@ def loadInitialData(dbsession, logger):
             searchDocument = generateDocument(
                 originalMapObj,
                 Metadata.byId(originalMapObj.id, dbsession),
-                georefMapObj=georefMapObj,
+                georefMapObj=georefMapObj if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()) else None,
                 logger=logger
             )
             esIndex.index(

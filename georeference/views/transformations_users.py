@@ -66,7 +66,7 @@ def GET_TransformationsForUserId(request):
         # Return process for the georeference endpoint
         queryTransformations = request.dbsession.query(Transformation, OriginalMap, Metadata)\
             .join(OriginalMap, Transformation.original_map_id == OriginalMap.id)\
-            .join(Metadata, Transformation.original_map_id == Metadata.mapid)\
+            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id)\
             .filter(Transformation.user_id == userId)\
             .order_by(desc(Transformation.submitted))
 
@@ -77,7 +77,7 @@ def GET_TransformationsForUserId(request):
             responseObj['items'].append({
                 'map_id': mapObj.id,
                 'metadata': {
-                    'time_publish': str(metadataObj.timepublish),
+                    'time_publish': str(metadataObj.time_of_publication),
                     'title': metadataObj.title,
                 },
                 'transformation': {

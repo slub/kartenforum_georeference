@@ -48,7 +48,7 @@ def _getOnlineResourcePermalink(metadataObj):
     :rtype: dict
     """
     return {
-        'url': metadataObj.apspermalink,
+        'url': metadataObj.permalink,
         'type': 'Permalink'
     }
 
@@ -106,7 +106,10 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
 
     # get srid and bbox
     coordinates = extent['coordinates'][0]
-    srid = extent['crs']['properties']['name']
+
+    # If no crs is defined within the geojson extent object we expect "EPSG:4326" as srid. This is the default srid
+    # for geojson geometires
+    srid = extent['crs']['properties']['name'] if 'crs' in extent else "EPSG:4326"
     return {
         'url': TEMPLATE_OGC_SERVICE_LINK['wcs_download'] % ({
             'mapid': georefMapObj.original_map_id,
@@ -140,7 +143,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
     try:
         # Create oai and get timepublish
         oai = toPublicOAI(originalMapObj.id)
-        timePublished = metadataObj.timepublish.date()
+        timePublished = metadataObj.time_of_publication.date()
 
         # Necessary for creating the online ressource
         onlineResources = [_getOnlineResourcePermalink(metadataObj)]
@@ -152,34 +155,30 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
                 onlineResources.append(_getOnlineResourceWCS(originalMapObj))
                 onlineResources.append(_getOnlineResourceWCSForDownload(
                     georefMapObj,
-                    metadataObj.titleshort,
+                    metadataObj.title_short,
                     extent,
                 ))
 
         # Create tms link
         tmsUrl = None
         if georefMapObj != None:
-            file_name, file_extension = os.path.splitext(os.path.basename(georefMapObj.getAbsPath()))
-            tmsUrl = GEOREFERENCE_PERSITENT_TMS_URL + '/' + os.path.join(
-                os.path.dirname(georefMapObj.getAbsPath()),
-                file_name
-            )
+            tmsUrl = GEOREFERENCE_PERSITENT_TMS_URL + '/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name
 
         return {
             'map_id': toPublicOAI(originalMapObj.id),
             'file_name': originalMapObj.file_name,
             'description': metadataObj.description,
             'map_scale': int(metadataObj.scale.split(':')[1]),
-            'zoomify_url': str(metadataObj.imagezoomify).replace('http:', ''),
+            'zoomify_url': str(metadataObj.link_zoomify).replace('http:', ''),
             'map_type': originalMapObj.map_type,
-            'orginal_url': str(metadataObj.imagejpg).replace('http:', ''),
+            'orginal_url': str(metadataObj.link_jpg).replace('http:', ''),
             'keywords': ';'.join([metadataObj.type,metadataObj.technic]),
             'title_long': metadataObj.title,
-            'title': metadataObj.titleshort,
-            'permalink': metadataObj.apspermalink,
+            'title': metadataObj.title_short,
+            'permalink': metadataObj.permalink,
             'online_resources': onlineResources,
             'tms_url': tmsUrl,
-            'thumb_url': str(metadataObj.thumbssmall).replace('http:', ''),
+            'thumb_url': str(metadataObj.link_thumb_small).replace('http:', ''),
             'geometry': json.loads(georefMapObj.extent) if georefMapObj != None else None, #
             'has_georeference': georefMapObj != None,
             'time_published': timePublished.isoformat()
