@@ -138,13 +138,6 @@ ES_ROOT = {
     # 'username': 'username',
     # 'password': 'password'
 }
-# ES_ROOT = {
-#     'host': 'test-slub.pikobytes.de',
-#     'port': 443,
-#     'ssl': True,
-#     'username': 'elastic',
-#     'password': 'test1234'
-# }
 
 # Name of the search index
 ES_INDEX_NAME = 'vk20'
