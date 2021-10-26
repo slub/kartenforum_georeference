@@ -10,7 +10,7 @@ MAP
         "wms_srs" "epsg:3857 epsg:4314 epsg:4326"
         "wms_onlineresource" "$wmsUrl"
         "wms_enable_request" "*"
-        "wms_titel" "Temporary Messtischblatt WMS"
+        "wms_titel" "Temporary Web Map Service for georeference new images."
         "wms_contactorganization" "Saxon State and University Library Dresden (SLUB)"
         "wms_contactperson" "Alexander Bigga"
         "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"

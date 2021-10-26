@@ -18,14 +18,31 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Global error message
 GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
+#
+# Set directory roots
+#
+
 # Path to the image root directory
-PATH_IMAGE_ROOT = os.path.join(BASE_PATH, '../georeference_tests/data_input')
+PATH_IMAGE_ROOT = os.path.join(BASE_PATH, '../tmp/org_new')
 
 # Path to the georef root directory
-PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp/georef')
+PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp/geo')
 
-# Path to the tms root directo
+# Path to the tms root directoy
 PATH_TMS_ROOT = os.path.join(BASE_PATH, '../tmp/tms')
+
+# Path to the mapfile directory
+PATH_MAPFILE_ROOT = os.path.join(BASE_PATH, '../tmp/mapfiles')
+
+# Service tmp
+PATH_TMP = os.path.join(BASE_PATH, '../tmp/tmp')
+
+# Directory where the mapfiles for the validation process are saved
+PATH_TMP_TRANSFORMATION = os.path.join(BASE_PATH, '../tmp/tmp')
+
+#
+# Dictonary of supported coordinate reference systems
+#
 
 # @TODO check if we can replace this dict through a system wide library
 # Definition of used srids
@@ -36,18 +53,22 @@ SRC_DICT_WKT = {
 }
 
 #
+# Configuration parameters for building the WMS and WCS services
+#
+
+# Template for the public wms service
+TEMPLATE_PUBLIC_WMS_URL = 'https://wms-slub.pikobytes.de/map/%s'
+
+# Template for the public wms service
+TEMPLATE_PUBLIC_WCS_URL = 'https://wcs-slub.pikobytes.de/map/%s'
+
+#
 # For the web service
 #
 
 # Prefix for url routing. This is important if the service run's under an apache server parallel to other
 # applications
 ROUTE_PREFIX = ''
-
-# Directory where the mapfiles for the validation process are saved
-GEOREFERENCE_VALIDATION_FOLDER = os.path.join(BASE_PATH, '../tmp')
-
-# Service tmp
-TMP_DIR = os.path.join(BASE_PATH, '../tmp')
 
 # WMS Service default url template
 TEMPLATE_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/%s'
@@ -67,7 +88,7 @@ GEOREFERENCE_DAEMON_LOGGER = {
     'name':'geoereference-daemon',
     'file': os.path.join(BASE_PATH, '../tmp/daemon.log'),
     # See supported log level https://docs.python.org/3/library/logging.html#levels
-    'level': logging.INFO,
+    'level': logging.DEBUG,
     'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 }
 
@@ -117,6 +138,13 @@ ES_ROOT = {
     # 'username': 'username',
     # 'password': 'password'
 }
+# ES_ROOT = {
+#     'host': 'test-slub.pikobytes.de',
+#     'port': 443,
+#     'ssl': True,
+#     'username': 'elastic',
+#     'password': 'test1234'
+# }
 
 # Name of the search index
 ES_INDEX_NAME = 'vk20'

@@ -18,8 +18,8 @@ from georeference.utils.parser import toInt
 from georeference.utils.parser import toGDALGcps
 from georeference.models.original_maps import OriginalMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE
-from georeference.settings import GEOREFERENCE_VALIDATION_FOLDER
-from georeference.settings import TMP_DIR
+from georeference.settings import PATH_TMP_TRANSFORMATION
+from georeference.settings import PATH_TMP
 from georeference.settings import TEMPLATE_WMS_URL
 from georeference.settings import TEMPLATE_WMS_DATA_DIR
 from georeference.utils.parser import fromPublicOAI
@@ -91,7 +91,7 @@ def POST_TransformationTryForMapId(request):
         trgFileName = '%s::%s.tif' % (mapObj.file_name, uuid.uuid4())
         trgFile = os.path.abspath(
             os.path.join(
-                GEOREFERENCE_VALIDATION_FOLDER,
+                PATH_TMP_TRANSFORMATION,
                 trgFileName
             )
         )
@@ -110,7 +110,7 @@ def POST_TransformationTryForMapId(request):
             gdalGcps,
             srs,
             LOGGER,
-            TMP_DIR,
+            PATH_TMP,
             None,
         )
 
@@ -119,7 +119,7 @@ def POST_TransformationTryForMapId(request):
         mapfileName = 'wms_%s.map' % uuid.uuid4()
         wmsUrl = TEMPLATE_WMS_URL % mapfileName
         writeMapfile(
-            os.path.join(GEOREFERENCE_VALIDATION_FOLDER, mapfileName),
+            os.path.join(PATH_TMP_TRANSFORMATION, mapfileName),
             os.path.join(BASE_PATH, '../templates/wms_dynamic.map'),
             {
                 'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.file_name,

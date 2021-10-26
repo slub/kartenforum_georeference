@@ -143,14 +143,15 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
     try:
         # Create oai and get timepublish
         oai = toPublicOAI(originalMapObj.id)
-        timePublished = metadataObj.time_of_publication.date()
 
         # Necessary for creating the online ressource
         onlineResources = [_getOnlineResourcePermalink(metadataObj)]
-        if georefMapObj != None:
+
+        # We can only create georeference ressources if the absolute path exists
+        if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
             onlineResources.append(_getOnlineResourceVK20Permalink(oai))
             onlineResources.append(_getOnlineResourceWMS(originalMapObj))
-            if timePublished.year <= GEOREFERENCE_WCS_YEAR_LIMIT:
+            if metadataObj.time_of_publication.date().year <= GEOREFERENCE_WCS_YEAR_LIMIT:
                 extent = json.loads(georefMapObj.extent)
                 onlineResources.append(_getOnlineResourceWCS(originalMapObj))
                 onlineResources.append(_getOnlineResourceWCSForDownload(
@@ -161,7 +162,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
 
         # Create tms link
         tmsUrl = None
-        if georefMapObj != None:
+        if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
             tmsUrl = GEOREFERENCE_PERSITENT_TMS_URL + '/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name
 
         return {
@@ -181,7 +182,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             'thumb_url': str(metadataObj.link_thumb_small).replace('http:', ''),
             'geometry': json.loads(georefMapObj.extent) if georefMapObj != None else None, #
             'has_georeference': georefMapObj != None,
-            'time_published': timePublished.isoformat()
+            'time_published': metadataObj.time_of_publication.date().isoformat()
         }
     except Exception as e:
         logger.error('Failed creating a es document for original map %s.' % originalMapObj.id)
@@ -225,7 +226,7 @@ def getIndex(esConfig, indexName, forceRecreation, logger):
 
         # Check if index exists and if not create it
         if indexExists == False or forceRecreation:
-            logger.debug('Index %s does not exist. Create a fresh index.')
+            logger.debug('Index "%s" does not exist. Create a fresh index.' % indexName)
             es.indices.create(
                 index=indexName,
                 body={

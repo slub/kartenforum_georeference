@@ -21,6 +21,19 @@ from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
 from georeference.scripts.es import generateDocument
 from georeference.scripts.es import getIndex
+from georeference.settings import PATH_TMP
+from georeference.settings import PATH_GEOREF_ROOT
+from georeference.settings import PATH_IMAGE_ROOT
+from georeference.settings import PATH_TMS_ROOT
+from georeference.settings import PATH_MAPFILE_ROOT
+from georeference.utils import createPathIfNotExists
+
+# Make sure that necessary directory exists
+createPathIfNotExists(PATH_TMP)
+createPathIfNotExists(PATH_GEOREF_ROOT)
+createPathIfNotExists(PATH_TMS_ROOT)
+createPathIfNotExists(PATH_IMAGE_ROOT)
+createPathIfNotExists(PATH_MAPFILE_ROOT)
 
 def _getLastValidTransformation(overwriteId, dbsession, logger):
     """ This function goes down the overwrite chain and looks for the last valid
@@ -247,15 +260,14 @@ def loadInitialData(dbsession, logger):
         logger.info('Start processing all active maps ...')
         for originalMapObj in dbsession.query(OriginalMap).filter(OriginalMap.enabled == True):
             georefMapObj = GeorefMap.byOriginalMapId(originalMapObj.id, dbsession)
+            metadataObj = Metadata.byId(originalMapObj.id, dbsession)
 
-            if georefMapObj != None and os.path.exists(originalMapObj.getAbsPath()) and os.path.exists(georefMapObj.getAbsPath()) == False:
-                logger.info('Process transformation %s ...' % georefMapObj.transformation_id)
-                # Process the geo image
+            if georefMapObj != None and os.path.exists(originalMapObj.getAbsPath()):
                 _processGeoTransformation(
                     Transformation.byId(georefMapObj.transformation_id, dbsession),
                     originalMapObj,
                     georefMapObj,
-                    dbsession,
+                    metadataObj,
                     logger
                 )
 

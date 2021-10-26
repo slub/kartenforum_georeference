@@ -24,7 +24,8 @@ def createLogger(name, level, file=None, formatter=None, handler=None):
     :result: Logger
     :rtype: `logging.Logger`
     """
-    logging.basicConfig()
+    if handler == None:
+        logging.basicConfig()
     logger = logging.getLogger(name)
     logger.setLevel(level)
 

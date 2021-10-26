@@ -34,7 +34,7 @@ def test_getUnprocessedJobs_success(dbsession_only):
     mapId = 10007521
     dbsession_only.add(
         Transformation(
-            id=1,
+            id=10000000,
             submitted=datetime.now().isoformat(),
             user_id='test',
             params="",
@@ -46,7 +46,7 @@ def test_getUnprocessedJobs_success(dbsession_only):
     )
     dbsession_only.add(
         Transformation(
-            id=2,
+            id=10000001,
             submitted=datetime.now().isoformat(),
             user_id='test',
             params="",
@@ -59,42 +59,42 @@ def test_getUnprocessedJobs_success(dbsession_only):
     dbsession_only.flush()
     dbsession_only.add(
         Job(
-            id=1,
+            id=10000000,
             processed=False,
             submitted=datetime.now().isoformat(),
             user_id='test',
             task_name=TaskValues.TRANSFORMATION_PROCESS.value,
-            task='{ "transformation_id": 1 }'
+            task='{ "transformation_id": 10000000 }'
         )
     )
     dbsession_only.add(
         Job(
-            id=2,
+            id=10000001,
             processed=False,
             submitted=datetime.now().isoformat(),
             user_id='test',
             task_name=TaskValues.TRANSFORMATION_PROCESS.value,
-            task='{ "transformation_id": 2 }'
+            task='{ "transformation_id": 10000001 }'
         )
     )
     dbsession_only.add(
         Job(
-            id=3,
+            id=10000002,
             processed=True,
             submitted=datetime.now().isoformat(),
             user_id='test',
             task_name=TaskValues.TRANSFORMATION_PROCESS.value,
-            task='{ "transformation_id": 2 }'
+            task='{ "transformation_id": 10000001 }'
         )
     )
     dbsession_only.add(
         Job(
-            id=4,
+            id=10000003,
             processed=False,
             submitted=datetime.now().isoformat(),
             user_id='test',
             task_name=TaskValues.TRANSFORMATION_SET_VALID.value,
-            task='{ "transformation_id": 2  }'
+            task='{ "transformation_id": 10000001  }'
         )
     )
     dbsession_only.flush()
@@ -102,7 +102,7 @@ def test_getUnprocessedJobs_success(dbsession_only):
     # Build test request
     subject = getUnprocessedJobs(dbsession_only, logger=LOGGER)
     assert len(subject['process']) == 1
-    assert subject['process'][0].id == 2
+    assert subject['process'][0].id == 10000001
     assert len(subject['validation']) == 1
 
     dbsession_only.rollback()
@@ -117,16 +117,16 @@ def test_runProcessJobs_success(dbsession_only):
     # Create the test data
     mapId = 10010367
     newJob = Job(
-        id=1,
+        id=10000000,
         processed=False,
         submitted=datetime.now().isoformat(),
         user_id='test',
         task_name=TaskValues.TRANSFORMATION_PROCESS.value,
-        task='{ "transformation_id": 1 }'
+        task='{ "transformation_id": 10000001 }'
     )
     dbsession_only.add(
         Transformation(
-            id=1,
+            id=10000001,
             submitted=datetime.now().isoformat(),
             user_id='test',
             params=json.dumps({
@@ -172,7 +172,7 @@ def test_runProcessJobs_success(dbsession_only):
     assert len(subject['processed_transformations']) == 1
 
     # Check if the database changes are correct
-    g = dbsession_only.query(GeorefMap).filter(GeorefMap.transformation_id == 1).first()
+    g = dbsession_only.query(GeorefMap).filter(GeorefMap.transformation_id == 10000001).first()
     assert g != None
 
     # Check if the index was pushed to the es
@@ -192,7 +192,7 @@ def test_runValidationJobs_success_withOverwrite(dbsession_only):
     mapId = 10007521
     transformationId = 12187
     newJob = Job(
-        id=1,
+        id=10000001,
         processed=False,
         submitted=datetime.now().isoformat(),
         user_id='test',
@@ -244,7 +244,7 @@ def test_runValidationJobs_success_withoutOverwrite(dbsession_only):
     mapId = 10009482
     transformationId = 7912
     newJob = Job(
-        id=1,
+        id=10000001,
         processed=False,
         submitted=datetime.now().isoformat(),
         user_id='test',
