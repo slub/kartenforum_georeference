@@ -19,7 +19,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pyramid.paster import get_appsettings
 from logging.handlers import TimedRotatingFileHandler
-from georeference.settings import GEOREFERENCE_DAEMON_LOGGER
+from georeference.settings import DAEMON_LOGGER_SETTINGS
 from georeference.utils.logging import createLogger
 from georeference.daemon.jobs import loadInitialData
 
@@ -58,13 +58,13 @@ def initializeLogger(handler):
     """
     # Configure the handler as a TimeRotatingFileHander
     handler.setFormatter(
-        logging.Formatter(GEOREFERENCE_DAEMON_LOGGER['formatter'])
+        logging.Formatter(DAEMON_LOGGER_SETTINGS['formatter'])
     )
 
     # Create and initialize the logger
     return createLogger(
-        GEOREFERENCE_DAEMON_LOGGER['name'],
-        GEOREFERENCE_DAEMON_LOGGER['level'],
+        DAEMON_LOGGER_SETTINGS['name'],
+        DAEMON_LOGGER_SETTINGS['level'],
         handler = handler,
     )
 

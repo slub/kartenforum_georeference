@@ -21,7 +21,7 @@ from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
 from georeference.scripts.es import generateDocument
 from georeference.scripts.es import getIndex
-from georeference.settings import PATH_TMP
+from georeference.settings import PATH_TMP_ROOT
 from georeference.settings import PATH_GEOREF_ROOT
 from georeference.settings import PATH_IMAGE_ROOT
 from georeference.settings import PATH_TMS_ROOT
@@ -29,7 +29,7 @@ from georeference.settings import PATH_MAPFILE_ROOT
 from georeference.utils import createPathIfNotExists
 
 # Make sure that necessary directory exists
-createPathIfNotExists(PATH_TMP)
+createPathIfNotExists(PATH_TMP_ROOT)
 createPathIfNotExists(PATH_GEOREF_ROOT)
 createPathIfNotExists(PATH_TMS_ROOT)
 createPathIfNotExists(PATH_IMAGE_ROOT)

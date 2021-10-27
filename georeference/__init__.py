@@ -10,7 +10,7 @@ import traceback
 import sys
 import os
 from pyramid.config import Configurator
-from georeference.settings import PATH_TMP
+from georeference.settings import PATH_TMP_ROOT
 from georeference.settings import PATH_GEOREF_ROOT
 from georeference.settings import PATH_IMAGE_ROOT
 from georeference.settings import PATH_TMS_ROOT
@@ -24,7 +24,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "python"))
 LOGGER = logging.getLogger(__name__)
 
 # Make sure that necessary directory exists
-createPathIfNotExists(PATH_TMP)
+createPathIfNotExists(PATH_TMP_ROOT)
 createPathIfNotExists(PATH_GEOREF_ROOT)
 createPathIfNotExists(PATH_TMS_ROOT)
 createPathIfNotExists(PATH_IMAGE_ROOT)

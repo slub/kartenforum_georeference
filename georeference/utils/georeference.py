@@ -13,8 +13,8 @@ import sys
 from osgeo import gdal
 from osgeo import osr
 from osgeo.gdalconst import GA_ReadOnly
-from georeference.settings import GEOREFERENCE_PATH_GDALWARP
-from georeference.settings import GEOREFERENCE_PATH_GDALADDO
+from georeference.settings import GLOBAL_PATH_GDALWARP
+from georeference.settings import GLOBAL_PATH_GDALADDO
 from georeference.settings import SRC_DICT_WKT
 
 def _addOverviews(dstFile, overviewLevels, logger):
@@ -30,7 +30,7 @@ def _addOverviews(dstFile, overviewLevels, logger):
     :raise: Exception """
     try:
         logger.debug('Adding overviews to raster %s'%dstFile)
-        command = '%s --config GDAL_CACHEMAX 500 -r average %s %s' % (GEOREFERENCE_PATH_GDALADDO, dstFile, overviewLevels)
+        command = '%s --config GDAL_CACHEMAX 500 -r average %s %s' % (GLOBAL_PATH_GDALADDO, dstFile, overviewLevels)
         subprocess.check_call(command, shell=True)
         return dstFile
     except:
@@ -191,7 +191,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
             logger.info('Rectify image with a %s transformation ...' % (algorithm))
             # The rectification is done via gdalwarp command line utility. Therefor we first build the correct
             # string.
-            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r near -wm 500 ' % (GEOREFERENCE_PATH_GDALWARP)
+            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r near -wm 500 ' % (GLOBAL_PATH_GDALWARP)
 
             # In case the algorithm is tps we extend the command with -tps
             if algorithm == 'tps':

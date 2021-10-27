@@ -18,10 +18,12 @@ from georeference.utils.parser import toInt
 from georeference.utils.parser import toGDALGcps
 from georeference.models.original_maps import OriginalMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE
-from georeference.settings import PATH_TMP_TRANSFORMATION
-from georeference.settings import PATH_TMP
-from georeference.settings import TEMPLATE_WMS_URL
-from georeference.settings import TEMPLATE_WMS_DATA_DIR
+from georeference.settings import PATH_TMP_TRANSFORMATION_ROOT
+from georeference.settings import PATH_TMP_ROOT
+from georeference.settings import PATH_TMP_TRANSFORMATION_DATA_ROOT
+from georeference.settings import TEMPLATE_TRANSFORMATION_WMS_URL
+from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
+from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
 from georeference.utils.parser import fromPublicOAI
 
 # For correct resolving of the paths we use derive the base_path of the file
@@ -91,7 +93,7 @@ def POST_TransformationTryForMapId(request):
         trgFileName = '%s::%s.tif' % (mapObj.file_name, uuid.uuid4())
         trgFile = os.path.abspath(
             os.path.join(
-                PATH_TMP_TRANSFORMATION,
+                PATH_TMP_TRANSFORMATION_ROOT,
                 trgFileName
             )
         )
@@ -110,22 +112,22 @@ def POST_TransformationTryForMapId(request):
             gdalGcps,
             srs,
             LOGGER,
-            PATH_TMP,
+            PATH_TMP_ROOT,
             None,
         )
 
         # Create mapfile
         LOGGER.debug('Create temporary map service ...')
         mapfileName = 'wms_%s.map' % uuid.uuid4()
-        wmsUrl = TEMPLATE_WMS_URL % mapfileName
+        wmsUrl = TEMPLATE_TRANSFORMATION_WMS_URL % mapfileName
         writeMapfile(
-            os.path.join(PATH_TMP_TRANSFORMATION, mapfileName),
+            os.path.join(PATH_TMP_TRANSFORMATION_ROOT, mapfileName),
             os.path.join(BASE_PATH, '../templates/wms_dynamic.map'),
             {
                 'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.file_name,
                 'wmsUrl': wmsUrl,
                 'layerName': mapObj.file_name,
-                'layerDataPath': TEMPLATE_WMS_DATA_DIR % trgFileName,
+                'layerDataPath': PATH_TMP_TRANSFORMATION_DATA_ROOT % trgFileName,
                 'layerProjection': target
             }
         )

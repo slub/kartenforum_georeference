@@ -6,7 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 from osgeo import gdal
-from georeference.settings import OAI_ID_TEMPLATE
+from georeference.settings import TEMPLATE_OAI_ID
 
 def fromPublicOAI(oai):
     """ Transforms a given oai to an internal mapId.
@@ -17,7 +17,7 @@ def fromPublicOAI(oai):
     :rtype: int
     """
     ns, mapId = oai.rsplit('-', 1)
-    if ns != OAI_ID_TEMPLATE.rsplit('-', 1)[0]:
+    if ns != TEMPLATE_OAI_ID.rsplit('-', 1)[0]:
         raise TypeError('Can not process the given oai.')
     return int(mapId)
 
@@ -53,6 +53,6 @@ def toPublicOAI(mapId):
     :result: Public OAI
     :rtype: str
     """
-    if '%s'not in OAI_ID_TEMPLATE:
+    if '%s'not in TEMPLATE_OAI_ID:
         raise BaseException('Could not process OAI_ID_TEMPLATE')
-    return OAI_ID_TEMPLATE % mapId
+    return TEMPLATE_OAI_ID % mapId

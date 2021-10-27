@@ -14,9 +14,9 @@ from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
 from georeference.settings import PATH_TMS_ROOT
 from georeference.settings import PATH_MAPFILE_ROOT
-from georeference.settings import PATH_TMP
-from georeference.settings import GEOREFERENCE_TMS_PROCESSES
-from georeference.settings import GEOREFERENCE_WCS_YEAR_LIMIT
+from georeference.settings import PATH_TMP_ROOT
+from georeference.settings import GLOBAL_TMS_PROCESSES
+from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
 from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
 from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
 from georeference.settings import ES_INDEX_NAME
@@ -91,7 +91,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
                 toGDALGcps(georefParams['gcps']),
                 georefParams['target'],
                 logger,
-                PATH_TMP,
+                PATH_TMP_ROOT,
                 clip
             )
 
@@ -112,7 +112,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
                 georefMapObj.getAbsPath(),
                 rootDirTms,
                 logger,
-                GEOREFERENCE_TMS_PROCESSES,
+                GLOBAL_TMS_PROCESSES,
                 originalMapObj.map_scale
             )
 
@@ -132,7 +132,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
             }
             logger.debug('Use template values %s' % templateValues)
 
-            if metadataObj.time_of_publication.date().year <= GEOREFERENCE_WCS_YEAR_LIMIT:
+            if metadataObj.time_of_publication.date().year <= GLOBAL_DOWNLOAD_YEAR_THRESHOLD:
                 templateFile = os.path.join(BASE_PATH, '../templates/wms_wcs_static.map')
 
             writeMapfile(

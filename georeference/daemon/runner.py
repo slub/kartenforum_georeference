@@ -17,8 +17,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pyramid.paster import get_appsettings
 from logging.handlers import TimedRotatingFileHandler
-from georeference.settings import GEOREFERENCE_DAEMON_LOGGER
-from georeference.settings import GEOREFERENCE_DAEMON_SETTINGS
+from georeference.settings import DAEMON_LOGGER_SETTINGS
+from georeference.settings import DAEMON_SETTINGS
 from georeference.utils.logging import createLogger
 from georeference.daemon.jobs import loadInitialData
 from georeference.daemon.jobs import getUnprocessedJobs
@@ -63,13 +63,13 @@ def initializeLogger(handler):
     """
     # Configure the handler as a TimeRotatingFileHander
     handler.setFormatter(
-        logging.Formatter(GEOREFERENCE_DAEMON_LOGGER['formatter'])
+        logging.Formatter(DAEMON_LOGGER_SETTINGS['formatter'])
     )
 
     # Create and initialize the logger
     return createLogger(
-        GEOREFERENCE_DAEMON_LOGGER['name'],
-        GEOREFERENCE_DAEMON_LOGGER['level'],
+        DAEMON_LOGGER_SETTINGS['name'],
+        DAEMON_LOGGER_SETTINGS['level'],
         handler = handler,
     )
 
@@ -78,19 +78,19 @@ def initializeLogger(handler):
 #
 
 # Check if the file exists and if not create it
-if not os.path.exists(GEOREFERENCE_DAEMON_LOGGER['file']):
-    open(GEOREFERENCE_DAEMON_LOGGER['file'], 'a').close()
+if not os.path.exists(DAEMON_LOGGER_SETTINGS['file']):
+    open(DAEMON_LOGGER_SETTINGS['file'], 'a').close()
 
-HANDLER = TimedRotatingFileHandler(GEOREFERENCE_DAEMON_LOGGER['file'], when='d', interval=1, backupCount=14)
+HANDLER = TimedRotatingFileHandler(DAEMON_LOGGER_SETTINGS['file'], when='d', interval=1, backupCount=14)
 LOGGER = initializeLogger(HANDLER)
 
 # Make sure that the stdin/stdout/stderr paths exists and if not produce
-if not os.path.exists(GEOREFERENCE_DAEMON_SETTINGS['stderr']):
-    open(GEOREFERENCE_DAEMON_SETTINGS['stderr'], 'a').close()
-if not os.path.exists(GEOREFERENCE_DAEMON_SETTINGS['stdout']):
-    open(GEOREFERENCE_DAEMON_SETTINGS['stdout'], 'a').close()
-if not os.path.exists(GEOREFERENCE_DAEMON_SETTINGS['stdin']):
-    open(GEOREFERENCE_DAEMON_SETTINGS['stdin'], 'a').close()
+if not os.path.exists(DAEMON_SETTINGS['stderr']):
+    open(DAEMON_SETTINGS['stderr'], 'a').close()
+if not os.path.exists(DAEMON_SETTINGS['stdout']):
+    open(DAEMON_SETTINGS['stdout'], 'a').close()
+if not os.path.exists(DAEMON_SETTINGS['stdin']):
+    open(DAEMON_SETTINGS['stdin'], 'a').close()
 
 def onStartUp():
     try:
@@ -111,7 +111,7 @@ def onStartUp():
 
 def main():
     try:
-        timeToWait = GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'] if GEOREFERENCE_DAEMON_SETTINGS['wait_on_startup'] > 0 else 1
+        timeToWait = DAEMON_SETTINGS['wait_on_startup'] if DAEMON_SETTINGS['wait_on_startup'] > 0 else 1
         LOGGER.info('Start logger but waiting for %s seconds ...' % timeToWait)
         time.sleep(timeToWait)
 
@@ -150,14 +150,14 @@ def main():
 
             LOGGER.info('Go to sleep ...')
             dbsession.close()
-            time.sleep(GEOREFERENCE_DAEMON_SETTINGS['sleep_time'])
+            time.sleep(DAEMON_SETTINGS['sleep_time'])
     except Exception as e:
         LOGGER.error('Error while running the daemon')
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
 
-pidFileLock = '%s.lock' % GEOREFERENCE_DAEMON_SETTINGS['pidfile_path']
-pidFile = lockfile.FileLock(GEOREFERENCE_DAEMON_SETTINGS['pidfile_path'])
+pidFileLock = '%s.lock' % DAEMON_SETTINGS['pidfile_path']
+pidFile = lockfile.FileLock(DAEMON_SETTINGS['pidfile_path'])
 
 def onCleanUp(a, b):
     LOGGER.info("Clean up")
@@ -169,7 +169,7 @@ context = daemon.DaemonContext(
     # stderr=open(GEOREFERENCE_DAEMON_SETTINGS['stderr'], 'a'),
     # stdin=open(GEOREFERENCE_DAEMON_SETTINGS['stdin'], 'a'),
     # stdout=open(GEOREFERENCE_DAEMON_SETTINGS['stdout'], 'a'),
-    pidfile=lockfile.FileLock(GEOREFERENCE_DAEMON_SETTINGS['pidfile_path']),
+    pidfile=lockfile.FileLock(DAEMON_SETTINGS['pidfile_path']),
     files_preserve=[HANDLER.stream],
 )
 
@@ -180,7 +180,7 @@ context.signal_map = {
 }
 
 if os.path.exists(pidFileLock):
-    raise Exception('Please make sure old daemons are cancelled first and remove the pidfile %s.' % GEOREFERENCE_DAEMON_SETTINGS['pidfile_path'])
+    raise Exception('Please make sure old daemons are cancelled first and remove the pidfile %s.' % DAEMON_SETTINGS['pidfile_path'])
 
 # Starts the daemon
 with context:

@@ -11,12 +11,47 @@ import os
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
+# Prefix for url routing. This is important if the service run's under an apache server parallel to other
+# applications
+ROUTE_PREFIX = ''
+
 #
 # General
 #
 
 # Global error message
 GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
+
+# Path to gdalwarp tool
+GLOBAL_PATH_GDALWARP = 'gdalwarp'
+
+# Path to gdaladdo tool
+GLOBAL_PATH_GDALADDO = 'gdaladdo'
+
+# Permalink resolver
+GLOBAL_PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
+
+# Number of processes used for creating the tms
+GLOBAL_TMS_PROCESSES = 1
+
+# Year below which wcs links should be created
+GLOBAL_DOWNLOAD_YEAR_THRESHOLD = 1900
+
+#
+# ElasticSearch settings
+#
+
+# Root of the es instance
+ES_ROOT = {
+    'host': 'localhost',
+    'port': 9200,
+    'ssl': False,
+    # 'username': 'username',
+    # 'password': 'password'
+}
+
+# Name of the search index
+ES_INDEX_NAME = 'vk20'
 
 #
 # Set directory roots
@@ -35,10 +70,17 @@ PATH_TMS_ROOT = os.path.join(BASE_PATH, '../tmp/tms')
 PATH_MAPFILE_ROOT = os.path.join(BASE_PATH, '../tmp/mapfiles')
 
 # Service tmp
-PATH_TMP = os.path.join(BASE_PATH, '../tmp/tmp')
+PATH_TMP_ROOT = os.path.join(BASE_PATH, '../tmp/tmp')
 
 # Directory where the mapfiles for the validation process are saved
-PATH_TMP_TRANSFORMATION = os.path.join(BASE_PATH, '../tmp/tmp')
+PATH_TMP_TRANSFORMATION_ROOT = os.path.join(BASE_PATH, '../tmp/tmp')
+
+# The data root is used by the map file an can be defiver from the PATH_TMP_TRANSFORMATION_ROOT. This is
+# necessary for proper working with the docker setup
+PATH_TMP_TRANSFORMATION_DATA_ROOT = '/mapdata/%s'
+
+# Georeference TMS Cache url
+TEMPLATE_TMS_URL = 'http://vk2-cdn{s}.slub-dresden.de/tms2'
 
 #
 # Dictonary of supported coordinate reference systems
@@ -62,38 +104,19 @@ TEMPLATE_PUBLIC_WMS_URL = 'https://wms-slub.pikobytes.de/map/%s'
 # Template for the public wms service
 TEMPLATE_PUBLIC_WCS_URL = 'https://wcs-slub.pikobytes.de/map/%s'
 
-#
-# For the web service
-#
-
-# Prefix for url routing. This is important if the service run's under an apache server parallel to other
-# applications
-ROUTE_PREFIX = ''
-
 # WMS Service default url template
-TEMPLATE_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/%s'
-
-# WMS data path template
-TEMPLATE_WMS_DATA_DIR = '/mapdata/%s'
-
-#
-# Parameter for the georeference persistent / persistent georeferencing
-#
+TEMPLATE_TRANSFORMATION_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/%s'
 
 # Template for proper building of ids
-OAI_ID_TEMPLATE = 'oai:de:slub-dresden:vk:id-%s'
+TEMPLATE_OAI_ID = 'oai:de:slub-dresden:vk:id-%s'
 
-# Settings for logger of the georeference persistent
-GEOREFERENCE_DAEMON_LOGGER = {
-    'name':'geoereference-daemon',
-    'file': os.path.join(BASE_PATH, '../tmp/daemon.log'),
-    # See supported log level https://docs.python.org/3/library/logging.html#levels
-    'level': logging.DEBUG,
-    'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-}
+#
+# Settings of the daemon. For more information regarding the supported log level see
+# https://docs.python.org/3/library/logging.html#levels
+#
 
 # Settings for the georeference persistent
-GEOREFERENCE_DAEMON_SETTINGS = {
+DAEMON_SETTINGS = {
     'stdin': os.path.join(BASE_PATH, '../tmp/null'),
     'stdout': os.path.join(BASE_PATH, '../tmp/tty'),
     'stderr': os.path.join(BASE_PATH, '../tmp/tty'),
@@ -103,43 +126,10 @@ GEOREFERENCE_DAEMON_SETTINGS = {
     'wait_on_startup': 15
 }
 
-# Number of processes used for creating the tms
-GEOREFERENCE_TMS_PROCESSES = 1
-
-# Year below which wcs links should be created
-GEOREFERENCE_WCS_YEAR_LIMIT = 1900
-
-# Path to gdalwarp tool
-GEOREFERENCE_PATH_GDALWARP = 'gdalwarp'
-GEOREFERENCE_PATH_GDALADDO = 'gdaladdo'
-
-# Georeference TMS Cache url
-GEOREFERENCE_PERSITENT_TMS_URL = 'http://vk2-cdn{s}.slub-dresden.de/tms2'
-
-# Template which are used for the creating of metadata records
-TEMPLATE_OGC_SERVICE_LINK = {
-    'wms_template':'http://localhost/cgi-bin/mtbows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=Historische Messtischblaetter&TRANSPARENT=true&FORMAT=image/png&STYLES=&SRS=EPSG:%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&TIME=%(time)s',
-    'wcs_download':'http://localhost/cgi-bin/wcs?&SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff',
-    'dynamic_ows_template':'http://localhost/cgi-bin/dynamic-ows?map=%(mapid)s&SERVICE=%(service)s&VERSION=1.0.0&REQUEST=GetCapabilities'
+# Settings for logger of the georeference persistent
+DAEMON_LOGGER_SETTINGS = {
+    'name':'geoereference-daemon',
+    'file': os.path.join(BASE_PATH, '../tmp/daemon.log'),
+    'level': logging.DEBUG,
+    'formatter': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 }
-
-# Permalink resolver
-PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
-
-#
-# ElasticSearch settings
-#
-
-# Root of the es instance
-ES_ROOT = {
-    'host': 'localhost',
-    'port': 9200,
-    'ssl': False,
-    # 'username': 'username',
-    # 'password': 'password'
-}
-
-# Name of the search index
-ES_INDEX_NAME = 'vk20'
-
-

@@ -11,10 +11,11 @@ import os
 import traceback
 import json
 from elasticsearch import Elasticsearch
-from georeference.settings import TEMPLATE_OGC_SERVICE_LINK
-from georeference.settings import GEOREFERENCE_WCS_YEAR_LIMIT
-from georeference.settings import PERMALINK_RESOLVER
-from georeference.settings import GEOREFERENCE_PERSITENT_TMS_URL
+from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
+from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
+from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
+from georeference.settings import GLOBAL_PERMALINK_RESOLVER
+from georeference.settings import TEMPLATE_TMS_URL
 from georeference.utils.georeference import getImageSize
 from georeference.utils.parser import toPublicOAI
 
@@ -61,7 +62,7 @@ def _getOnlineResourceVK20Permalink(oai):
     :rtype: dict
     """
     return {
-        'url': PERMALINK_RESOLVER + oai,
+        'url': GLOBAL_PERMALINK_RESOLVER + oai,
         'type': 'Permalink'
     }
 
@@ -74,8 +75,10 @@ def _getOnlineResourceWMS(originalMapObj):
     """
     # append WMS
     return {
-        'url': TEMPLATE_OGC_SERVICE_LINK['dynamic_ows_template'] % ({ 'mapid': originalMapObj.id, 'service': 'WMS' }),
-        'type': 'WMS'
+        'url': '%(service_link)s?SERVICE=WMS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
+            'link_service': TEMPLATE_PUBLIC_WMS_URL % originalMapObj.id,
+        }),
+        'type': 'WCS'
     }
 
 def _getOnlineResourceWCS(originalMapObj):
@@ -87,7 +90,9 @@ def _getOnlineResourceWCS(originalMapObj):
     """
     # append WCS
     return {
-        'url': TEMPLATE_OGC_SERVICE_LINK['dynamic_ows_template'] % ({ 'mapid': originalMapObj.id, 'service': 'WCS' }),
+        'url': '%(service_link)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
+            'link_service': TEMPLATE_PUBLIC_WCS_URL % originalMapObj.id,
+        }),
         'type': 'WCS'
     }
 
@@ -111,8 +116,8 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
     # for geojson geometires
     srid = extent['crs']['properties']['name'] if 'crs' in extent else "EPSG:4326"
     return {
-        'url': TEMPLATE_OGC_SERVICE_LINK['wcs_download'] % ({
-            'mapid': georefMapObj.original_map_id,
+        'url': '%(service_link)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff' % ({
+            'link_service': TEMPLATE_PUBLIC_WCS_URL % georefMapObj.original_map_id,
             'westBoundLongitude': str(coordinates[0][0]),
             'southBoundLatitude': str(coordinates[0][1]),
             'eastBoundLongitude': str(coordinates[2][0]),
@@ -151,7 +156,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
             onlineResources.append(_getOnlineResourceVK20Permalink(oai))
             onlineResources.append(_getOnlineResourceWMS(originalMapObj))
-            if metadataObj.time_of_publication.date().year <= GEOREFERENCE_WCS_YEAR_LIMIT:
+            if metadataObj.time_of_publication.date().year <= GLOBAL_DOWNLOAD_YEAR_THRESHOLD:
                 extent = json.loads(georefMapObj.extent)
                 onlineResources.append(_getOnlineResourceWCS(originalMapObj))
                 onlineResources.append(_getOnlineResourceWCSForDownload(
@@ -163,7 +168,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
         # Create tms link
         tmsUrl = None
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
-            tmsUrl = GEOREFERENCE_PERSITENT_TMS_URL + '/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name
+            tmsUrl = TEMPLATE_TMS_URL + '/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name
 
         return {
             'map_id': toPublicOAI(originalMapObj.id),
