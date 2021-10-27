@@ -21,7 +21,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, os.pardir))
+BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, '../../'))
 sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 

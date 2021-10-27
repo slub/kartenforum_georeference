@@ -16,7 +16,7 @@ from osgeo import gdal
 from osgeo.gdalconst import GA_ReadOnly
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, os.pardir))
+BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, '../../'))
 sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
