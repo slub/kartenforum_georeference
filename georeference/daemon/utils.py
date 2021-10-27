@@ -96,14 +96,13 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
                 clip
             )
 
-            if not os.path.exists(georefMapObj.getAbsPath()):
-                raise Exception('Something went wrong while trying to process georeference image')
+        if not os.path.exists(georefMapObj.getAbsPath()):
+            raise Exception('Something went wrong while trying to process georeference image')
 
-            logger.debug('Update the extent of the georef map object ...')
-            georefMapObj.extent = json.dumps(
-                _getExtentFromGeoTIFF(georefMapObj.getAbsPath())
-            )
-
+        logger.debug('Update the extent of the georef map object ...')
+        georefMapObj.extent = json.dumps(
+            _getExtentFromGeoTIFF(georefMapObj.getAbsPath())
+        )
 
         rootDirTms = os.path.join(PATH_TMS_ROOT, str(originalMapObj.map_type).lower())
         tmsDir = os.path.join(rootDirTms, os.path.basename(georefMapObj.getAbsPath()).split('.')[0])

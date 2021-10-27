@@ -75,7 +75,7 @@ def _getOnlineResourceWMS(originalMapObj):
     """
     # append WMS
     return {
-        'url': '%(service_link)s?SERVICE=WMS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
+        'url': '%(link_service)s?SERVICE=WMS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
             'link_service': TEMPLATE_PUBLIC_WMS_URL % originalMapObj.id,
         }),
         'type': 'WCS'
@@ -90,7 +90,7 @@ def _getOnlineResourceWCS(originalMapObj):
     """
     # append WCS
     return {
-        'url': '%(service_link)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
+        'url': '%(link_service)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
             'link_service': TEMPLATE_PUBLIC_WCS_URL % originalMapObj.id,
         }),
         'type': 'WCS'
@@ -116,7 +116,7 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
     # for geojson geometires
     srid = extent['crs']['properties']['name'] if 'crs' in extent else "EPSG:4326"
     return {
-        'url': '%(service_link)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff' % ({
+        'url': '%(link_service)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff' % ({
             'link_service': TEMPLATE_PUBLIC_WCS_URL % georefMapObj.original_map_id,
             'westBoundLongitude': str(coordinates[0][0]),
             'southBoundLatitude': str(coordinates[0][1]),
