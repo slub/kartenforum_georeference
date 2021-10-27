@@ -14,17 +14,24 @@
 import os
 import logging
 import traceback
+import sys
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pyramid.paster import get_appsettings
 from logging.handlers import TimedRotatingFileHandler
+
+# For correct resolving of the paths we use derive the base_path of the file
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, os.pardir))
+sys.path.insert(0, BASE_PATH)
+sys.path.append(BASE_PATH_PARENT)
+
 from georeference.settings import DAEMON_LOGGER_SETTINGS
 from georeference.utils.logging import createLogger
 from georeference.daemon.jobs import loadInitialData
 
-# For correct resolving of the paths we use derive the base_path of the file
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 
 def initializeDatabaseSession():
     """ Functions loads and initialize a database session
