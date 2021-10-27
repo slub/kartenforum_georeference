@@ -121,7 +121,7 @@ def POST_TransformationTryForMapId(request):
         mapfileName = 'wms_%s' % str(uuid.uuid4()).replace('-', '_')
         wmsUrl = TEMPLATE_TRANSFORMATION_WMS_URL % mapfileName
         writeMapfile(
-            os.path.join(PATH_TMP_TRANSFORMATION_ROOT, mapfileName),
+            os.path.join(PATH_TMP_TRANSFORMATION_ROOT, '%s.map' % mapfileName),
             os.path.join(BASE_PATH, '../templates/wms_dynamic.map'),
             {
                 'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.file_name,
