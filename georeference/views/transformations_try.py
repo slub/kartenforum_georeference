@@ -118,7 +118,7 @@ def POST_TransformationTryForMapId(request):
 
         # Create mapfile
         LOGGER.debug('Create temporary map service ...')
-        mapfileName = 'wms_%s.map' % uuid.uuid4()
+        mapfileName = 'wms_%s' % str(uuid.uuid4()).replace('-', '_')
         wmsUrl = TEMPLATE_TRANSFORMATION_WMS_URL % mapfileName
         writeMapfile(
             os.path.join(PATH_TMP_TRANSFORMATION_ROOT, mapfileName),

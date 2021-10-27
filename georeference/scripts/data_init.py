@@ -31,8 +31,6 @@ from georeference.settings import DAEMON_LOGGER_SETTINGS
 from georeference.utils.logging import createLogger
 from georeference.daemon.jobs import loadInitialData
 
-
-
 def initializeDatabaseSession():
     """ Functions loads and initialize a database session
 
