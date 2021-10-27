@@ -8,6 +8,7 @@
 import traceback
 import os
 import json
+import shutil
 from datetime import datetime
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
@@ -165,8 +166,22 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
 
     # Delete the georef object
     if georefMapObj != None:
+        logger.debug('Delete tiff file for georeference map')
+        if (os.path.exists(georefMapObj.getAbsPath())):
+            os.remove(georefMapObj.getAbsPath())
         logger.debug('Delete georeference map object for original map id %s.' % georefMapObj.original_map_id)
         dbsession.delete(georefMapObj)
+
+    # Check if there is a tms and if yes remove it
+    rootDirTms = os.path.join(PATH_TMS_ROOT, str(originalMapObj.map_type).lower())
+    tmsDir = os.path.join(rootDirTms, os.path.basename(georefMapObj.getAbsPath()).split('.')[0])
+    if os.path.isdir(tmsDir):
+        shutil.rmtree(tmsDir)
+
+    # Check if there is a mapfile and remove it, if it exists
+    trgMapFile = os.path.join(PATH_MAPFILE_ROOT, '%s.map' % originalMapObj.id)
+    if os.path.exists(trgMapFile):
+        os.remove(trgMapFile)
 
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
