@@ -43,11 +43,17 @@ GLOBAL_DOWNLOAD_YEAR_THRESHOLD = 1900
 
 # Root of the es instance
 ES_ROOT = {
-    'host': 'localhost',
-    'port': 9200,
-    'ssl': False,
-    # 'username': 'username',
-    # 'password': 'password'
+    # 'host': 'localhost',
+    # 'port': 9200,
+    # 'ssl': False,
+    # # 'username': 'username',
+    # # 'password': 'password'
+    'host': 'search-slub.pikobytes.de',
+    'port': 443,
+    'ssl': True,
+    'username': 'elastic',
+    'password': 'test1234'
+
 }
 
 # Name of the search index

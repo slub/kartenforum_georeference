@@ -46,7 +46,7 @@ MAP
       "wms_contactperson" "Alexander Bigga"
       "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
       "wms_abstract" "Web Map Service for serving $layerName"
-      "wcs_title" "Web Map Service for serving $layerName"
+      "wcs_title" "Web Coverage Service for serving $layerName"
       "wcs_onlineresource" "$wcsUrl"
       "wcs_abstract" "Web Coverage Service for serving $layerName"
       "wcs_nativeformat" "GEOTIFF"
@@ -83,8 +83,9 @@ MAP
     END
     METADATA
         "wms_title" "$layerTitle"
-        "wms_srs" "epsg:3857 epsg:4326"
+        "wms_srs" "epsg:3857 $layerProjection"
         "wms_enable_request" "*"
+        "wcs_srs" "$layerProjection"
         "wcs_resolution" "$layerResolution"
         "wcs_size" "$layerSize"
         "wcs_bandcount" "$layerBands"
