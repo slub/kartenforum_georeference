@@ -78,7 +78,7 @@ def _getOnlineResourceWMS(originalMapObj):
         'url': '%(link_service)s?SERVICE=WMS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
             'link_service': TEMPLATE_PUBLIC_WMS_URL % originalMapObj.id,
         }),
-        'type': 'WCS'
+        'type': 'WMS'
     }
 
 def _getOnlineResourceWCS(originalMapObj):
