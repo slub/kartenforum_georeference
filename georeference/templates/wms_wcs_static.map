@@ -1,0 +1,98 @@
+# For configuration information have a look at https://mapserver.org/de/ogc/wms_server.html
+MAP
+  DEBUG 5
+
+  PROJECTION
+	"init=$layerProjection"
+  END
+  UNITS $layerUnit
+  EXTENT $layerExtent
+
+  OUTPUTFORMAT
+    NAME "png"
+    MIMETYPE "image/png"
+    DRIVER "AGG/PNG"
+    EXTENSION "png"
+    IMAGEMODE RGB
+    TRANSPARENT FALSE
+  END # OUTPUTFORMAT
+
+  OUTPUTFORMAT
+    NAME "jpeg"
+    MIMETYPE "image/jpeg"
+    DRIVER "AGG/JPEG"
+    EXTENSION "jpg"
+    IMAGEMODE RGB
+    TRANSPARENT FALSE
+  END # OUTPUTFORMAT
+
+  OUTPUTFORMAT
+    NAME "GEOTIFF"
+    DRIVER "GDAL/GTiff"
+    MIMETYPE "image/tiff"
+    IMAGEMODE "BYTE"
+    EXTENSION "tif"
+  END
+
+  WEB
+    METADATA
+      "wms_srs" "epsg:3857 epsg:4326"
+      "wms_onlineresource" "$wmsUrl"
+      "wms_enable_request" "*"
+      "wms_encoding" "UTF-8"
+      "wms_title" "Web Map Service for serving $layerName"
+      "wms_accessconstraints" "Alle Metadaten stehen unter der CC0-Lizenz zur Verfuegung. Alle ueber die Infrastruktur des Virtuellen Kartenforum angeboten Karten mit einer Datierung vor 1900 stehen unter CC-BY-SA 4.0 zur Verfuegung. Für juengere Karten gilt aus urheberrechtlichen Gruenden Rechte vorbehalten/rights reserved. Naehere Informationen finden sie auch in den Nutzungsbestimmungen auf den Webseiten der SLUB (http://www.deutschefotothek.de)"
+      "wms_contactorganization" "Saxon State and University Library Dresden (SLUB)"
+      "wms_contactperson" "Alexander Bigga"
+      "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
+      "wms_abstract" "Web Map Service for serving $layerName"
+      "wcs_title" "Web Coverage Service for serving $layerName"
+      "wcs_onlineresource" "$wcsUrl"
+      "wcs_abstract" "Web Coverage Service for serving $layerName"
+      "wcs_nativeformat" "GEOTIFF"
+      "wcs_accessconstraints" "Alle Metadaten stehen unter der CC0-Lizenz zur Verfuegung. Alle ueber die Infrastruktur des Virtuellen Kartenforum angeboten Karten mit einer Datierung vor 1900 stehen unter CC-BY-SA 4.0 zur Verfuegung. Für juengere Karten gilt aus urheberrechtlichen Gruenden Rechte vorbehalten/rights reserved. Naehere Informationen finden sie auch in den Nutzungsbestimmungen auf den Webseiten der SLUB (http://www.deutschefotothek.de)"
+      "wcs_enable_request" "*"
+      "wcs_contactperson" "Alexander Bigga"
+      "wcs_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
+    END
+  END
+
+  IMAGECOLOR 255 255 255
+  IMAGETYPE "png"
+  SIZE 600 400
+  STATUS ON
+  MAXSIZE 30000
+
+  OUTPUTFORMAT
+    NAME "jpeg"
+    MIMETYPE "image/jpeg"
+    DRIVER "AGG/JPEG"
+    EXTENSION "jpg"
+    IMAGEMODE RGB
+    TRANSPARENT FALSE
+  END
+
+  LAYER
+    NAME "$layerName"
+    TYPE RASTER
+    UNITS PIXELS
+    STATUS DEFAULT
+    DATA "$layerDataPath"
+    PROJECTION
+	    "init=$layerProjection"
+    END
+    METADATA
+        "wms_title" "$layerTitle"
+        "wms_srs" "epsg:3857 $layerProjection"
+        "wms_enable_request" "*"
+        "wcs_srs" "$layerProjection"
+        "wcs_resolution" "$layerResolution"
+        "wcs_size" "$layerSize"
+        "wcs_bandcount" "$layerBands"
+        "wcs_rangeset_axes" "bands"
+        "wcs_rangeset_name" "bands"
+        "wcs_formats" "GEOTIFF"
+        "wcs_rangeset_label" "bands"
+    END
+  END
+END

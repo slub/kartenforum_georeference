@@ -15,9 +15,9 @@ LOGGER = logging.getLogger(__name__)
 
 # Import or define all models here to ensure they are attached to the
 # ``Base.metadata`` prior to any initialization routines.
-from .adminjobs import AdminJobs
-from .georeferenzierungsprozess import Georeferenzierungsprozess
-from .map import Map
+from .jobs import Job
+from .transformations import Transformation
+from .original_maps import OriginalMap
 from .metadata import Metadata
 
 # Run ``configure_mappers`` after defining all of the models to ensure
