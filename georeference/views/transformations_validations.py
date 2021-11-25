@@ -82,7 +82,7 @@ def GET_TransformationsForValidation(request):
                 },
                 'transformation': {
                     'transformation_id': transformationObj.id,
-                    'clip': json.loads(transformationObj.clip),
+                    'clip': json.loads(transformationObj.clip) if transformationObj.clip != None else None,
                     'params': transformationObj.getParamsAsDict(),
                     'submitted': str(transformationObj.submitted),
                     'overwrites': transformationObj.overwrites,
