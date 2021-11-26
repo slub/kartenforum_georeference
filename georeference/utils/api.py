@@ -34,10 +34,14 @@ def toTransformationResponse(transformationObj, mapObj, metadataObj, isActive = 
           title: str,
     }}
     """
+    clipJson =  json.loads(transformationObj.clip) if transformationObj.clip != None else None
+    if clipJson != None and 'crs' not in clipJson:
+        clipJson["crs"] = {"type":"name","properties":{"name":"EPSG:4326"}}
+
     return {
         'is_active': isActive,
         'transformation_id': transformationObj.id,
-        'clip': json.loads(transformationObj.clip) if transformationObj.clip != None else None,
+        'clip': clipJson,
         'params': transformationObj.getParamsAsDict(),
         'submitted': str(transformationObj.submitted),
         'overwrites': transformationObj.overwrites,
