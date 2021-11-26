@@ -47,7 +47,7 @@ class Job(Base):
         hasPendingJobs = False
         for job in session.query(Job).filter(Job.task_name == TaskValues.TRANSFORMATION_PROCESS.value):
             task = json.loads(job.task)
-            transformation= Transformation.byId(task['transformation_id'], session)
-            if transformation.original_map_id == mapId:
+            transformation = Transformation.byId(task['transformation_id'], session)
+            if transformation != None and transformation.original_map_id == mapId:
                 hasPendingJobs = True
         return hasPendingJobs

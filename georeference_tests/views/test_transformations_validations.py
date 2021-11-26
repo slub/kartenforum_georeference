@@ -18,17 +18,17 @@ def test_GET_TransformationsForValidation_success_emptyResult(testapp):
 def test_GET_TransformationsForValidation_validation_missing(testapp, dbsession):
     res = testapp.get(ROUTE_PREFIX + '/transformations/validations/%s' % 'MISSING', status=200)
     assert res.status_int == 200
-    assert len(res.json['items']) == 3
+    assert len(res.json['transformations']) == 4
 
 def test_GET_TransformationsForValidation_validation_valid(testapp, dbsession):
     res = testapp.get(ROUTE_PREFIX + '/transformations/validations/%s' % 'valid', status=200)
     assert res.status_int == 200
-    assert len(res.json['items']) == 18
+    assert len(res.json['transformations']) == 18
 
 def test_GET_TransformationsForValidation_validation_invalid(testapp, dbsession):
     res = testapp.get(ROUTE_PREFIX + '/transformations/validations/%s' % 'invalid', status=200)
     assert res.status_int == 200
-    assert len(res.json['items']) == 1
+    assert len(res.json['transformations']) == 1
 
 
 

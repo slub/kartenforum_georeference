@@ -21,6 +21,7 @@ from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, TaskValues
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.utils.parser import fromPublicOAI, toPublicOAI
+from georeference.utils.api import toTransformationResponse
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -82,7 +83,7 @@ def GET_TransformationsForMapId(request):
             'active_transformation_id': georefMapObj.transformation_id if georefMapObj != None else None,
             'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
-            'items': [],
+            'transformations': [],
             'map_id': toPublicOAI(mapObj.id),
             'metadata': {
                 'time_publish': str(metadataObj.time_of_publication),
@@ -97,21 +98,13 @@ def GET_TransformationsForMapId(request):
             .filter(Transformation.validation != ValidationValues.INVALID.value)
         for transformation in queryTransformations:
             # Create a georeference process object
-            responseObj['items'].append({
-                'map_id': toPublicOAI(mapObj.id),
-                'metadata': {
-                    'time_publish': str(metadataObj.time_of_publication),
-                    'title': metadataObj.title,
-                },
-                'transformation': {
-                    'transformation_id': transformation.id,
-                    'clip': json.loads(transformation.clip) if transformation.clip != None else None,
-                    'params': transformation.getParamsAsDict(),
-                    'submitted': str(transformation.submitted),
-                    'overwrites': transformation.overwrites,
-                    'user_id': transformation.user_id
-                }
-            })
+            responseObj['transformations'].append(
+                toTransformationResponse(
+                    transformation,
+                    mapObj,
+                    metadataObj
+                )
+            )
 
         return responseObj
     except Exception as e:

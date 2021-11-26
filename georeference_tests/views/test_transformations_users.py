@@ -12,14 +12,14 @@ from georeference.models.jobs import Job, TaskValues
 from georeference.settings import ROUTE_PREFIX
 
 def test_GET_TransformationsForUserId_success_emptyResult(testapp):
-    res = testapp.get(ROUTE_PREFIX + '/transformations/users/%s' % 'test', status=200)
+    res = testapp.get(ROUTE_PREFIX + '/transformations/users/%s' % 'test_1', status=200)
     assert res.status_int == 200
-    assert len(res.json['items']) == 0
+    assert len(res.json['transformations']) == 0
 
 def test_GET_TransformationsForUserId_success_transformationResults(testapp, dbsession):
     res = testapp.get(ROUTE_PREFIX + '/transformations/users/%s' % 'user_1', status=200)
     assert res.status_int == 200
-    assert len(res.json['items']) == 18
+    assert len(res.json['transformations']) == 18
 
     dbsession.rollback()
 
