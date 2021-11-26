@@ -93,16 +93,18 @@ def GET_TransformationsForMapId(request):
         }
 
         # Return process for the georeference endpoint
-        queryTransformations = request.dbsession.query(Transformation)\
+        queryTransformations = request.dbsession.query(Transformation, GeorefMap) \
+            .join(GeorefMap, Transformation.id == GeorefMap.transformation_id, isouter=True) \
             .filter(Transformation.original_map_id == mapObj.id)\
             .filter(Transformation.validation != ValidationValues.INVALID.value)
-        for transformation in queryTransformations:
+        for record in queryTransformations:
             # Create a georeference process object
             responseObj['transformations'].append(
                 toTransformationResponse(
-                    transformation,
+                    record[0],
                     mapObj,
-                    metadataObj
+                    metadataObj,
+                    True if record[1] != None else None
                 )
             )
 

@@ -15,6 +15,7 @@ from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.models.transformations import Transformation
 from georeference.models.metadata import Metadata
 from georeference.models.original_maps import OriginalMap
+from georeference.models.georef_maps import GeorefMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.utils.api import toTransformationResponse
 
@@ -51,9 +52,10 @@ def GET_TransformationsForUserId(request):
         }
 
         # Return process for the georeference endpoint
-        queryTransformations = request.dbsession.query(Transformation, OriginalMap, Metadata)\
+        queryTransformations = request.dbsession.query(Transformation, OriginalMap, Metadata, GeorefMap)\
             .join(OriginalMap, Transformation.original_map_id == OriginalMap.id)\
-            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id)\
+            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id) \
+            .join(GeorefMap, Transformation.id == GeorefMap.transformation_id, isouter=True) \
             .filter(Transformation.user_id == userId)\
             .order_by(desc(Transformation.submitted))
 
@@ -62,7 +64,8 @@ def GET_TransformationsForUserId(request):
                 toTransformationResponse(
                     record[0],
                     record[1],
-                    record[2]
+                    record[2],
+                    True if record[3] != None else None
                 )
             )
         return responseObj
