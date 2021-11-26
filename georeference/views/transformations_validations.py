@@ -65,7 +65,7 @@ def GET_TransformationsForValidation(request):
                     record[0],
                     record[1],
                     record[2],
-                    True if record[3] != None else None
+                    True if record[3] != None else False
                 )
             )
         return responseObj

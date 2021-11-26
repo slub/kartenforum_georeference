@@ -104,7 +104,7 @@ def GET_TransformationsForMapId(request):
                     record[0],
                     mapObj,
                     metadataObj,
-                    True if record[1] != None else None
+                    True if record[1] != None else False
                 )
             )
 
