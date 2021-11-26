@@ -204,7 +204,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
 
             # If a shapefile with a clip polygon is defined it is used.
             if clipGeoJSON is not None:
-                command += '-crop_to_cutline -cutline \'%s\' ' % clipGeoJSON
+                command += '-crop_to_cutline -cutline \'%s\' ' % str(clipGeoJSON).replace("'", '"')
 
             # append source and dest file
             command += '%s %s' % (tmpFile, dstFile)
