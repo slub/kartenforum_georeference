@@ -39,6 +39,7 @@ def toTransformationResponse(transformationObj, mapObj, metadataObj):
         'overwrites': transformationObj.overwrites,
         'user_id': transformationObj.user_id,
         'map_id': toPublicOAI(mapObj.id),
+        'validation': transformationObj.validation,
         'metadata': {
             'time_publish': str(metadataObj.time_of_publication),
             'title': metadataObj.title,
