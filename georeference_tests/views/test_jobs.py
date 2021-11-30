@@ -79,7 +79,7 @@ def test_POST_Jobs_success_transformationProcess(testapp, dbsession):
     # Create and perform test request
     params = {
         'user_id': 'test',
-        'task_name': TaskValues.TRANSFORMATION_PROCESS.value,
+        'task_name': TaskValues.m .value,
         'task': {
             'transformation_id': 123,
             'comment': 'test'

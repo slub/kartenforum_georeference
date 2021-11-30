@@ -21,7 +21,7 @@ class ExtentType(UserDefinedType):
         return func.ST_GeomFromGeoJSON(bindvalue, type_=self)
 
     def column_expression(self, col):
-        return func.ST_AsGeoJSON(func.ST_Transform(func.ST_Envelope(col, type_=self), 4326))
+        return func.ST_AsGeoJSON(func.ST_Envelope(func.ST_Transform(col, 4326, type_=self)))
 
 class GeorefMap(Base):
     __tablename__ = 'georef_maps'

@@ -191,7 +191,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
             logger.info('Rectify image with a %s transformation ...' % (algorithm))
             # The rectification is done via gdalwarp command line utility. Therefor we first build the correct
             # string.
-            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r near -wm 500 ' % (GLOBAL_PATH_GDALWARP)
+            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r near -wm 500 -dstalpha ' % (GLOBAL_PATH_GDALWARP)
 
             # In case the algorithm is tps we extend the command with -tps
             if algorithm == 'tps':

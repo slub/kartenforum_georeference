@@ -78,11 +78,7 @@ def buildTMSCache(pathImage, targetPath, logger, processes, map_scale):
 
 
     os.makedirs(tms_target_dir)
-    if processes > 1:
-        gdalScript = os.path.join(os.path.realpath(__file__), 'processing/gdal2tilesp.py')
-        command = '%s -z %s -w none -s %s# --processes=%s -o tms %s %s'%(gdalScript, zoomLevel, processes, projection, pathImage, tms_target_dir)
-    else:
-        command = 'gdal2tiles.py -z %s -w none -s %s#  %s %s'%(zoomLevel, projection, pathImage, tms_target_dir)
+    command = 'gdal2tiles.py -z %s --processes=%s %s %s'%(zoomLevel, processes, pathImage, tms_target_dir)
 
     logger.debug('Execute - %s'%command)
     subprocess.call(
@@ -143,6 +139,10 @@ def compressTMSCache(path, logger):
     :return:
     """
     logger.debug('Run png compression on %s ...' % path)
+
+    # Prevents pil from logs pollution
+    logging.getLogger('PIL').setLevel(logging.WARNING)
+
     pngs = getImageFilesInDirTree(path, 'png')
     for png in pngs:
         Image.open(png).convert('RGBA').quantize(method=2).save(png)

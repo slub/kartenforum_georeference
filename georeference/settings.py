@@ -32,7 +32,7 @@ GLOBAL_PATH_GDALADDO = 'gdaladdo'
 GLOBAL_PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
 
 # Number of processes used for creating the tms
-GLOBAL_TMS_PROCESSES = 1
+GLOBAL_TMS_PROCESSES = 2
 
 # Year below which wcs links should be created
 GLOBAL_DOWNLOAD_YEAR_THRESHOLD = 1900
@@ -51,8 +51,8 @@ ES_ROOT = {
     'host': 'search-slub.pikobytes.de',
     'port': 443,
     'ssl': True,
-    'username': 'elastic',
-    'password': 'test1234'
+    'username': 'test',
+    'password': 'test'
 
 }
 
