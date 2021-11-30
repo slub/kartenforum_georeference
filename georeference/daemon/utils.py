@@ -188,7 +188,8 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
         originalMapObj,
         Metadata.byId(originalMapObj.id, dbsession),
         georefMapObj=None,
-        logger=logger
+        logger=logger,
+        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
     )
     logger.debug(searchDocument)
     esIndex.index(
@@ -244,7 +245,8 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
         originalMapObj,
         metadataObj,
         georefMapObj=georefMapObj,
-        logger=logger
+        logger=logger,
+        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
     )
     logger.debug(searchDocument)
     esIndex.index(

@@ -277,8 +277,10 @@ def loadInitialData(dbsession, logger):
             searchDocument = generateDocument(
                 originalMapObj,
                 Metadata.byId(originalMapObj.id, dbsession),
-                georefMapObj=georefMapObj if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()) else None,
-                logger=logger
+                georefMapObj=georefMapObj if georefMapObj != None and os.path.exists(
+                    georefMapObj.getAbsPath()) else None,
+                logger=logger,
+                geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
             )
             esIndex.index(
                 index=ES_INDEX_NAME,
@@ -286,6 +288,7 @@ def loadInitialData(dbsession, logger):
                 id=searchDocument['map_id'],
                 body=searchDocument
             )
+
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')

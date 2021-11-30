@@ -11,6 +11,7 @@ import os
 import traceback
 import json
 from elasticsearch import Elasticsearch
+from georeference.models.georef_maps import GeorefMap
 from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
 from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
 from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
@@ -131,7 +132,7 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
     }
 
 
-def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGGER):
+def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGGER, geometry=None):
     """ Generates a document which matches the es mapping.
 
     :param originalMapObj: Original map
@@ -142,6 +143,8 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
     :type georefMapObj: georeference.models.original_maps.GeorefMap | None
     :param logger: Logger
     :type logger: logging.Logger
+    :param geometry: GeoJSON geometry
+    :type geometry: dict
     :result: Document matching the es mapping
     :rtype: dict
     """
@@ -185,7 +188,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             'online_resources': onlineResources,
             'tms_url': tmsUrl,
             'thumb_url': str(metadataObj.link_thumb_small).replace('http:', ''),
-            'geometry': json.loads(georefMapObj.extent) if georefMapObj != None else None, #
+            'geometry': geometry if geometry != None else None, #
             'has_georeference': georefMapObj != None,
             'time_published': metadataObj.time_of_publication.date().isoformat()
         }
