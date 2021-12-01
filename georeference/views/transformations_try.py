@@ -12,7 +12,7 @@ import uuid
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.models.original_maps import OriginalMap
-from georeference.settings import GLOBAL_ERROR_MESSAGE, PATH_TMP_TRANSFORMATION_ROOT, PATH_TMP_ROOT, PATH_TMP_TRANSFORMATION_DATA_ROOT, TEMPLATE_TRANSFORMATION_WMS_URL
+from georeference.settings import GLOBAL_ERROR_MESSAGE, PATH_MAPFILE_TEMPLATES, PATH_TMP_TRANSFORMATION_ROOT, PATH_TMP_ROOT, PATH_TMP_TRANSFORMATION_DATA_ROOT, TEMPLATE_TRANSFORMATION_WMS_URL
 from georeference.utils.georeference import getImageExtent, rectifyImage
 from georeference.utils.mapfile import writeMapfile
 from georeference.utils.parser import fromPublicOAI, toInt, toGDALGcps
@@ -107,7 +107,7 @@ def POST_TransformationTryForMapId(request):
         wmsUrl = TEMPLATE_TRANSFORMATION_WMS_URL % mapfileName
         writeMapfile(
             os.path.join(PATH_TMP_TRANSFORMATION_ROOT, '%s.map' % mapfileName),
-            os.path.join(BASE_PATH, '../templates/wms_dynamic.map'),
+            os.path.join(PATH_MAPFILE_TEMPLATES, './wms_dynamic.map'),
             {
                 'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.file_name,
                 'wmsUrl': wmsUrl,

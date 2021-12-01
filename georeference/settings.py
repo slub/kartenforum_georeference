@@ -72,6 +72,9 @@ PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp/geo')
 # Path to the tms root directoy
 PATH_TMS_ROOT = os.path.join(BASE_PATH, '../tmp/tms')
 
+# Path to the template directory
+PATH_MAPFILE_TEMPLATES = os.path.join(BASE_PATH, "./templates")
+
 # Path to the mapfile directory
 PATH_MAPFILE_ROOT = os.path.join(BASE_PATH, '../tmp/mapfiles')
 
@@ -129,7 +132,7 @@ DAEMON_SETTINGS = {
     'pidfile_path': os.path.join(BASE_PATH, '../tmp/daemon.pid'),
     'pidfile_timeout': 5,
     'sleep_time': 60,
-    'wait_on_startup': 15
+    'wait_on_startup': 1
 }
 
 # Settings for logger of the georeference persistent

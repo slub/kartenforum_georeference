@@ -14,7 +14,7 @@ from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
 from georeference.settings import PATH_TMS_ROOT
-from georeference.settings import PATH_MAPFILE_ROOT
+from georeference.settings import PATH_MAPFILE_ROOT, PATH_MAPFILE_TEMPLATES
 from georeference.settings import PATH_TMP_ROOT
 from georeference.settings import GLOBAL_TMS_PROCESSES
 from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
@@ -29,9 +29,6 @@ from georeference.utils.georeference import rectifyImageWithClipAndOverviews
 from georeference.utils.parser import toGDALGcps
 from georeference.utils.mapfile import writeMapfile
 from georeference.utils.mapfile import parseGeoTiffMetadata
-
-# For correct resolving of the paths we use derive the base_path of the file
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def _getExtentFromGeoTIFF(path):
     """ Extracts the extent from a geotiff file and returns a GeoJSON.
@@ -129,7 +126,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
             os.remove(trgMapFile)
         if not os.path.exists(trgMapFile):
             logger.debug('Create mapfile for wms and wcs services ...')
-            templateFile = os.path.join(BASE_PATH, '../templates/wms_static.map')
+            templateFile = os.path.join(PATH_MAPFILE_TEMPLATES, './wms_static.map')
             templateValues = {
                 **parseGeoTiffMetadata(georefMapObj.getAbsPath()),
                 **{
@@ -143,7 +140,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
             logger.debug('Use template values %s' % templateValues)
 
             if metadataObj.time_of_publication.date().year <= GLOBAL_DOWNLOAD_YEAR_THRESHOLD:
-                templateFile = os.path.join(BASE_PATH, '../templates/wms_wcs_static.map')
+                templateFile = os.path.join(PATH_MAPFILE_TEMPLATES, './wms_wcs_static.map')
 
             writeMapfile(
                 trgMapFile,
