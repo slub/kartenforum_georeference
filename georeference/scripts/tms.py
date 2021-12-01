@@ -78,7 +78,7 @@ def buildTMSCache(pathImage, targetPath, logger, processes, map_scale):
 
 
     os.makedirs(tms_target_dir)
-    command = 'gdal2tiles.py -z %s --processes=%s %s %s'%(zoomLevel, processes, pathImage, tms_target_dir)
+    command = 'gdal2tiles.py -z %s --processes=%s -w none %s %s'%(zoomLevel, processes, pathImage, tms_target_dir)
 
     logger.debug('Execute - %s'%command)
     subprocess.call(

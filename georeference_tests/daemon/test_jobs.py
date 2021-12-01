@@ -11,10 +11,7 @@ from datetime import datetime
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.jobs import Job, TaskValues
 from georeference.models.transformations import Transformation, ValidationValues
-from georeference.daemon.jobs import getUnprocessedJobs
-from georeference.daemon.jobs import runProcessJobs
-from georeference.daemon.jobs import runValidationJobs
-from georeference.daemon.jobs import loadInitialData
+from georeference.daemon.jobs import getUnprocessedJobs, runProcessJobs, runValidationJobs, loadInitialData
 from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
 from georeference.scripts.es import getIndex

@@ -85,22 +85,28 @@ def getUnprocessedJobs(dbsession, logger):
         # where are two unprocessed transformations for the same original_map_id. In this case, the last one should be transformed
         unique_process = {}
         for rp in rawProcess:
+            logger.info("Job: %s | %s" % (rp.task_name, rp.task))
+
             # Query transformation and get mapId
             task = json.loads(rp.task)
             transformation = Transformation.byId(task['transformation_id'], dbsession)
-            mapId = str(transformation.original_map_id)
 
             # Make sure that only on job of kind "transformation_process" is processed for each mapId
-            if mapId in unique_process:
-                if unique_process[mapId].submitted > rp.submitted:
-                    # Hold the alreay registered process and set the new process to processed
-                    rp.processed = True
+            if transformation != None:
+                mapId = str(transformation.original_map_id)
+                if mapId in unique_process:
+                    if unique_process[mapId].submitted > rp.submitted:
+                        # Hold the alreay registered process and set the new process to processed
+                        rp.processed = True
+                    else:
+                        # Skip the current registered process and set it to processed
+                        unique_process[mapId].processed = True
+                        unique_process[mapId] = rp
                 else:
-                    # Skip the current registered process and set it to processed
-                    unique_process[mapId].processed = True
                     unique_process[mapId] = rp
             else:
-                unique_process[mapId] = rp
+                # In this case a transformation could not be find for the rp and we mark it as processed
+                rp.processed = True
 
         # Make sure to flush any database changes.
         dbsession.flush()
@@ -198,7 +204,7 @@ def runValidationJobs(jobs, esIndex, dbsession, logger):
                     validation_transformations.append(transformation)
                     job.processed = True
                 elif job.task_name == TaskValues.TRANSFORMATION_SET_INVALID.value:
-                    logger.debug('Set transformation %s to invalid.' % transformation.id)
+                    logger.info('Set transformation %s to invalid.' % transformation.id)
                     transformation.validation = ValidationValues.INVALID.value
                     transformation.comment = task['comment'] if 'comment' in task else None
 
@@ -211,7 +217,7 @@ def runValidationJobs(jobs, esIndex, dbsession, logger):
 
                     # If there is no older valid transformation make sure that there is no georeference map
                     if GeorefMap.byTransformationId(transformation.id, dbsession) != None and olderValidTransformationObj == None:
-                        logger.debug('Disable georef map for transformation with id %s ...' % transformation.id)
+                        logger.info('Disable georef map for transformation with id %s ...' % transformation.id)
                         disableTransformation(
                             transformation,
                             esIndex,
@@ -221,7 +227,7 @@ def runValidationJobs(jobs, esIndex, dbsession, logger):
 
                     # If there is an older valid transformation for the georeference process enable it
                     if GeorefMap.byTransformationId(transformation.id, dbsession) != None and olderValidTransformationObj != None:
-                        logger.debug('Enable older transformation with id %s ...' % olderValidTransformationObj.id)
+                        logger.info('Enable older transformation with id %s ...' % olderValidTransformationObj.id)
                         enableTransformation(
                             olderValidTransformationObj,
                             esIndex,
@@ -232,8 +238,7 @@ def runValidationJobs(jobs, esIndex, dbsession, logger):
 
                     validation_transformations.append(transformation)
                     job.processed = True
-
-
+                    logger.info("Processed job %s." % job.id)
 
             return {
                 'validation_transformations': validation_transformations,

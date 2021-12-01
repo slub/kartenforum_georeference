@@ -59,7 +59,7 @@ def _getExtentFromGeoTIFF(path):
         }
     }
 
-def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, metadataObj, logger):
+def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, metadataObj, logger, forceReprocessing = False):
     """ Process the geo transformation for a given set of parameters
 
     :param transformationObj: Transformation
@@ -72,6 +72,8 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
     :type metadataObj: georeference.model.metadata.Metadata
     :param logger: Logger
     :type logger: logging.Logger
+    :param forceReprocessing: Forces a reprocessing
+    :type forceReprocessing: bool
     :result: True if performed successfully
     :rtype: bool
     """
@@ -79,7 +81,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
         if not os.path.exists(originalMapObj.getAbsPath()):
             logger.info('Skip processing georeference transformation for map "%s", because of missing original image.' % originalMapObj.id)
 
-        if os.path.exists(georefMapObj.getAbsPath()) == False:
+        if os.path.exists(georefMapObj.getAbsPath()) == False or forceReprocessing:
             logger.debug('Process transformation with id "%s" ...' % transformationObj.id)
             georefParams  = transformationObj.getParamsAsDict()
             clip = json.loads(transformationObj.clip)
@@ -106,6 +108,10 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
 
         rootDirTms = os.path.join(PATH_TMS_ROOT, str(originalMapObj.map_type).lower())
         tmsDir = os.path.join(rootDirTms, os.path.basename(georefMapObj.getAbsPath()).split('.')[0])
+
+        # If the reprocessing is forced we delete the tms dir
+        if forceReprocessing and os.path.exists(tmsDir):
+            shutil.rmtree(tmsDir)
         if not os.path.isdir(tmsDir):
             logger.debug('Process tile map service (TMS) ...')
             calculateCompressedTMS(
@@ -116,7 +122,11 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
                 originalMapObj.map_scale
             )
 
+
         trgMapFile = os.path.join(PATH_MAPFILE_ROOT, '%s.map' % originalMapObj.id)
+        # If the reprocessing is forced we delete the tms dir
+        if forceReprocessing and os.path.exists(trgMapFile):
+            os.remove(trgMapFile)
         if not os.path.exists(trgMapFile):
             logger.debug('Create mapfile for wms and wcs services ...')
             templateFile = os.path.join(BASE_PATH, '../templates/wms_static.map')
@@ -233,7 +243,8 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
         originalMapObj,
         georefMapObj,
         metadataObj,
-        logger
+        logger,
+        forceReprocessing=True
     )
 
     # Update the transformation_id

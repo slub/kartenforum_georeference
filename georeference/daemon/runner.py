@@ -135,6 +135,7 @@ def main():
                 logger=LOGGER,
             )
 
+            LOGGER.info(jobs)
             if len(jobs['process']) > 0:
                 LOGGER.info('Process %s jobs with task_name="transformation_process" ...' % jobs['process'])
                 runProcessJobs(
@@ -152,6 +153,7 @@ def main():
                     dbsession=dbsession,
                     logger=LOGGER
                 )
+            dbsession.commit()
 
             LOGGER.info('Go to sleep ...')
             dbsession.close()
