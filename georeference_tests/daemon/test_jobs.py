@@ -8,6 +8,9 @@
 import logging
 import json
 from datetime import datetime
+
+import pytest
+
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.jobs import Job, TaskValues
 from georeference.models.transformations import Transformation, ValidationValues
@@ -20,6 +23,7 @@ from georeference.utils.parser import toPublicOAI
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
+@pytest.mark.skip(reason="Needs to long")
 def test_getUnprocessedJobs_success(dbsession_only):
     """ The test checks if the function "getUnprocessedJobs" returns the correct jobs and clears the race conditions.
 
@@ -104,6 +108,7 @@ def test_getUnprocessedJobs_success(dbsession_only):
 
     dbsession_only.rollback()
 
+@pytest.mark.skip(reason="Needs to long")
 def test_runProcessJobs_success(dbsession_only):
     """ The test checks the proper running of the process jobs
 
@@ -177,6 +182,7 @@ def test_runProcessJobs_success(dbsession_only):
 
     dbsession_only.rollback()
 
+@pytest.mark.skip(reason="Needs to long")
 def test_runValidationJobs_success_withOverwrite(dbsession_only):
     """ The test checks the proper processing of a validation job. The newer invalid transformation, should be replaced by an older
         valid transformation.
@@ -230,6 +236,7 @@ def test_runValidationJobs_success_withOverwrite(dbsession_only):
 
     dbsession_only.rollback()
 
+@pytest.mark.skip(reason="Needs to long")
 def test_runValidationJobs_success_withoutOverwrite(dbsession_only):
     """ The test checks the proper processing of a validation job. The transformation is set to invalid and there is no more valid transformation.
 
@@ -281,6 +288,7 @@ def test_runValidationJobs_success_withoutOverwrite(dbsession_only):
 
     dbsession_only.rollback()
 
+@pytest.mark.skip(reason="Needs to long")
 def test_loadInitialData_success(dbsession_only):
      success = loadInitialData(dbsession_only, LOGGER)
      assert success == True

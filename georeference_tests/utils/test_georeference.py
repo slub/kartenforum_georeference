@@ -8,6 +8,9 @@
 import os
 import logging
 import time
+
+import pytest
+
 from georeference.utils.georeference import rectifyImageWithClipAndOverviews
 from georeference.utils.georeference import rectifyImage
 from georeference.utils.parser import toGDALGcps
@@ -54,6 +57,7 @@ GEOREFERENCE_TESTS = [
 # Directory which to use as temporary or output dir for tests
 TMP_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../data_output')
 
+@pytest.mark.skip(reason="Needs to long")
 def test_rectifyImage():
     testcases = GEOREFERENCE_TESTCASES + GEOREFERENCE_TESTS
     t0 = time.time()
@@ -87,6 +91,7 @@ def test_rectifyImage():
 
     print('Executed %s tests (Time: %s)' % (len(testcases), (time.time()) - t0))
 
+@pytest.mark.skip(reason="Needs to long")
 def test_processGeorefImage():
     testcases = list(filter(lambda g: g['clip'] != None, GEOREFERENCE_TESTCASES))
     t0 = time.time()

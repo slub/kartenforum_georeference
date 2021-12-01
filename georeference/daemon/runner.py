@@ -58,14 +58,18 @@ def initializeDatabaseSession():
     Base.metadata.create_all(dbengine)
     return db_sessionmaker()
 
-def initializeLogger(handler):
+def initializeLogger():
     """ Function loads and create the logger for the daemon
 
-    :param handler: Handler which should be used by the logger
-    :type handler: TimedRotatingFileHandler
     :result: Logger
     :rtype: `logging.Logger`
     """
+    # Check if the file exists and if not create it
+    if not os.path.exists(DAEMON_LOGGER_SETTINGS['file']):
+        open(DAEMON_LOGGER_SETTINGS['file'], 'a').close()
+
+    handler = TimedRotatingFileHandler(DAEMON_LOGGER_SETTINGS['file'], when='d', interval=1, backupCount=14)
+
     # Configure the handler as a TimeRotatingFileHander
     handler.setFormatter(
         logging.Formatter(DAEMON_LOGGER_SETTINGS['formatter'])
@@ -75,7 +79,7 @@ def initializeLogger(handler):
     return createLogger(
         DAEMON_LOGGER_SETTINGS['name'],
         DAEMON_LOGGER_SETTINGS['level'],
-        handler = handler,
+        handler = HANDLER,
     )
 
 #
@@ -87,7 +91,7 @@ if not os.path.exists(DAEMON_LOGGER_SETTINGS['file']):
     open(DAEMON_LOGGER_SETTINGS['file'], 'a').close()
 
 HANDLER = TimedRotatingFileHandler(DAEMON_LOGGER_SETTINGS['file'], when='d', interval=1, backupCount=14)
-LOGGER = initializeLogger(HANDLER)
+
 
 # Make sure that the stdin/stdout/stderr paths exists and if not produce
 if not os.path.exists(DAEMON_SETTINGS['stderr']):
@@ -97,7 +101,7 @@ if not os.path.exists(DAEMON_SETTINGS['stdout']):
 if not os.path.exists(DAEMON_SETTINGS['stdin']):
     open(DAEMON_SETTINGS['stdin'], 'a').close()
 
-def onStartUp():
+def onStartUp(LOGGER):
     try:
         LOGGER.info('Starting the daemon ...')
         LOGGER.info('Sync index and files ...')
@@ -114,62 +118,91 @@ def onStartUp():
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
 
-def main():
+def loop(LOGGER):
     try:
-        timeToWait = DAEMON_SETTINGS['wait_on_startup'] if DAEMON_SETTINGS['wait_on_startup'] > 0 else 1
-        LOGGER.info('Start logger but waiting for %s seconds ...' % timeToWait)
-        time.sleep(timeToWait)
-
-        # Start the daemon
-        onStartUp()
-
         LOGGER.info('################################')
+        LOGGER.debug('Initialize database')
+        dbsession = initializeDatabaseSession()
 
-        while True:
-            dbsession = initializeDatabaseSession()
+        LOGGER.info('Looking for Looking for pending jobs ...')
+        jobs = getUnprocessedJobs(
+            dbsession=dbsession,
+            logger=LOGGER,
+        )
+
+        LOGGER.info(jobs)
+
+        # Check if there are process jobs to process
+        if len(jobs['process']) > 0:
             esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
-
-            LOGGER.info('Looking for Looking for pending jobs ...')
-            jobs = getUnprocessedJobs(
+            LOGGER.info('Process %s jobs with task_name="transformation_process" ...' % jobs['process'])
+            runProcessJobs(
+                jobs['process'],
+                esIndex,
                 dbsession=dbsession,
-                logger=LOGGER,
+                logger=LOGGER
             )
+            esIndex.close()
+        dbsession.commit()
 
-            LOGGER.info(jobs)
-            if len(jobs['process']) > 0:
-                LOGGER.info('Process %s jobs with task_name="transformation_process" ...' % jobs['process'])
-                runProcessJobs(
-                    jobs['process'],
-                    esIndex,
-                    dbsession=dbsession,
-                    logger=LOGGER
-                )
-            dbsession.commit()
-            if len(jobs['validation']) > 0:
-                LOGGER.info('Process %s jobs with task_name="transformation_set_valid" or "transformation_set_invalid" ...' % jobs['validation'])
-                runValidationJobs(
-                    jobs['validation'],
-                    esIndex,
-                    dbsession=dbsession,
-                    logger=LOGGER
-                )
-            dbsession.commit()
+        # Check if there are validation jobs to process
+        if len(jobs['validation']) > 0:
+            esIndex = getIndex(ES_ROOT, ES_INDEX_NAME, forceRecreation=False, logger=LOGGER)
+            LOGGER.info(
+                'Process %s jobs with task_name="transformation_set_valid" or "transformation_set_invalid" ...' % jobs[
+                    'validation'])
+            runValidationJobs(
+                jobs['validation'],
+                esIndex,
+                dbsession=dbsession,
+                logger=LOGGER
+            )
+            esIndex.close()
+        dbsession.commit()
 
-            LOGGER.info('Go to sleep ...')
-            dbsession.close()
-            time.sleep(DAEMON_SETTINGS['sleep_time'])
+        LOGGER.info('Close database connection.')
+        dbsession.close()
     except Exception as e:
         LOGGER.error('Error while running the daemon')
         LOGGER.error(e)
         LOGGER.error(traceback.format_exc())
 
+def main():
+    try:
+        LOGGER = initializeLogger()
+        timeToWait = DAEMON_SETTINGS['wait_on_startup'] if DAEMON_SETTINGS['wait_on_startup'] > 0 else 1
+        LOGGER.info('Start logger but waiting for %s seconds ...' % timeToWait)
+        time.sleep(timeToWait)
+
+        # Start the daemon
+        onStartUp(LOGGER)
+
+        while True:
+            logging.shutdown()
+            LOGGER = initializeLogger()
+            loop(LOGGER)
+            LOGGER.info('Sleep for %s seconds.' % (DAEMON_SETTINGS['sleep_time']))
+            time.sleep(DAEMON_SETTINGS['sleep_time'])
+    except Exception as e:
+        if LOGGER == None:
+            LOGGER = initializeLogger()
+        LOGGER.error('Error while running the daemon')
+        LOGGER.error(e)
+        LOGGER.error(traceback.format_exc())
+    finally:
+        logging.shutdown()
+
 pidFileLock = '%s.lock' % DAEMON_SETTINGS['pidfile_path']
 pidFile = lockfile.FileLock(DAEMON_SETTINGS['pidfile_path'])
 
 def onCleanUp(a, b):
-    LOGGER.info("Clean up")
-    if os.path.exists(pidFileLock):
-        pidFile.release()
+    try:
+        LOGGER = initializeLogger()
+        LOGGER.info("Clean up")
+        if os.path.exists(pidFileLock):
+            pidFile.release()
+    finally:
+        logging.shutdown()
 
 # Initialize the daemon context
 context = daemon.DaemonContext(

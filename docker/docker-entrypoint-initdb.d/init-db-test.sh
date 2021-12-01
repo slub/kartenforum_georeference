@@ -267,20 +267,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Data for Name: jobs; Type: TABLE DATA; Schema: public; Owner: postgres
     --
 
-    INSERT INTO public.jobs VALUES (16, false, '{"transformation_id": 29}', '2021-11-22 15:54:21.462695', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (17, false, '{"transformation_id": 30}', '2021-11-22 15:54:32.446299', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (18, false, '{"transformation_id": 31}', '2021-11-22 15:54:36.008329', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (19, false, '{"transformation_id": 32}', '2021-11-22 15:54:37.864609', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (20, false, '{"transformation_id": 33}', '2021-11-22 15:56:02.77124', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (21, false, '{"transformation_id": 34}', '2021-11-22 15:56:04.028442', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (22, false, '{"transformation_id": 35}', '2021-11-22 15:56:05.111692', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (23, false, '{"transformation_id": 36}', '2021-11-22 15:56:06.453982', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (24, false, '{"transformation_id": 37}', '2021-11-22 15:56:07.792248', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (25, false, '{"transformation_id": 38}', '2021-11-22 15:56:08.894799', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (26, false, '{"transformation_id": 39}', '2021-11-22 15:56:10.414023', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (27, false, '{"transformation_id": 40}', '2021-11-22 15:56:11.549057', 'test', NULL, 'transformation_process');
-    INSERT INTO public.jobs VALUES (28, false, '{"transformation_id": 41}', '2021-11-22 15:57:34.685979', 'test', NULL, 'transformation_process');
-
 
     --
     -- Data for Name: metadata; Type: TABLE DATA; Schema: public; Owner: postgres

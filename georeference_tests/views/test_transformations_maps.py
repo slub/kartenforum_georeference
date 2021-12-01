@@ -136,19 +136,26 @@ def test_POST_TransformationForMapId_success_newTransformationMultiplyTimes(test
     }
 
     # Build test request
-    res = testapp.post(ROUTE_PREFIX + '/transformations/maps/%s' % toPublicOAI(map_id), params=json.dumps(params), content_type='application/json; charset=utf-8', status=200)
     res = testapp.post(ROUTE_PREFIX + '/transformations/maps/%s' % toPublicOAI(map_id), params=json.dumps(params),
                        content_type='application/json; charset=utf-8', status=200)
-    res = testapp.post(ROUTE_PREFIX + '/transformations/maps/%s' % toPublicOAI(map_id), params=json.dumps(params),
-                       content_type='application/json; charset=utf-8', status=200)
-    # First of all rollback session
-    dbsession.rollback()
 
     # Run tests
     assert res.status_int == 200
     assert res.json_body['transformation_id'] != None
     assert res.json_body['job_id'] != None
     assert res.json_body['points'] == 400
+
+    res = testapp.post(ROUTE_PREFIX + '/transformations/maps/%s' % toPublicOAI(map_id), params=json.dumps(params),
+                       content_type='application/json; charset=utf-8', status=400)
+    res = testapp.post(ROUTE_PREFIX + '/transformations/maps/%s' % toPublicOAI(map_id), params=json.dumps(params),
+                       content_type='application/json; charset=utf-8', status=400)
+
+    assert res.status_int == 400
+
+    # First of all rollback session
+    dbsession.rollback()
+
+
 
 
 

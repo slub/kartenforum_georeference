@@ -183,7 +183,9 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
         tmpFile = os.path.abspath(
             os.path.join(tmpDir, '%s.vrt' % tmpDataName)
         )
+        logger.debug('Create temporary file - %s' % tmpFile)
         newDataset = _createVrt(gdal.Open(srcFile, GA_ReadOnly), tmpFile)
+        logger.debug(newDataset)
         newDataset.SetGCPs(gcps, geoProj)
         newDataset.FlushCache()
 
