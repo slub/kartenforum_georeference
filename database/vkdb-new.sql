@@ -112,6 +112,7 @@ CREATE TABLE public.metadata (
     title character varying,
     title_short character varying,
     title_serie character varying,
+    fotothek_id integer,
     description character varying,
     measures character varying,
     scale character varying,

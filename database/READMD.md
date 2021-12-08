@@ -12,3 +12,7 @@ The old Virtual Map Forum relies on an older database schema. For usage with the
 4.) Import old data into the database vkdb-migration
 
   > psql -h localhost -p 5432 -U postgres vkdb-migration < vkdb-prod.last
+
+5.) Run the migration script
+
+6.) Adjust sequence id of the database

@@ -64,14 +64,14 @@ def doMigrationTableMetadata(srcConn, trgConn):
         trgCur = trgConn.cursor()
 
         # Query source database and write records into trg database
-        srcCur.execute('SELECT mapid, title, titleshort, serientitle, description, measures, scale, type, technic, ppn, apspermalink, imagelicence, imageowner, imagejpg, imagezoomify, timepublish, thumbssmall, thumbsmid FROM metadata')
+        srcCur.execute('SELECT md.mapid, md.title, md.titleshort, md.serientitle, md.description, md.measures, md.scale, md.type, md.technic, md.ppn, md.apspermalink, md.imagelicence, md.imageowner, md.imagejpg, md.imagezoomify, md.timepublish, md.thumbssmall, md.thumbsmid, m.apsobjectid, m.apsdateiname FROM metadata md, map m where m.id = md.mapid')
         for row in srcCur.fetchall():
             # Create insert statement for metadata table
             insertStatement = 'INSERT INTO metadata(original_map_id, title, title_short, title_serie, description, ' \
                               'measures, scale, type, technic, ppn, permalink, license, owner, link_jpg, link_zoomify,' \
-                              ' time_of_publication, link_thumb_small, link_thumb_mid) VALUES (\'%s\', \'%s\', \'%s\', ' \
+                              ' time_of_publication, link_thumb_small, link_thumb_mid, fotothek_id) VALUES (\'%s\', \'%s\', \'%s\', ' \
                               '%s, \'%s\',\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\',\'%s\', ' \
-                              '\'%s\', \'%s\', \'%s\',\'%s\')' % (
+                              '\'%s\', \'%s\', \'%s\',\'%s\', %s)' % (
                 row[0],
                 row[1].replace('\'', '\'\''),
                 row[2].replace('\'', '\'\''),
@@ -82,7 +82,7 @@ def doMigrationTableMetadata(srcConn, trgConn):
                 row[7],
                 row[8],
                 row[9],
-                row[10],
+                'https://www.deutschefotothek.de/documents/obj/%s/%s' % (row[18], row[19]) if row[18] != None else row[10],
                 row[11],
                 row[12],
                 row[13].replace('http', 'https'),
@@ -90,8 +90,10 @@ def doMigrationTableMetadata(srcConn, trgConn):
                 row[15],
                 row[16].replace('http', 'https'),
                 row[17].replace('http', 'https'),
+                row[18] if row[18] != None else 'NULL'
             )
             print(insertStatement)
+
             trgCur.execute(insertStatement)
 
             # Update map_scale original_maps
@@ -345,7 +347,7 @@ if __name__ == '__main__':
         print('Initialize connections and clean the target database')
         srcConn = getConnection({
             'host':'localhost',
-            'database':'vkdb-migration',
+            'database':'vkdb_a1',
             'user':'postgres',
             'password':'postgres'
         })
