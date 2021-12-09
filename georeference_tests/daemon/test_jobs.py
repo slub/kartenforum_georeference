@@ -7,10 +7,8 @@
 # "LICENSE", which is part of this source code package
 import logging
 import json
-from datetime import datetime
-
 import pytest
-
+from datetime import datetime
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.jobs import Job, TaskValues
 from georeference.models.transformations import Transformation, ValidationValues
