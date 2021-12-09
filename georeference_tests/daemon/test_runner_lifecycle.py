@@ -15,7 +15,7 @@ from georeference.daemon.runner_lifecyle import main, onStart
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-@pytest.mark.skip(reason="Needs to long")
+#@pytest.mark.skip(reason="Needs to long")
 def test_onStart_success(dbsession_only):
     onStart(
         logger=LOGGER,

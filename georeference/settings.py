@@ -43,17 +43,11 @@ GLOBAL_DOWNLOAD_YEAR_THRESHOLD = 1900
 
 # Root of the es instance
 ES_ROOT = {
-    # 'host': 'localhost',
-    # 'port': 9200,
-    # 'ssl': False,
-    # # 'username': 'username',
-    # # 'password': 'password'
-    'host': 'search-slub.pikobytes.de',
-    'port': 443,
-    'ssl': True,
-    'username': 'test',
-    'password': 'test'
-
+    'host': 'localhost',
+    'port': 9200,
+    'ssl': False,
+    # 'username': 'username',
+    # 'password': 'password'
 }
 
 # Name of the search index
@@ -87,6 +81,16 @@ PATH_TMP_TRANSFORMATION_ROOT = os.path.join(BASE_PATH, '../tmp/tmp')
 # The data root is used by the map file an can be defiver from the PATH_TMP_TRANSFORMATION_ROOT. This is
 # necessary for proper working with the docker setup
 PATH_TMP_TRANSFORMATION_DATA_ROOT = '/mapdata/%s'
+
+#
+# GDAL parameters
+#
+
+# GDAL_CACHEMAX - Important setting for performance speed. Unit is mb
+GDAL_CACHEMAX = 1500
+
+# WARP_MEMORY - Important setting for performance speed. Unit is mb
+GDAL_WARP_MEMORY = 1500
 
 # Georeference TMS Cache url
 TEMPLATE_TMS_URL = 'http://vk2-cdn{s}.slub-dresden.de/tms2'
@@ -131,7 +135,7 @@ DAEMON_SETTINGS = {
     'stderr': os.path.join(BASE_PATH, '../tmp/tty'),
     'pidfile_path': os.path.join(BASE_PATH, '../tmp/daemon.pid'),
     'pidfile_timeout': 5,
-    'sleep_time': 60,
+    'sleep_time': 10,
     'wait_on_startup': 1
 }
 
