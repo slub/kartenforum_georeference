@@ -11,7 +11,6 @@ import os
 import traceback
 import json
 from elasticsearch import Elasticsearch
-from georeference.models.georef_maps import GeorefMap
 from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
 from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
 from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
@@ -34,6 +33,7 @@ MAPPING = {
     'title_long': { 'type': 'text', 'index': False }, #"Me\u00dftischblatt 119 : Altenberg, 1939"
     'title': { 'type': 'keyword', 'index': True }, # Altenberg
     'permalink': { 'type': 'text', 'index': False }, # "http://digital.slub-dresden.de/id335921620"
+    'slub_url': { 'type': 'text', 'index': False }, # "http://digital.slub-dresden.de/id335921620"
     'online_resources': { 'type': 'nested' }, # [{	"url":"http://digital.slub-dresden.de/id335921620", "type":"Permalinkk" }]
     'tms_url': { 'type': 'text', 'index': False }, #"http://vk2-cdn{s}.slub-dresden.de/tms/mtb/df_dk_0010001_5248_1933",
     'thumb_url': { 'type': 'text', 'index': False }, #"http://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_5248_1933.jpg"
@@ -128,7 +128,7 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
             'height': str(image_size['y']),
             'coverage': coverageTitle
         }),
-        'type': 'WCS'
+        'type': 'download'
     }
 
 
@@ -149,15 +149,11 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
     :rtype: dict
     """
     try:
-        # Create oai and get timepublish
-        oai = toPublicOAI(originalMapObj.id)
-
         # Necessary for creating the online ressource
         onlineResources = [_getOnlineResourcePermalink(metadataObj)]
 
         # We can only create georeference ressources if the absolute path exists
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
-            onlineResources.append(_getOnlineResourceVK20Permalink(oai))
             onlineResources.append(_getOnlineResourceWMS(originalMapObj))
             if metadataObj.time_of_publication.date().year <= GLOBAL_DOWNLOAD_YEAR_THRESHOLD:
                 extent = json.loads(georefMapObj.extent)
@@ -185,6 +181,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             'title_long': metadataObj.title,
             'title': metadataObj.title_short,
             'permalink': metadataObj.permalink,
+            'slub_url': metadataObj.permalink,
             'online_resources': onlineResources,
             'tms_url': tmsUrl,
             'thumb_url': str(metadataObj.link_thumb_small).replace('http:', ''),
