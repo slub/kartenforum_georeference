@@ -177,6 +177,7 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
             os.remove(georefMapObj.getAbsPath())
         logger.debug('Delete georeference map object for original map id %s.' % georefMapObj.original_map_id)
         dbsession.delete(georefMapObj)
+        dbsession.flush()
 
     # Check if there is a tms and if yes remove it
     rootDirTms = os.path.join(PATH_TMS_ROOT, str(originalMapObj.map_type).lower())
@@ -191,6 +192,7 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
 
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
+    dbsession.flush()
     searchDocument = generateDocument(
         originalMapObj,
         Metadata.byId(originalMapObj.id, dbsession),
@@ -233,6 +235,7 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
             last_processed = datetime.now().isoformat()
         )
         dbsession.add(georefMapObj)
+        dbsession.flush()
 
     # Process the geo image
     _processGeoTransformation(
@@ -249,6 +252,7 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
 
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
+    dbsession.flush()
     searchDocument = generateDocument(
         originalMapObj,
         metadataObj,
