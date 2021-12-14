@@ -93,10 +93,11 @@ def GET_TransformationsForMapId(request):
         }
 
         # Return process for the georeference endpoint
+        returnAll = True if 'return_all' in request.params and request.params['return_all'].lower() == 'true' else False
         queryTransformations = request.dbsession.query(Transformation, GeorefMap) \
             .join(GeorefMap, Transformation.id == GeorefMap.transformation_id, isouter=True) \
             .filter(Transformation.original_map_id == mapObj.id)\
-            .filter(Transformation.validation != ValidationValues.INVALID.value)
+            .filter(Transformation.validation != ValidationValues.INVALID.value if returnAll == False else True == True)
         for record in queryTransformations:
             # Create a georeference process object
             responseObj['transformations'].append(

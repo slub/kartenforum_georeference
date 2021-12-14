@@ -57,6 +57,42 @@ def test_GET_TransformationsForMapId_success_transformationResults(testapp, dbse
 
     dbsession.rollback()
 
+def test_GET_TransformationsForMapId_success_transformationResults_also_invalid(testapp, dbsession):
+    map_id = 10001556
+
+    # Insert an unprocessed job for the map_id
+    dbsession.add(
+        Transformation(
+            id=1,
+            submitted=datetime.now().isoformat(),
+            user_id='test',
+            params=json.dumps({'source': 'pixel', 'target': 'EPSG:4314', 'algorithm': 'tps', 'gcps': []}),
+            validation=ValidationValues.INVALID.value,
+            original_map_id=10001556,
+            overwrites=0,
+            comment=None
+        )
+    )
+    dbsession.add(
+        Job(
+            id=1,
+            processed=False,
+            submitted=datetime.now().isoformat(),
+            user_id='test',
+            task_name=TaskValues.TRANSFORMATION_PROCESS.value,
+            task='{ "transformation_id": 1 }'
+        )
+    )
+    dbsession.flush()
+
+    # Build test request
+    res = testapp.get(ROUTE_PREFIX + '/transformations/maps/%s?return_all=True' % toPublicOAI(map_id), status=200)
+    assert res.status_int == 200
+    assert len(res.json['transformations']) == 5
+    assert res.json['pending_jobs'] == True
+
+    dbsession.rollback()
+
 def test_POST_TransformationForMapId_success_newTransformation(testapp, dbsession):
     map_id = 10001558
 
