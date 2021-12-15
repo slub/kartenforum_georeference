@@ -66,6 +66,8 @@ def doMigrationTableMetadata(srcConn, trgConn):
         # Query source database and write records into trg database
         srcCur.execute('SELECT md.mapid, md.title, md.titleshort, md.serientitle, md.description, md.measures, md.scale, md.type, md.technic, md.ppn, md.apspermalink, md.imagelicence, md.imageowner, md.imagejpg, md.imagezoomify, md.timepublish, md.thumbssmall, md.thumbsmid, m.apsobjectid, m.apsdateiname FROM metadata md, map m where m.id = md.mapid')
         for row in srcCur.fetchall():
+            # Create a new permalink
+            permalink = "https://www.deutschefotothek.de/documents/obj/%s" % row[18] if row[18] != None else "https://www.deutschefotothek.de/list/freitext/%s" % row[9]
             # Create insert statement for metadata table
             insertStatement = 'INSERT INTO metadata(original_map_id, title, title_short, title_serie, description, ' \
                               'measures, scale, type, technic, ppn, permalink, license, owner, link_jpg, link_zoomify,' \
@@ -82,7 +84,7 @@ def doMigrationTableMetadata(srcConn, trgConn):
                 row[7],
                 row[8],
                 row[9],
-                'https://www.deutschefotothek.de/documents/obj/%s/%s' % (row[18], row[19]) if row[18] != None else row[10],
+                permalink,
                 row[11],
                 row[12],
                 row[13].replace('http', 'https'),
@@ -347,7 +349,7 @@ if __name__ == '__main__':
         print('Initialize connections and clean the target database')
         srcConn = getConnection({
             'host':'localhost',
-            'database':'vkdb_a1',
+            'database':'vkdb-migration-test',
             'user':'postgres',
             'password':'postgres'
         })

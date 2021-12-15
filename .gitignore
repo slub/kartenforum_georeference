@@ -21,3 +21,4 @@ TODO.md
 *.pyc
 
 # configuration files
+create_tar.sh
