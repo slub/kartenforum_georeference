@@ -21,6 +21,7 @@ BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, '../../'))
 sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
+from georeference.models.georef_maps import GeorefMap
 from georeference.models.original_maps import OriginalMap
 from georeference.settings import DAEMON_LOGGER_SETTINGS
 from georeference.utils.logging import createLogger
@@ -68,7 +69,7 @@ def initializeLogger_(handler):
         handler = handler,
     )
 
-def checkPaths(dbsession, logger):
+def checkPathsOriginalImages(dbsession, logger):
     """ Checks if the path exists.
 
     :param dbsession: Database session object
@@ -79,9 +80,52 @@ def checkPaths(dbsession, logger):
     :rtype: bool
     """
     logger.info("Check for missing original images ...")
+    foundImages = 0
+    notFoundImages = []
     for mapObj in OriginalMap.all(dbsession):
-        if os.path.exists(mapObj.getAbsPath()) != True:
-            logger.info(mapObj.getAbsPath())
+        if os.path.exists(mapObj.getAbsPath()) != True and mapObj.enabled:
+            notFoundImages.append(
+                mapObj.getAbsPath()
+            )
+        else:
+            foundImages += 1
+    logger.info('Found %s images.' % foundImages)
+
+    if len(notFoundImages) > 0:
+        logger.info('Did not found the following images:')
+        for img in notFoundImages:
+            logger.info(img)
+    else:
+        logger.info('All images were found')
+
+def checkPathsGeorefImages(dbsession, logger):
+    """ Checks if the path exists.
+
+    :param dbsession: Database session object
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param logger: Logger
+    :type logger: logging.Logger
+    :result: True if performed successfully
+    :rtype: bool
+    """
+    logger.info("Check for missing georef images ...")
+    foundImages = 0
+    notFoundImages = []
+    for georefMapObj in GeorefMap.all(dbsession):
+        if os.path.exists(georefMapObj.getAbsPath()) != True:
+            notFoundImages.append(
+                georefMapObj.getAbsPath()
+            )
+        else:
+            foundImages += 1
+    logger.info('Found %s images.' % foundImages)
+
+    if len(notFoundImages) > 0:
+        logger.info('Did not found the following images:')
+        for img in notFoundImages:
+            logger.info(img)
+    else:
+        logger.info('All images were found')
 
 #
 # Initialize TimedRotatingFileHandler and LOGGER
@@ -94,7 +138,8 @@ LOGGER = initializeLogger_(
 LOGGER.info('Start running migration helper tasks...')
 try:
     dbsession = initializeDatabaseSession_()
-    checkPaths(dbsession, LOGGER)
+    checkPathsOriginalImages(dbsession, LOGGER)
+    checkPathsGeorefImages(dbsession, LOGGER)
     LOGGER.info('Finish sync.')
 except Exception as e:
     LOGGER.error('Error while syncing files and search documents-')

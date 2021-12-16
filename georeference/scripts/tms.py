@@ -76,7 +76,6 @@ def buildTMSCache(pathImage, targetPath, logger, processes, map_scale):
     elif map_scale != None and map_scale <= 15000 and map_scale > 5000:
         zoomLevel = '1-16'
 
-
     os.makedirs(tms_target_dir)
     command = 'gdal2tiles.py -z %s --processes=%s -w none %s %s'%(zoomLevel, processes, pathImage, tms_target_dir)
 

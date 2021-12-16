@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import os
 import json
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, desc
 from sqlalchemy.types import UserDefinedType
 from georeference.settings import PATH_GEOREF_ROOT
 from georeference.models.meta import Base
@@ -31,6 +31,17 @@ class GeorefMap(Base):
     rel_path = Column(String(255))
     extent = Column(ExtentType)
     last_processed = Column(DateTime(timezone=False))
+
+    @classmethod
+    def all(cls, dbsession):
+        """ Equivalent to an 'SELECT * FROM georef_maps;'
+
+        :param dbsession: Session object
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: All georeference maps.
+        :rtype: georeference.models.georef_maps.GeorefMap[]
+        """
+        return dbsession.query(GeorefMap).order_by(desc(GeorefMap.original_map_id))
 
     def getAbsPath(self):
         """ Returns the absolute path to the georeference image
