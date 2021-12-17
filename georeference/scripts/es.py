@@ -169,7 +169,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
             for template in TEMPLATE_TMS_URLS:
                 tmsUrls.append(
-                    template % ('/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name)
+                    template % (str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name)
                 )
 
         return {
