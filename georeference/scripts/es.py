@@ -15,7 +15,7 @@ from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
 from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
 from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
 from georeference.settings import GLOBAL_PERMALINK_RESOLVER
-from georeference.settings import TEMPLATE_TMS_URL
+from georeference.settings import TEMPLATE_TMS_URLS
 from georeference.utils.georeference import getImageSize
 from georeference.utils.parser import toPublicOAI
 
@@ -35,7 +35,7 @@ MAPPING = {
     'permalink': { 'type': 'text', 'index': False }, # "http://digital.slub-dresden.de/id335921620"
     'slub_url': { 'type': 'text', 'index': False }, # "http://digital.slub-dresden.de/id335921620"
     'online_resources': { 'type': 'nested' }, # [{	"url":"http://digital.slub-dresden.de/id335921620", "type":"Permalinkk" }]
-    'tms_url': { 'type': 'text', 'index': False }, #"http://vk2-cdn{s}.slub-dresden.de/tms/mtb/df_dk_0010001_5248_1933",
+    'tms_urls': { 'type': 'text', 'index': False }, #["http://vk2-cdn{s}.slub-dresden.de/tms/mtb/df_dk_0010001_5248_1933"],
     'thumb_url': { 'type': 'text', 'index': False }, #"http://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_5248_1933.jpg"
     'geometry': {'type': 'geo_shape' }, # GeoJSON
     'has_georeference': {'type': 'boolean', 'index': True },
@@ -165,9 +165,12 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
                 ))
 
         # Create tms link
-        tmsUrl = None
+        tmsUrls = None
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
-            tmsUrl = TEMPLATE_TMS_URL + '/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name
+            for template in TEMPLATE_TMS_URLS:
+                tmsUrls.append(
+                    template % ('/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name)
+                )
 
         return {
             'map_id': toPublicOAI(originalMapObj.id),
@@ -183,7 +186,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             'permalink': metadataObj.permalink,
             'slub_url': metadataObj.permalink,
             'online_resources': onlineResources,
-            'tms_url': tmsUrl,
+            'tms_urls': tmsUrls,
             'thumb_url': str(metadataObj.link_thumb_small).replace('http:', ''),
             'geometry': geometry if geometry != None else None, #
             'has_georeference': georefMapObj != None,

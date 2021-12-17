@@ -46,8 +46,9 @@ ES_ROOT = {
     'host': 'localhost',
     'port': 9200,
     'ssl': False,
-    # 'username': 'username',
-    # 'password': 'password'
+    # # 'username': 'username',
+    # # 'password': 'password'
+
 }
 
 # Name of the search index
@@ -93,7 +94,9 @@ GDAL_CACHEMAX = 1500
 GDAL_WARP_MEMORY = 1500
 
 # Georeference TMS Cache url
-TEMPLATE_TMS_URL = 'http://vk2-cdn{s}.slub-dresden.de/tms2'
+TEMPLATE_TMS_URLS = [
+    'http://vk2-cdn.slub-dresden.de/tms2/%s'
+]
 
 #
 # Dictonary of supported coordinate reference systems
