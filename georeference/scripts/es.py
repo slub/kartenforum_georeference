@@ -165,7 +165,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
                 ))
 
         # Create tms link
-        tmsUrls = None
+        tmsUrls = []
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
             for template in TEMPLATE_TMS_URLS:
                 tmsUrls.append(
