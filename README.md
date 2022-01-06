@@ -7,9 +7,45 @@ This repository contains the code for deploying a georeference service as well a
 The georeference service relies on the following dependencies:
 
 ```
-apt-get install python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev
+apt-get install python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev gcc uwsgi
 ```
 
+The python dependencies are installed within a virtual environment. Therefor run the following commands:
+
+```
+virtualenv python_env
+./python_env/bin/pip install -e ".[testing]"
+```
+
+## Testing & Development
+
+For local development and testing of the project a few further steps have to be executed. First download the `test_data.tar.xz` unpack it and place the image within the directory `./tmp/org_new/`. The password for the SFTP-Service is `8C2Kdpxc2lpUoYBX`.
+
+```
+# Download the images
+scp u279620-sub2@u279620-sub2.your-storagebox.de:/test_data.tar.xz ./
+tar -xf test_data.tar.xz -C ./tmp/org_new/
+```
+
+As next step start the docker services (PostgreSQL Database, Mapserver, Elasticsearch):
+
+``` 
+cd docker/
+docker-compose up
+```
+
+Now it should be possible to run all tests of the kartenforum_georeference application. As a test runner [pytest](https://docs.pytest.org/en/6.2.x/) is used. For performing a full test run, perform the following command. 
+
+```
+./python_env/bin/pytest --cov --cov-report=term-missing
+```
+
+
+
+/home/mendt/Workspace/customer/slub/kartenforum_georeference/development.ini
+
+
+## Backup / Deprecated
 First of all the python dependencies have to be installed. This done by creating a virtual environment:
 
 ```
@@ -25,16 +61,6 @@ virtualenv python_env
 # For setting up a production environment
 # ./python_env/bin/python setup.py install
 ```
-
-## Testing
-
-The kartenforum_georeference application uses [pytest](https://docs.pytest.org/en/6.2.x/) as a Test-Runner. For performing a full test run, perform the following command. Make sure that the docker-setup is started before.
-
-```
-./python_env/bin/pytest --cov --cov-report=term-missing
-```
-
-Make sure that the project is properly installed beforehand.
 
 ## Processing- & Service-Engine (Daemon)
 
