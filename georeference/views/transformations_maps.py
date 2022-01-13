@@ -21,6 +21,7 @@ from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, TaskValues
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.utils.parser import fromPublicOAI, toPublicOAI
+from georeference.utils.api import toTransformationResponse
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -82,7 +83,7 @@ def GET_TransformationsForMapId(request):
             'active_transformation_id': georefMapObj.transformation_id if georefMapObj != None else None,
             'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
-            'items': [],
+            'transformations': [],
             'map_id': toPublicOAI(mapObj.id),
             'metadata': {
                 'time_publish': str(metadataObj.time_of_publication),
@@ -92,26 +93,21 @@ def GET_TransformationsForMapId(request):
         }
 
         # Return process for the georeference endpoint
-        queryTransformations = request.dbsession.query(Transformation)\
+        returnAll = True if 'return_all' in request.params and request.params['return_all'].lower() == 'true' else False
+        queryTransformations = request.dbsession.query(Transformation, GeorefMap) \
+            .join(GeorefMap, Transformation.id == GeorefMap.transformation_id, isouter=True) \
             .filter(Transformation.original_map_id == mapObj.id)\
-            .filter(Transformation.validation != ValidationValues.INVALID.value)
-        for transformation in queryTransformations:
+            .filter(Transformation.validation != ValidationValues.INVALID.value if returnAll == False else True == True)
+        for record in queryTransformations:
             # Create a georeference process object
-            responseObj['items'].append({
-                'map_id': toPublicOAI(mapObj.id),
-                'metadata': {
-                    'time_publish': str(metadataObj.time_of_publication),
-                    'title': metadataObj.title,
-                },
-                'transformation': {
-                    'transformation_id': transformation.id,
-                    'clip': json.loads(transformation.clip) if transformation.clip != None else None,
-                    'params': transformation.getParamsAsDict(),
-                    'submitted': str(transformation.submitted),
-                    'overwrites': transformation.overwrites,
-                    'user_id': transformation.user_id
-                }
-            })
+            responseObj['transformations'].append(
+                toTransformationResponse(
+                    record[0],
+                    mapObj,
+                    metadataObj,
+                    True if record[1] != None else False
+                )
+            )
 
         return responseObj
     except Exception as e:
@@ -165,7 +161,8 @@ def POST_TransformationForMapId(request):
         submitted = datetime.now().isoformat()
 
         # If overwrites == 0, we check if there is already a valid transformation registered for the original map id.
-        if overwrites == 0 and Transformation.hasTransformation(mapId, request.dbsession):
+        hasTransformation = Transformation.hasTransformation(mapId, request.dbsession)
+        if overwrites == 0 and hasTransformation:
             return HTTPBadRequest('It is forbidden to register a new transformation for an original map, which already has a transformation registered.')
 
         # Save to transformations

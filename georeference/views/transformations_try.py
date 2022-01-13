@@ -10,21 +10,13 @@ import logging
 import os
 import uuid
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
-from georeference.utils.georeference import getImageExtent
-from georeference.utils.georeference import rectifyImage
-from georeference.utils.mapfile import writeMapfile
-from georeference.utils.parser import toInt
-from georeference.utils.parser import toGDALGcps
+from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.models.original_maps import OriginalMap
-from georeference.settings import GLOBAL_ERROR_MESSAGE
-from georeference.settings import PATH_TMP_TRANSFORMATION_ROOT
-from georeference.settings import PATH_TMP_ROOT
-from georeference.settings import PATH_TMP_TRANSFORMATION_DATA_ROOT
-from georeference.settings import TEMPLATE_TRANSFORMATION_WMS_URL
-from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
-from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
-from georeference.utils.parser import fromPublicOAI
+from georeference.settings import GLOBAL_ERROR_MESSAGE, PATH_MAPFILE_TEMPLATES, PATH_TMP_TRANSFORMATION_ROOT, PATH_TMP_ROOT, PATH_TMP_TRANSFORMATION_DATA_ROOT, TEMPLATE_TRANSFORMATION_WMS_URL
+from georeference.utils.georeference import getImageExtent, rectifyImage
+from georeference.utils.mapfile import writeMapfile
+from georeference.utils.parser import fromPublicOAI, toInt, toGDALGcps
+from georeference.utils.validations import isValidClipPolygon, isValidTransformationParams
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -67,28 +59,21 @@ def POST_TransformationTryForMapId(request):
         if mapObj is None:
             return HTTPBadRequest('Could not found map_id')
 
-        # Validate requests params
+        # Parse params and validate
         params = request.json_body['params']
         if params is None:
             return HTTPBadRequest('Could not found params.')
+        elif isValidTransformationParams(params)[0] == False:
+            return HTTPBadRequest(isValidTransformationParams(params)[1])
 
-        algorithm = params['algorithm']
-        gcps = params['gcps']
-        source = params['source']
-        target = params['target'].lower()
-        if algorithm is None:
-            return HTTPBadRequest('Missing algorithm')
-        if gcps is None or len(gcps) < 3:
-            return HTTPBadRequest('Need at least 3 gcps for producing a validation result')
-        if source != 'pixel':
-            return HTTPBadRequest('Validation endpoint does not support other source type then "pixel"')
-        if 'epsg:' not in target:
-            return HTTPBadRequest('Validation endpoint expects a epsg code, in the notation "EPSG:4314" for the target type.')
+        # Parse clip
+        clip = request.json_body['clip'] if 'clip' in request.json_body else None
+        if clip is not None and isValidClipPolygon(clip)[0] == False:
+            return HTTPBadRequest(isValidClipPolygon(clip)[1])
 
         # Parse gcps, srs and create a temporary result
         LOGGER.debug('Create temporary validation result ...')
-        gdalGcps = toGDALGcps(gcps)
-        srs = target
+        gdalGcps = toGDALGcps(params['gcps'])
         srcFile = mapObj.getAbsPath()
         trgFileName = '%s::%s.tif' % (mapObj.file_name, uuid.uuid4())
         trgFile = os.path.abspath(
@@ -108,12 +93,12 @@ def POST_TransformationTryForMapId(request):
         rectifyImage(
             srcFile,
             trgFile,
-            algorithm,
+            params['algorithm'],
             gdalGcps,
-            srs,
+            params['target'].lower(),
             LOGGER,
             PATH_TMP_ROOT,
-            None,
+            None if clip is None else clip,
         )
 
         # Create mapfile
@@ -122,13 +107,13 @@ def POST_TransformationTryForMapId(request):
         wmsUrl = TEMPLATE_TRANSFORMATION_WMS_URL % mapfileName
         writeMapfile(
             os.path.join(PATH_TMP_TRANSFORMATION_ROOT, '%s.map' % mapfileName),
-            os.path.join(BASE_PATH, '../templates/wms_dynamic.map'),
+            os.path.join(PATH_MAPFILE_TEMPLATES, './wms_dynamic.map'),
             {
                 'wmsAbstract': 'This wms is a temporary wms for %s' % mapObj.file_name,
                 'wmsUrl': wmsUrl,
                 'layerName': mapObj.file_name,
                 'layerDataPath': PATH_TMP_TRANSFORMATION_DATA_ROOT % trgFileName,
-                'layerProjection': target
+                'layerProjection': params['target'].lower()
             }
         )
         LOGGER.debug('Return validation result.')

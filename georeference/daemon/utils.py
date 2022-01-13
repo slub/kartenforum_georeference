@@ -14,7 +14,7 @@ from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
 from georeference.settings import PATH_TMS_ROOT
-from georeference.settings import PATH_MAPFILE_ROOT
+from georeference.settings import PATH_MAPFILE_ROOT, PATH_MAPFILE_TEMPLATES
 from georeference.settings import PATH_TMP_ROOT
 from georeference.settings import GLOBAL_TMS_PROCESSES
 from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
@@ -29,9 +29,6 @@ from georeference.utils.georeference import rectifyImageWithClipAndOverviews
 from georeference.utils.parser import toGDALGcps
 from georeference.utils.mapfile import writeMapfile
 from georeference.utils.mapfile import parseGeoTiffMetadata
-
-# For correct resolving of the paths we use derive the base_path of the file
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def _getExtentFromGeoTIFF(path):
     """ Extracts the extent from a geotiff file and returns a GeoJSON.
@@ -59,7 +56,7 @@ def _getExtentFromGeoTIFF(path):
         }
     }
 
-def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, metadataObj, logger):
+def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, metadataObj, logger, forceReprocessing = False):
     """ Process the geo transformation for a given set of parameters
 
     :param transformationObj: Transformation
@@ -72,6 +69,8 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
     :type metadataObj: georeference.model.metadata.Metadata
     :param logger: Logger
     :type logger: logging.Logger
+    :param forceReprocessing: Forces a reprocessing
+    :type forceReprocessing: bool
     :result: True if performed successfully
     :rtype: bool
     """
@@ -79,7 +78,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
         if not os.path.exists(originalMapObj.getAbsPath()):
             logger.info('Skip processing georeference transformation for map "%s", because of missing original image.' % originalMapObj.id)
 
-        if os.path.exists(georefMapObj.getAbsPath()) == False:
+        if os.path.exists(georefMapObj.getAbsPath()) == False or forceReprocessing:
             logger.debug('Process transformation with id "%s" ...' % transformationObj.id)
             georefParams  = transformationObj.getParamsAsDict()
             clip = json.loads(transformationObj.clip)
@@ -106,6 +105,10 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
 
         rootDirTms = os.path.join(PATH_TMS_ROOT, str(originalMapObj.map_type).lower())
         tmsDir = os.path.join(rootDirTms, os.path.basename(georefMapObj.getAbsPath()).split('.')[0])
+
+        # If the reprocessing is forced we delete the tms dir
+        if forceReprocessing and os.path.exists(tmsDir):
+            shutil.rmtree(tmsDir)
         if not os.path.isdir(tmsDir):
             logger.debug('Process tile map service (TMS) ...')
             calculateCompressedTMS(
@@ -116,10 +119,14 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
                 originalMapObj.map_scale
             )
 
+
         trgMapFile = os.path.join(PATH_MAPFILE_ROOT, '%s.map' % originalMapObj.id)
+        # If the reprocessing is forced we delete the tms dir
+        if forceReprocessing and os.path.exists(trgMapFile):
+            os.remove(trgMapFile)
         if not os.path.exists(trgMapFile):
             logger.debug('Create mapfile for wms and wcs services ...')
-            templateFile = os.path.join(BASE_PATH, '../templates/wms_static.map')
+            templateFile = os.path.join(PATH_MAPFILE_TEMPLATES, './wms_static.map')
             templateValues = {
                 **parseGeoTiffMetadata(georefMapObj.getAbsPath()),
                 **{
@@ -133,7 +140,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
             logger.debug('Use template values %s' % templateValues)
 
             if metadataObj.time_of_publication.date().year <= GLOBAL_DOWNLOAD_YEAR_THRESHOLD:
-                templateFile = os.path.join(BASE_PATH, '../templates/wms_wcs_static.map')
+                templateFile = os.path.join(PATH_MAPFILE_TEMPLATES, './wms_wcs_static.map')
 
             writeMapfile(
                 trgMapFile,
@@ -170,6 +177,7 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
             os.remove(georefMapObj.getAbsPath())
         logger.debug('Delete georeference map object for original map id %s.' % georefMapObj.original_map_id)
         dbsession.delete(georefMapObj)
+        dbsession.flush()
 
     # Check if there is a tms and if yes remove it
     rootDirTms = os.path.join(PATH_TMS_ROOT, str(originalMapObj.map_type).lower())
@@ -184,11 +192,13 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
 
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
+    dbsession.flush()
     searchDocument = generateDocument(
         originalMapObj,
         Metadata.byId(originalMapObj.id, dbsession),
         georefMapObj=None,
-        logger=logger
+        logger=logger,
+        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
     )
     logger.debug(searchDocument)
     esIndex.index(
@@ -225,6 +235,7 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
             last_processed = datetime.now().isoformat()
         )
         dbsession.add(georefMapObj)
+        dbsession.flush()
 
     # Process the geo image
     _processGeoTransformation(
@@ -232,7 +243,8 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
         originalMapObj,
         georefMapObj,
         metadataObj,
-        logger
+        logger,
+        forceReprocessing=True
     )
 
     # Update the transformation_id
@@ -240,11 +252,13 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
 
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
+    dbsession.flush()
     searchDocument = generateDocument(
         originalMapObj,
         metadataObj,
         georefMapObj=georefMapObj,
-        logger=logger
+        logger=logger,
+        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
     )
     logger.debug(searchDocument)
     esIndex.index(

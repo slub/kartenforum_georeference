@@ -482,5 +482,5 @@ HTTP Response:
 Curl Example: 
 
 ``` 
-curl -XPOST 'http://localhost:6543/maps/10001556/georefs_validate' -H 'Content-Type: application/json' -d '{ "source": "pixel", "target": "EPSG:4314", "algorithm": "tps", "gcps": [{"source": [6700, 998], "target": [14.809598142072, 50.897193140898]}, {"source": [6656, 944], "target": [14.808447338463, 50.898010359738]}, {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]}, {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]}]}'
+curl -XPOST 'http://localhost:6543/transformations/try' -H 'Content-Type: application/json' -d '{ "map_id": "oai:de:slub-dresden:vk:id-10001556", "params": {"source": "pixel", "target": "EPSG:4314", "algorithm": "tps", "gcps": [{"source": [6700, 998], "target": [14.809598142072, 50.897193140898]}, {"source": [6656, 944], "target": [14.808447338463, 50.898010359738]}, {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]}, {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]}]}}'
 ```

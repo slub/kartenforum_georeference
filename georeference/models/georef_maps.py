@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import os
 import json
-from sqlalchemy import Column, Integer, Boolean, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, desc
 from sqlalchemy.types import UserDefinedType
 from georeference.settings import PATH_GEOREF_ROOT
 from georeference.models.meta import Base
@@ -21,7 +21,7 @@ class ExtentType(UserDefinedType):
         return func.ST_GeomFromGeoJSON(bindvalue, type_=self)
 
     def column_expression(self, col):
-        return func.ST_AsGeoJSON(func.ST_Transform(func.ST_Envelope(col, type_=self), 4326))
+        return func.ST_AsGeoJSON(func.ST_Envelope(col, type_=self))
 
 class GeorefMap(Base):
     __tablename__ = 'georef_maps'
@@ -31,6 +31,17 @@ class GeorefMap(Base):
     rel_path = Column(String(255))
     extent = Column(ExtentType)
     last_processed = Column(DateTime(timezone=False))
+
+    @classmethod
+    def all(cls, dbsession):
+        """ Equivalent to an 'SELECT * FROM georef_maps;'
+
+        :param dbsession: Session object
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: All georeference maps.
+        :rtype: georeference.models.georef_maps.GeorefMap[]
+        """
+        return dbsession.query(GeorefMap).order_by(desc(GeorefMap.original_map_id))
 
     def getAbsPath(self):
         """ Returns the absolute path to the georeference image
@@ -65,3 +76,20 @@ class GeorefMap(Base):
         :rtype: georeference.models.georef_maps.GeorefMap
         """
         return dbsession.query(GeorefMap).filter(GeorefMap.transformation_id == transformationId).first()
+
+    @classmethod
+    def getExtentForMapId(cls, mapId, dbsession):
+        """ Returns the extent for a given map id
+
+        :param mapId: Original map id
+        :type mapId: int
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: GeoJSON  in EPSG:4326
+        :rtype: GeoJSON
+        """
+        query = "SELECT st_asgeojson(st_envelope(st_transform(extent, 4326))) FROM georef_maps WHERE original_map_id = %s" % mapId
+        response = dbsession.execute(query).fetchone()
+        if response != None:
+            return json.loads(response[0])
+        return None

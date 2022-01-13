@@ -15,7 +15,9 @@ from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.models.transformations import Transformation
 from georeference.models.metadata import Metadata
 from georeference.models.original_maps import OriginalMap
+from georeference.models.georef_maps import GeorefMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE
+from georeference.utils.api import toTransformationResponse
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -32,21 +34,7 @@ def GET_TransformationsForUserId(request):
     :result: JSON array of georeference process enhanced with further metadata
     :rtype: {{
       user_id: str,
-      items: {
-        map_id: int,
-        metadata: {
-          time_publish: str,
-          title: str,
-        }
-        transformation: {
-            transformation_id: int,
-            clip: GeoJSON,
-            params: dict,
-            submitted: str,
-            overwrites: int,
-            user_id: str,
-        }
-      }[],
+      transformations: Transformation[],
     }}
     """
     try:
@@ -60,35 +48,26 @@ def GET_TransformationsForUserId(request):
         # Create default response
         responseObj = {
             'user_id': userId,
-            'items': []
+            'transformations': []
         }
 
         # Return process for the georeference endpoint
-        queryTransformations = request.dbsession.query(Transformation, OriginalMap, Metadata)\
+        queryTransformations = request.dbsession.query(Transformation, OriginalMap, Metadata, GeorefMap)\
             .join(OriginalMap, Transformation.original_map_id == OriginalMap.id)\
-            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id)\
+            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id) \
+            .join(GeorefMap, Transformation.id == GeorefMap.transformation_id, isouter=True) \
             .filter(Transformation.user_id == userId)\
             .order_by(desc(Transformation.submitted))
 
         for record in queryTransformations:
-            transformationObj = record[0]
-            mapObj = record[1]
-            metadataObj = record[2]
-            responseObj['items'].append({
-                'map_id': mapObj.id,
-                'metadata': {
-                    'time_publish': str(metadataObj.time_of_publication),
-                    'title': metadataObj.title,
-                },
-                'transformation': {
-                    'transformation_id': transformationObj.id,
-                    'clip': json.loads(transformationObj.clip),
-                    'params': transformationObj.getParamsAsDict(),
-                    'submitted': str(transformationObj.submitted),
-                    'overwrites': transformationObj.overwrites,
-                    'user_id': transformationObj.user_id
-                }
-            })
+            responseObj['transformations'].append(
+                toTransformationResponse(
+                    record[0],
+                    record[1],
+                    record[2],
+                    True if record[3] != None else False
+                )
+            )
         return responseObj
 
     except Exception as e:

@@ -15,7 +15,7 @@ from georeference.settings import TEMPLATE_PUBLIC_WMS_URL
 from georeference.settings import TEMPLATE_PUBLIC_WCS_URL
 from georeference.settings import GLOBAL_DOWNLOAD_YEAR_THRESHOLD
 from georeference.settings import GLOBAL_PERMALINK_RESOLVER
-from georeference.settings import TEMPLATE_TMS_URL
+from georeference.settings import TEMPLATE_TMS_URLS
 from georeference.utils.georeference import getImageSize
 from georeference.utils.parser import toPublicOAI
 
@@ -33,8 +33,9 @@ MAPPING = {
     'title_long': { 'type': 'text', 'index': False }, #"Me\u00dftischblatt 119 : Altenberg, 1939"
     'title': { 'type': 'keyword', 'index': True }, # Altenberg
     'permalink': { 'type': 'text', 'index': False }, # "http://digital.slub-dresden.de/id335921620"
+    'slub_url': { 'type': 'text', 'index': False }, # "http://digital.slub-dresden.de/id335921620"
     'online_resources': { 'type': 'nested' }, # [{	"url":"http://digital.slub-dresden.de/id335921620", "type":"Permalinkk" }]
-    'tms_url': { 'type': 'text', 'index': False }, #"http://vk2-cdn{s}.slub-dresden.de/tms/mtb/df_dk_0010001_5248_1933",
+    'tms_urls': { 'type': 'text', 'index': False }, #["http://vk2-cdn{s}.slub-dresden.de/tms/mtb/df_dk_0010001_5248_1933"],
     'thumb_url': { 'type': 'text', 'index': False }, #"http://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_5248_1933.jpg"
     'geometry': {'type': 'geo_shape' }, # GeoJSON
     'has_georeference': {'type': 'boolean', 'index': True },
@@ -75,7 +76,7 @@ def _getOnlineResourceWMS(originalMapObj):
     """
     # append WMS
     return {
-        'url': '%(link_service)s?SERVICE=WMS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
+        'url': '%(link_service)s?SERVICE=WMS&VERSION=2.0.0&REQUEST=GetCapabilities' % ({
             'link_service': TEMPLATE_PUBLIC_WMS_URL % originalMapObj.id,
         }),
         'type': 'WMS'
@@ -90,7 +91,7 @@ def _getOnlineResourceWCS(originalMapObj):
     """
     # append WCS
     return {
-        'url': '%(link_service)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCapabilities' % ({
+        'url': '%(link_service)s?SERVICE=WCS&VERSION=2.0.0&REQUEST=GetCapabilities' % ({
             'link_service': TEMPLATE_PUBLIC_WCS_URL % originalMapObj.id,
         }),
         'type': 'WCS'
@@ -116,7 +117,7 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
     # for geojson geometires
     srid = extent['crs']['properties']['name'] if 'crs' in extent else "EPSG:4326"
     return {
-        'url': '%(link_service)s?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=image/tiff' % ({
+        'url': '%(link_service)s?SERVICE=WCS&VERSION=2.0.0&REQUEST=GetCoverage&CoverageID=%(coverage)s&CRS=%(srid)s&BBOX=%(westBoundLongitude)s,%(southBoundLatitude)s,%(eastBoundLongitude)s,%(northBoundLatitude)s&WIDTH=%(width)s&HEIGHT=%(height)s&FORMAT=GEOTIFF' % ({
             'link_service': TEMPLATE_PUBLIC_WCS_URL % georefMapObj.original_map_id,
             'westBoundLongitude': str(coordinates[0][0]),
             'southBoundLatitude': str(coordinates[0][1]),
@@ -127,11 +128,11 @@ def _getOnlineResourceWCSForDownload(georefMapObj, coverageTitle, extent):
             'height': str(image_size['y']),
             'coverage': coverageTitle
         }),
-        'type': 'WCS'
+        'type': 'download'
     }
 
 
-def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGGER):
+def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGGER, geometry=None):
     """ Generates a document which matches the es mapping.
 
     :param originalMapObj: Original map
@@ -142,33 +143,34 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
     :type georefMapObj: georeference.models.original_maps.GeorefMap | None
     :param logger: Logger
     :type logger: logging.Logger
+    :param geometry: GeoJSON geometry
+    :type geometry: dict
     :result: Document matching the es mapping
     :rtype: dict
     """
     try:
-        # Create oai and get timepublish
-        oai = toPublicOAI(originalMapObj.id)
-
         # Necessary for creating the online ressource
         onlineResources = [_getOnlineResourcePermalink(metadataObj)]
 
         # We can only create georeference ressources if the absolute path exists
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
-            onlineResources.append(_getOnlineResourceVK20Permalink(oai))
             onlineResources.append(_getOnlineResourceWMS(originalMapObj))
             if metadataObj.time_of_publication.date().year <= GLOBAL_DOWNLOAD_YEAR_THRESHOLD:
                 extent = json.loads(georefMapObj.extent)
                 onlineResources.append(_getOnlineResourceWCS(originalMapObj))
                 onlineResources.append(_getOnlineResourceWCSForDownload(
                     georefMapObj,
-                    metadataObj.title_short,
+                    originalMapObj.file_name,
                     extent,
                 ))
 
         # Create tms link
-        tmsUrl = None
+        tmsUrls = []
         if georefMapObj != None and os.path.exists(georefMapObj.getAbsPath()):
-            tmsUrl = TEMPLATE_TMS_URL + '/' + str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name
+            for template in TEMPLATE_TMS_URLS:
+                tmsUrls.append(
+                    template % (str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name)
+                )
 
         return {
             'map_id': toPublicOAI(originalMapObj.id),
@@ -182,10 +184,11 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             'title_long': metadataObj.title,
             'title': metadataObj.title_short,
             'permalink': metadataObj.permalink,
+            'slub_url': metadataObj.permalink,
             'online_resources': onlineResources,
-            'tms_url': tmsUrl,
+            'tms_urls': tmsUrls,
             'thumb_url': str(metadataObj.link_thumb_small).replace('http:', ''),
-            'geometry': json.loads(georefMapObj.extent) if georefMapObj != None else None, #
+            'geometry': geometry if geometry != None else None, #
             'has_georeference': georefMapObj != None,
             'time_published': metadataObj.time_of_publication.date().isoformat()
         }

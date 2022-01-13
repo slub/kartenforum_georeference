@@ -6,8 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import os
-from sqlalchemy import Column, Integer, Boolean, String, DateTime
-from sqlalchemy import desc
+from sqlalchemy import Column, Integer, Boolean, String, desc
 from georeference.settings import PATH_IMAGE_ROOT
 from georeference.models.meta import Base
 
@@ -32,7 +31,7 @@ class OriginalMap(Base):
 
     @classmethod
     def all(cls, dbsession):
-        """ Equivalent to an 'SELECT * FROM map;'
+        """ Equivalent to an 'SELECT * FROM original_maps;'
 
         :param dbsession: Session object
         :type dbsession: sqlalchemy.orm.session.Session
@@ -42,7 +41,7 @@ class OriginalMap(Base):
 
     @classmethod
     def allEnabled(cls, dbsession):
-        """ Equivalent to an 'SELECT * FROM map WHERE enabled=True;'
+        """ Equivalent to an 'SELECT * FROM original_maps WHERE enabled=True;'
 
         :param dbsession: Session object
         :type dbsession: sqlalchemy.orm.session.Session

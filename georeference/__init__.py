@@ -30,6 +30,8 @@ createPathIfNotExists(PATH_TMS_ROOT)
 createPathIfNotExists(PATH_IMAGE_ROOT)
 createPathIfNotExists(PATH_MAPFILE_ROOT)
 
+
+
 def onError(e):
     LOGGER.error(e)
 
@@ -65,6 +67,9 @@ def createApplication(debug_mode=False, **settings):
 
     # Debug code
     config.scan('views', onerror=onError)
+
+    # Enable cors
+    config.include('.cors')
 
     return config.make_wsgi_app()
 

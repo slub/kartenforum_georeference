@@ -13,9 +13,7 @@ import sys
 from osgeo import gdal
 from osgeo import osr
 from osgeo.gdalconst import GA_ReadOnly
-from georeference.settings import GLOBAL_PATH_GDALWARP
-from georeference.settings import GLOBAL_PATH_GDALADDO
-from georeference.settings import SRC_DICT_WKT
+from georeference.settings import GDAL_CACHEMAX, GDAL_WARP_MEMORY, GLOBAL_PATH_GDALWARP, GLOBAL_PATH_GDALADDO, SRC_DICT_WKT
 
 def _addOverviews(dstFile, overviewLevels, logger):
     """ Function adds overview to given geotiff.
@@ -183,6 +181,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
         tmpFile = os.path.abspath(
             os.path.join(tmpDir, '%s.vrt' % tmpDataName)
         )
+        logger.debug('Create temporary file - %s' % tmpFile)
         newDataset = _createVrt(gdal.Open(srcFile, GA_ReadOnly), tmpFile)
         newDataset.SetGCPs(gcps, geoProj)
         newDataset.FlushCache()
@@ -191,7 +190,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
             logger.info('Rectify image with a %s transformation ...' % (algorithm))
             # The rectification is done via gdalwarp command line utility. Therefor we first build the correct
             # string.
-            command = '%s -overwrite --config GDAL_CACHEMAX 500 -r near -wm 500 ' % (GLOBAL_PATH_GDALWARP)
+            command = '%s -overwrite --config GDAL_CACHEMAX %s -r near -wm %s -dstalpha ' % (GLOBAL_PATH_GDALWARP, GDAL_CACHEMAX, GDAL_WARP_MEMORY)
 
             # In case the algorithm is tps we extend the command with -tps
             if algorithm == 'tps':
@@ -204,7 +203,7 @@ def rectifyImage(srcFile, dstFile, algorithm, gcps, srs, logger, tmpDir, clipGeo
 
             # If a shapefile with a clip polygon is defined it is used.
             if clipGeoJSON is not None:
-                command += '-crop_to_cutline -cutline \'%s\' ' % clipGeoJSON
+                command += '-crop_to_cutline -cutline \'%s\' ' % str(clipGeoJSON).replace("'", '"')
 
             # append source and dest file
             command += '%s %s' % (tmpFile, dstFile)

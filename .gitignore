@@ -1,4 +1,5 @@
 # local developing files
+.vscode/
 .idea/
 .coverage
 /deprecated
@@ -12,6 +13,8 @@ TODO.md
 
 # custom installations files
 /python_env
+/database/backup_*
+/database/vkdb-test1
 
 # build files
 /georeference.egg-info
@@ -19,3 +22,4 @@ TODO.md
 *.pyc
 
 # configuration files
+create_tar.sh
