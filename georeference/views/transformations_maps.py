@@ -161,8 +161,8 @@ def POST_TransformationForMapId(request):
         submitted = datetime.now().isoformat()
 
         # If overwrites == 0, we check if there is already a valid transformation registered for the original map id.
-        hasTransformationAndGeoref = Transformation.hasTransformation(mapId, request.dbsession) and GeorefMap.byOriginalMapId(mapId, request.dbsession) != None
-        if overwrites == 0 and hasTransformationAndGeoref:
+        hasTransformation = Transformation.hasTransformation(mapId, request.dbsession)
+        if overwrites == 0 and hasTransformation:
             return HTTPBadRequest('It is forbidden to register a new transformation for an original map, which already has a transformation registered.')
 
         # Save to transformations

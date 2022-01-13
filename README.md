@@ -78,3 +78,5 @@ kill -9
 
 * If the execution of the command `./python_env/bin/python setup.py develop` fails, make sure that the system wide gdal version, matches the GDAL version within the `setup.py`. 
 
+* If the execution of the command `./python_env/bin/python setup.py develop` fails with "Unknown distribution option: 'use_2to3_fixers'", install an older version of the setup tools in your virtualenv (<58).
+
