@@ -4,7 +4,7 @@ This repository contains the code for deploying a georeference service as well a
 
 ## Install
 
-The tools are developed with Python 3.97. They rely on the following dependencies:
+The tools are developed with Python 3.9.7. They rely on the following dependencies:
 
 ```
 apt-get install python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev gcc uwsgi
