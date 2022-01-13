@@ -4,7 +4,7 @@ This repository contains the code for deploying a georeference service as well a
 
 ## Install
 
-The georeference service relies on the following dependencies:
+The tools are developed with Python 3.97. They rely on the following dependencies:
 
 ```
 apt-get install python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev gcc uwsgi
@@ -40,27 +40,14 @@ Now it should be possible to run all tests of the kartenforum_georeference appli
 ./python_env/bin/pytest --cov --cov-report=term-missing
 ```
 
-
-
-/home/mendt/Workspace/customer/slub/kartenforum_georeference/development.ini
-
-
-## Backup / Deprecated
-First of all the python dependencies have to be installed. This done by creating a virtual environment:
+Develop or production services can be started via `pserve`:
 
 ```
-virtualenv python_env
-
-# Install test dependencies
-./python_env/bin/pip install -e ".[testing]"
-
-# For setting up a development environment
-./python_env/bin/python setup.py develop
-
-# @TODO
-# For setting up a production environment
-# ./python_env/bin/python setup.py install
+./python_env/bin/pserve development.ini
+./python_env/bin/pserve production.ini
 ```
+
+Make sure to update the `georeference/settings.py` to your local development environment.
 
 ## Processing- & Service-Engine (Daemon)
 
