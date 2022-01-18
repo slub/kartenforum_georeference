@@ -7,6 +7,9 @@
 # "LICENSE", which is part of this source code package
 import traceback
 import logging
+from jsonschema import validate
+import json
+
 from datetime import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
@@ -14,49 +17,9 @@ from georeference.utils.parser import toInt
 from georeference.models.map_view import MapView
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.utils.parser import toPublicOAI, fromPublicOAI
+from georeference.schema.map_view import map_view_schema
 
 LOGGER = logging.getLogger(__name__)
-
-schema = {
-    "type": "object",
-    "properties": {
-        "activeBasemapId": { "type": "string"},
-        "is3dEnabled": { "type": "boolean"},
-        "operationalLayers": {
-            "type": "array",
-            "items": {
-                "anyOf": [
-                    
-                ]
-            }
-        }
-    }
-}
-
-{
-  "activeBasemapId": "slub-osm",
-  "is3dEnabled": false,
-  "operationalLayers": [],
-  "searchOptions": {
-    "facets": {
-      "facets": [],
-      "georeference": true
-    },
-    "timeExtent": [
-      1850,
-      1970
-    ]
-  },
-  "mapView": {
-    "center": [
-      1039475.3400097956,
-      6695196.931201956
-    ],
-    "resolution": 611.4962261962891,
-    "rotation": 0,
-    "zoom": 2
-  }
-}
 
 
 @view_config(route_name='map_views', renderer='json')
@@ -120,9 +83,11 @@ def POST_TransformationForMapId(request):
         userId = request.json_body['user_id']
         submitted = datetime.now().isoformat()
 
+        validate(map_view_json, map_view_schema)
+
         # Save to transformations
         newMapView = MapView(
-            map_view_json=map_view_json,
+            map_view_json=json.dumps(map_view_json),
             last_request=None,
             request_count=0,
             submitted=submitted,
