@@ -12,6 +12,19 @@ map_view_schema = {
     "properties": {
         # in order for the "additionalProperties" key to work correctly, all expected properties have to be defined here
         "activeBasemapId": {"type": "string"},
+        "customBasemaps": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "label": {"type": "string"},
+                    "urls": {"type": "array"},
+                    "type": {"type": "string"}
+                },
+                "required": ["id", "label", "urls"]
+            }        
+        },
         "is3dEnabled": {"type": "boolean"},
         "mapView": {"type": "object"},
         "operationalLayers": {
