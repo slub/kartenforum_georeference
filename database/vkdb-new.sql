@@ -338,3 +338,25 @@ ALTER TABLE ONLY public.transformations
 -- PostgreSQL database dump complete
 --
 
+
+
+--
+-- New map_view table
+--
+CREATE TABLE map_view
+(
+    id            serial
+        CONSTRAINT map_view_pk
+            PRIMARY KEY,
+    map_view_json character varying NOT NULL,
+    public_id character varying UNIQUE NOT NULL,
+    submitted     timestamp,
+    request_count integer,
+    last_request  timestamp,
+    user_id       character varying
+);
+
+ALTER TABLE map_view OWNER TO postgres;
+
+CREATE UNIQUE INDEX map_view_id_uindex ON map_view (id);
+CREATE UNIQUE INDEX map_view_public_id_uindex ON map_view (public_id);
