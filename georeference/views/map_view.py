@@ -13,10 +13,8 @@ import uuid
 from datetime import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
-from georeference.utils.parser import toInt
 from georeference.models.map_view import MapView
 from georeference.settings import GLOBAL_ERROR_MESSAGE
-from georeference.utils.parser import toPublicOAI, fromPublicOAI
 from georeference.schema.map_view import map_view_schema
 
 LOGGER = logging.getLogger(__name__)
