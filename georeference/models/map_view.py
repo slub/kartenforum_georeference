@@ -18,6 +18,7 @@ class MapView(Base):
     __tablename__ = 'map_view'
     __table_args__ = {'extend_existing':True}
     id = Column(Integer, primary_key=True)
+    public_id = Column(Text())
     map_view_json = Column(Text())
     submitted = Column(DateTime(timezone=False))
     request_count = Column(Integer)
@@ -28,6 +29,15 @@ class MapView(Base):
     @classmethod
     def byId(cls, id, session):
         return session.query(MapView).filter(MapView.id == id).first()
+    
+    @classmethod
+    def byPublicId(cls, public_id, session):
+        return cls.queryByPublicId(public_id, session).first()
+
+    @classmethod
+    def queryByPublicId(cls, public_id, session):
+        return session.query(MapView).filter(MapView.public_id == public_id)
+
 
     @classmethod
     def all(cls, session):

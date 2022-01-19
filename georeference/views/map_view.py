@@ -9,10 +9,10 @@ import traceback
 import logging
 from jsonschema import validate
 import json
-
+import uuid
 from datetime import datetime
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
+from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
 from georeference.utils.parser import toInt
 from georeference.models.map_view import MapView
 from georeference.settings import GLOBAL_ERROR_MESSAGE
@@ -22,7 +22,7 @@ from georeference.schema.map_view import map_view_schema
 LOGGER = logging.getLogger(__name__)
 
 
-@view_config(route_name='map_views', renderer='json')
+@view_config(route_name='map_view', renderer='json')
 def GET_MapViewById(request):
     """ Endpoint for accessing map views for a given id of a map view.
 
@@ -38,13 +38,20 @@ def GET_MapViewById(request):
             return HTTPBadRequest('Missing map_view_id')
 
         # query mapView object
-        map_view_id = toInt(request.matchdict['map_view_id'])
-        mapObj = MapView.byId(map_view_id, request.dbsession)
+        map_view_id = request.matchdict['map_view_id']
+        mapObj = MapView.byPublicId(map_view_id, request.dbsession)
 
-        # Building basic json response
+        if mapObj is None:
+            return HTTPNotFound("The requested map view does not exist.")
+
+        # Build basic json response
         responseObj = {
             'map_view_json': mapObj.map_view_json,
         }
+
+        # update metadata
+        MapView.queryByPublicId(map_view_id, request.dbsession).update({MapView.last_request: datetime.now().isoformat(), MapView.request_count: mapObj.request_count + 1})
+        request.dbsession.flush()
 
         return responseObj
     except Exception as e:
@@ -54,7 +61,7 @@ def GET_MapViewById(request):
         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)
 
 
-@view_config(route_name='map_views', renderer='json', request_method='POST', accept='application/json')
+@view_config(route_name='map_view', renderer='json', request_method='POST', accept='application/json')
 def POST_MapView(request):
     """ Endpoint to POST a new mapView
 
@@ -89,12 +96,17 @@ def POST_MapView(request):
             validate(request.json_body, request_schema)
         except Exception as e:
             LOGGER.error(e)
-            raise HTTPBadRequest("Invalid request object at POST request")
+            return HTTPBadRequest("Invalid request object at POST request")
 
         map_view_json = request.json_body['map_view_json']
         userId = request.json_body['user_id']
         submitted = datetime.now().isoformat()
+        public_id = str(uuid.uuid4())
 
+        # if the id is not unique, regenerate public_id
+        while MapView.queryByPublicId(public_id, request.dbsession).count() > 0:
+            public_id = str(uuid.uuid4())
+        
 
         # Save to MapView table
         newMapView = MapView(
@@ -103,12 +115,13 @@ def POST_MapView(request):
             request_count=0,
             submitted=submitted,
             user_id=userId,
+            public_id=public_id
         )
         request.dbsession.add(newMapView)
         request.dbsession.flush()
 
         return {
-            'map_view_id': newMapView.id,
+            'map_view_id': newMapView.public_id,
         }
     except Exception as e:
         LOGGER.error('Error while trying to process POST request')
