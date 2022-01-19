@@ -52,20 +52,6 @@ CREATE TABLE public.georef_maps (
 ALTER TABLE public.georef_maps OWNER TO postgres;
 
 --
--- Name: georef_maps_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.georef_maps_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.georef_maps_id_seq OWNER TO postgres;
-
---
 -- Name: jobs; Type: TABLE; Schema: public; Owner: postgres
 --
 
