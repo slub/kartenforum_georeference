@@ -329,7 +329,7 @@ ALTER TABLE ONLY public.transformations
 --
 -- New map_view table
 --
-CREATE TABLE map_view
+CREATE TABLE public.map_view
 (
     id            serial
         CONSTRAINT map_view_pk
@@ -342,7 +342,7 @@ CREATE TABLE map_view
     user_id       character varying
 );
 
-ALTER TABLE map_view OWNER TO postgres;
+ALTER TABLE public.map_view OWNER TO postgres;
 
-CREATE UNIQUE INDEX map_view_id_uindex ON map_view (id);
-CREATE UNIQUE INDEX map_view_public_id_uindex ON map_view (public_id);
+CREATE UNIQUE INDEX map_view_id_uindex ON public.map_view (id);
+CREATE UNIQUE INDEX map_view_public_id_uindex ON public.map_view (public_id);
