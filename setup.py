@@ -20,7 +20,7 @@ requires = [
     'zope.sqlalchemy==1.5',
     'GDAL==3.2.2',
     'uwsgi==2.0.20',
-    'jsonschema=4.4.0'
+    'jsonschema==4.4.0'
 ]
 
 tests_require = [
