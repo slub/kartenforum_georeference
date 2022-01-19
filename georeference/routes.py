@@ -17,4 +17,5 @@ def includeme(config):
     config.add_route('transformations_validations', ROUTE_PREFIX + '/transformations/validations/{validation}')
     config.add_route('transformations_try', ROUTE_PREFIX + '/transformations/try')
     config.add_route('user_history', ROUTE_PREFIX + '/user/{user_id}/history')
+    config.add_route('map_view', ROUTE_PREFIX + '/map_view/{map_view_id:.*}')
 

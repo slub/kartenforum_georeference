@@ -19,6 +19,7 @@ from .jobs import Job
 from .transformations import Transformation
 from .original_maps import OriginalMap
 from .metadata import Metadata
+from .map_view import MapView
 
 # Run ``configure_mappers`` after defining all of the models to ensure
 # all relationships can be setup.
