@@ -26,25 +26,19 @@ LOGGER = logging.getLogger(__name__)
 def GET_MapViewById(request):
     """ Endpoint for accessing map views for a given id of a map view.
 
-    :param map_id: Id of the map object
-    :type map_id: int
+    :param map_view_id: Id of the mapView object
+    :type map_view_id: int
     :result: JSON object describing the map object
     :rtype: {{
-      file_name: str,
-      transformation_id: int | None,
-      map_id: int,
-      map_type: str,
-      title_long: str,
-      title_short: str,
-      zoomify_url: str,
+        map_view_json: map_view_schema
     }}
     """
     try:
         if request.method != 'GET' or request.matchdict['map_view_id'] == None:
             return HTTPBadRequest('Missing map_view_id')
 
-        # query map object and metadata
-        map_view_id = toInt(fromPublicOAI(request.matchdict['map_view_id']))
+        # query mapView object
+        map_view_id = toInt(request.matchdict['map_view_id'])
         mapObj = MapView.byId(map_view_id, request.dbsession)
 
         # Building basic json response
@@ -61,14 +55,13 @@ def GET_MapViewById(request):
 
 
 @view_config(route_name='map_views', renderer='json', request_method='POST', accept='application/json')
-def POST_TransformationForMapId(request):
-    """ Endpoint for POST a new transformation for a given id of an original map and creates a job for signaling the daemon
-        to process it.
+def POST_MapView(request):
+    """ Endpoint to POST a new mapView
 
     :param json_body: Json object containing the parameters
     :type json_body: {{
-        map_view_json: str,
         user_id: str,
+        map_view_json: map_view_schema,
     }}
     :result: JSON object describing the map object
     :rtype: {{
@@ -79,13 +72,31 @@ def POST_TransformationForMapId(request):
         if request.method != 'POST':
             return HTTPBadRequest('The endpoint only supports "POST" requests.')
 
+        # Define the request schema for this endpoint
+        request_schema = {
+            "type": "object",
+            "properties": {
+                "user_id": { "type": "string"},
+                "map_view_json": map_view_schema
+            },
+            "required": ["map_view_json", "user_id"],
+            "additionalProperties": False
+        }
+
+
+        # Validate the request
+        try:
+            validate(request.json_body, request_schema)
+        except Exception as e:
+            LOGGER.error(e)
+            raise HTTPBadRequest("Invalid request object at POST request")
+
         map_view_json = request.json_body['map_view_json']
         userId = request.json_body['user_id']
         submitted = datetime.now().isoformat()
 
-        validate(map_view_json, map_view_schema)
 
-        # Save to transformations
+        # Save to MapView table
         newMapView = MapView(
             map_view_json=json.dumps(map_view_json),
             last_request=None,
