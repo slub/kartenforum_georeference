@@ -5,11 +5,8 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-import os
 import pytest
 import logging
-import lockfile
-from georeference.settings import PATH_TMP_ROOT
 from georeference.daemon.runner_lifecyle import main, onStart
 
 # Initialize the logger
