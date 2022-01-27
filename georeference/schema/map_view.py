@@ -66,14 +66,14 @@ map_view_schema = {
             "mapView": {
                 "type": "object",
                 "properties": {
-                    "direction": {"type": "array"},
-                    "position": {"type": "array"},
-                    "up": {"type": "array"},
-                    "right": {"type": "array"},
+                    "direction": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
+                    "position": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
+                    "up": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
+                    "right": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
                 },
+                "required": ["direction", "position", "up", "right"]
             }
         },
-        "required": ["direction", "postion", "up", "right"]
     },
     "else": {
         "properties": {
