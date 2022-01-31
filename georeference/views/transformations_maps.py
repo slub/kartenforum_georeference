@@ -82,7 +82,7 @@ def GET_TransformationsForMapId(request):
         # Create default response
         responseObj = {
             'active_transformation_id': georefMapObj.transformation_id if georefMapObj != None else None,
-            'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
+            'extent': json.loads(georefMapObj.extent) if georefMapObj != None and georefMapObj.extent != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'transformations': [],
             'map_id': toPublicOAI(mapObj.id),
