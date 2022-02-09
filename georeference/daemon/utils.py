@@ -81,7 +81,7 @@ def _processGeoTransformation(transformationObj, originalMapObj, georefMapObj, m
         if os.path.exists(georefMapObj.getAbsPath()) == False or forceReprocessing:
             logger.debug('Process transformation with id "%s" ...' % transformationObj.id)
             georefParams  = transformationObj.getParamsAsDict()
-            clip = json.loads(transformationObj.clip)
+            clip = json.loads(transformationObj.clip) if transformationObj.clip != None else None
 
             # Try processing a geo transformation
             rectifyImageWithClipAndOverviews(

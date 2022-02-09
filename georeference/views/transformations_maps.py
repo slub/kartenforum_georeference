@@ -9,16 +9,17 @@ import traceback
 import logging
 import json
 import os
+from jsonschema import validate
 from datetime import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
 from georeference.utils.parser import toInt
-from georeference.utils.validations import isValidTransformationRequest
 from georeference.models.transformations import Transformation, ValidationValues
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, TaskValues
+from georeference.schema.transformation import TransformationSchema
 from georeference.settings import GLOBAL_ERROR_MESSAGE
 from georeference.utils.parser import fromPublicOAI, toPublicOAI
 from georeference.utils.api import toTransformationResponse
@@ -81,7 +82,7 @@ def GET_TransformationsForMapId(request):
         # Create default response
         responseObj = {
             'active_transformation_id': georefMapObj.transformation_id if georefMapObj != None else None,
-            'extent': json.loads(georefMapObj.extent) if georefMapObj != None else None,
+            'extent': json.loads(georefMapObj.extent) if georefMapObj != None and georefMapObj.extent != None else None,
             'default_srs': 'EPSG:%s' % mapObj.default_srs,
             'transformations': [],
             'map_id': toPublicOAI(mapObj.id),
@@ -143,18 +144,22 @@ def POST_TransformationForMapId(request):
         if request.matchdict['map_id'] == None:
             return HTTPBadRequest('Missing map_id')
 
-        # Validate input
-        isValidRequest = isValidTransformationRequest(request.json_body)
-        if isValidRequest['valid'] == False:
-            return HTTPBadRequest(isValidRequest['error_msg'])
-
         # Check if original map exists for given id
         mapId = toInt(fromPublicOAI(request.matchdict['map_id']))
         mapObj = OriginalMap.byId(mapId, request.dbsession)
         if mapObj is None:
             return HTTPNotFound('Could not detect original map for passed map id.')
 
-        clip = request.json_body['clip']
+        # Validate json content
+        try:
+            validate(request.json_body, TransformationSchema)
+        except Exception as e:
+            LOGGER.error(e)
+            LOGGER.error(traceback.format_exc())
+            return HTTPBadRequest("Invalid request object at POST request. %s" % e.message)
+
+        # Parse and process the input
+        clip = request.json_body['clip'] if 'clip' in request.json_body else None
         params = request.json_body['params']
         overwrites = request.json_body['overwrites']
         userId = request.json_body['user_id']
@@ -170,7 +175,7 @@ def POST_TransformationForMapId(request):
             submitted=submitted,
             user_id=userId,
             params=json.dumps(params),
-            clip=json.dumps(clip),
+            clip=json.dumps(clip) if clip != None else None,
             validation=ValidationValues.MISSING.value,
             original_map_id=mapId,
             overwrites=overwrites,
