@@ -91,3 +91,20 @@ class Transformation(Base):
         if transformation is None:
             return False
         return True
+
+    @classmethod
+    def getClipForTransformationId(cls, transformationId, dbsession):
+        """ Returns the clip polygon as GeoJSON for a given map id.
+
+        :param transformationId: Id of the transformation
+        :type transformationId: int
+        :param dbsession: Database session
+        :type dbsession: sqlalchemy.orm.session.Session
+        :result: GeoJSON  in EPSG:4326
+        :rtype: GeoJSON
+        """
+        query = "SELECT st_asgeojson(st_transform(clip, 4326)) FROM transformations WHERE id = %s" % transformationId
+        response = dbsession.execute(query).fetchone()
+        if response != None and response[0] != None:
+            return json.loads(response[0])
+        return None

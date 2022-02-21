@@ -13,6 +13,7 @@ from datetime import datetime
 from georeference.models.original_maps import OriginalMap
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
+from georeference.models.transformations import Transformation
 from georeference.settings import PATH_TMS_ROOT
 from georeference.settings import PATH_MAPFILE_ROOT, PATH_MAPFILE_TEMPLATES
 from georeference.settings import PATH_TMP_ROOT
@@ -267,3 +268,24 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
         id=searchDocument['map_id'],
         body=searchDocument
     )
+
+def getGeometry(originalMapId, dbsession):
+    """ This function helps to extract the geometry for a given georeferenced map in GeoJSON structure. It checks if a clip polygon
+        is saved for a given GeorefMap and if yes returns the clip polygon as Geometry in GeoJSON structure. If no clip
+        polygon is saved it uses the extent of the GeorefMap
+
+    :param originalMapId: Id of a original map
+    :type originalMapId: int
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :returns: JSON
+    """
+    # Extract the GeorefMap object for the original map
+    georefMapObj = GeorefMap.byOriginalMapId(originalMapId, dbsession)
+
+    # Check if there is a clip polygon and if yes return it.
+    clipGeometry = Transformation.getClipForTransformationId(georefMapObj.transformation_id, dbsession)
+    if clipGeometry != None:
+        return clipGeometry
+    else:
+        return GeorefMap.getExtentForMapId(originalMapId, dbsession)

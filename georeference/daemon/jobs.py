@@ -13,6 +13,7 @@ from georeference.models.jobs import Job, TaskValues
 from georeference.models.transformations import Transformation, ValidationValues
 from georeference.daemon.utils import disableTransformation
 from georeference.daemon.utils import enableTransformation
+from georeference.daemon.utils import getGeometry
 from georeference.daemon.utils import _processGeoTransformation
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.original_maps import OriginalMap
@@ -285,7 +286,7 @@ def loadInitialData(dbsession, logger):
                 georefMapObj=georefMapObj if georefMapObj != None and os.path.exists(
                     georefMapObj.getAbsPath()) else None,
                 logger=logger,
-                geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
+                geometry=getGeometry(originalMapObj.id, dbsession)
             )
             esIndex.index(
                 index=ES_INDEX_NAME,
