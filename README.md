@@ -24,7 +24,8 @@ For local development and testing of the project a few further steps have to be 
 ```
 # Download the images
 scp u279620-sub2@u279620-sub2.your-storagebox.de:/test_data.tar.xz ./
-tar -xf test_data.tar.xz -C ./tmp/org_new/
+mkdir /tmp/org_new/
+tar -xf test_data.tar.xz -C /tmp/org_new/
 ```
 
 As next step start the docker services (PostgreSQL Database, Mapserver, Elasticsearch):
