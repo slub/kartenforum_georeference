@@ -1,0 +1,45 @@
+# Created by jacob.mendt@pikobytes.de on 31.08.2021
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE.md", which is part of this source code package
+version: '3'
+services:
+  db:
+    container_name: pg_container
+    image: postgis/postgis:13-master
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+  mapserver:
+    container_name: mapserver
+    image: camptocamp/mapserver
+    restart: unless-stopped
+    volumes:
+      - ../tmp/tmp/:/etc/mapserver/
+      - ../tmp/tmp/:/mapdata/
+    ports:
+      - 8080:80
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - 9200:9200
+      - 9300:9300
+

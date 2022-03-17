@@ -1,0 +1,25 @@
+# local developing files
+.vscode/
+.idea/
+.coverage
+/deprecated
+/georeference_tests/data_output
+!/georeference_tests/data_output/.placeholder
+/georeference_tests/data_input
+!/georeference_tests/data_input/.placeholder
+/tmp
+!/tmp/.placeholder
+TODO.md
+
+# custom installations files
+/python_env
+/database/backup_*
+/database/vkdb-test1
+
+# build files
+/georeference.egg-info
+/dist
+*.pyc
+
+# configuration files
+create_tar.sh
