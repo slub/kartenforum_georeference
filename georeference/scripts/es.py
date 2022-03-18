@@ -172,7 +172,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
                     template % (str(originalMapObj.map_type).lower() + '/' + originalMapObj.file_name)
                 )
 
-        return {
+        response = {
             'map_id': toPublicOAI(originalMapObj.id),
             'file_name': originalMapObj.file_name,
             'description': metadataObj.description,
@@ -192,6 +192,7 @@ def generateDocument(originalMapObj, metadataObj, georefMapObj=None, logger=LOGG
             'has_georeference': georefMapObj != None,
             'time_published': metadataObj.time_of_publication.date().isoformat()
         }
+        return response
     except Exception as e:
         logger.error('Failed creating a es document for original map %s.' % originalMapObj.id)
         logger.error(e)

@@ -280,21 +280,26 @@ def loadInitialData(dbsession, logger):
 
             # Write document to es
             logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
-            searchDocument = generateDocument(
-                originalMapObj,
-                Metadata.byId(originalMapObj.id, dbsession),
-                georefMapObj=georefMapObj if georefMapObj != None and os.path.exists(
-                    georefMapObj.getAbsPath()) else None,
-                logger=logger,
-                geometry=getGeometry(originalMapObj.id, dbsession)
-            )
-            esIndex.index(
-                index=ES_INDEX_NAME,
-                doc_type=None,
-                id=searchDocument['map_id'],
-                body=searchDocument
-            )
-
+            try:
+                searchDocument = generateDocument(
+                    originalMapObj,
+                    Metadata.byId(originalMapObj.id, dbsession),
+                    georefMapObj=georefMapObj if georefMapObj != None and os.path.exists(
+                        georefMapObj.getAbsPath()) else None,
+                    logger=logger,
+                    geometry=getGeometry(originalMapObj.id, dbsession)
+                )
+                esIndex.index(
+                    index=ES_INDEX_NAME,
+                    doc_type=None,
+                    id=searchDocument['map_id'],
+                    body=searchDocument
+                )
+            except Exception as e:
+                logger.error('Failed to write document to es for original map %s.' % originalMapObj.id)
+                logger.error(searchDocument)
+                logger.error(e)
+                logger.error(traceback.format_exc())
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')

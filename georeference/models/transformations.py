@@ -103,7 +103,7 @@ class Transformation(Base):
         :result: GeoJSON  in EPSG:4326
         :rtype: GeoJSON
         """
-        query = "SELECT st_asgeojson(st_transform(clip, 4326)) FROM transformations WHERE id = %s" % transformationId
+        query = "SELECT st_asgeojson(ST_ConvexHull(st_transform(clip, 4326))) FROM transformations WHERE id = %s" % transformationId
         response = dbsession.execute(query).fetchone()
         if response != None and response[0] != None:
             return json.loads(response[0])
