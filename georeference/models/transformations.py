@@ -95,6 +95,9 @@ class Transformation(Base):
     @classmethod
     def getClipForTransformationId(cls, transformationId, dbsession):
         """ Returns the clip polygon as GeoJSON for a given map id.
+        
+            The clip polygon is wrapped by an by an ConvexHull because the elasticsearch has problems with some
+            valid but complex (crossing) polygon geometries.
 
         :param transformationId: Id of the transformation
         :type transformationId: int

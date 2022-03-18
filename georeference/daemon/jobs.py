@@ -299,7 +299,6 @@ def loadInitialData(dbsession, logger):
                 logger.error('Failed to write document to es for original map %s.' % originalMapObj.id)
                 logger.error(searchDocument)
                 logger.error(e)
-                logger.error(traceback.format_exc())
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')
