@@ -199,7 +199,7 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
         Metadata.byId(originalMapObj.id, dbsession),
         georefMapObj=None,
         logger=logger,
-        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
+        geometry=getGeometry(originalMapObj.id, dbsession)
     )
     logger.debug(searchDocument)
     esIndex.index(
@@ -259,7 +259,7 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
         metadataObj,
         georefMapObj=georefMapObj,
         logger=logger,
-        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
+        geometry=getGeometry(originalMapObj.id, dbsession)
     )
     logger.debug(searchDocument)
     esIndex.index(
@@ -284,8 +284,8 @@ def getGeometry(originalMapId, dbsession):
     georefMapObj = GeorefMap.byOriginalMapId(originalMapId, dbsession)
 
     # Check if there is a clip polygon and if yes return it.
-    clipGeometry = Transformation.getClipForTransformationId(georefMapObj.transformation_id, dbsession)
-    if clipGeometry != None:
-        return clipGeometry
-    else:
-        return GeorefMap.getExtentForMapId(originalMapId, dbsession)
+    if georefMapObj != None:
+        clipGeometry = Transformation.getClipForTransformationId(georefMapObj.transformation_id, dbsession)
+        if clipGeometry != None:
+            return clipGeometry
+    return GeorefMap.getExtentForMapId(originalMapId, dbsession)
