@@ -194,20 +194,27 @@ def disableTransformation(transformationObj, esIndex, dbsession, logger):
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
     dbsession.flush()
-    searchDocument = generateDocument(
-        originalMapObj,
-        Metadata.byId(originalMapObj.id, dbsession),
-        georefMapObj=None,
-        logger=logger,
-        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
-    )
-    logger.debug(searchDocument)
-    esIndex.index(
-        index=ES_INDEX_NAME,
-        doc_type=None,
-        id=searchDocument['map_id'],
-        body=searchDocument
-    )
+
+    try:
+        searchDocument = generateDocument(
+            originalMapObj,
+            Metadata.byId(originalMapObj.id, dbsession),
+            georefMapObj=None,
+            logger=logger,
+            geometry=getGeometry(originalMapObj.id, dbsession)
+        )
+        logger.debug(searchDocument)
+        esIndex.index(
+            index=ES_INDEX_NAME,
+            doc_type=None,
+            id=searchDocument['map_id'],
+            body=searchDocument
+        )
+    except Exception as e:
+        logger.error('Failed to write document to es for original map %s.' % originalMapObj.id)
+        logger.error(searchDocument)
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
 def enableTransformation(transformationObj, esIndex, dbsession, logger):
     """ Enables a given transformation.
@@ -254,20 +261,27 @@ def enableTransformation(transformationObj, esIndex, dbsession, logger):
     # Write document to es
     logger.debug('Write search record for original map id %s to index ...' % (originalMapObj.id))
     dbsession.flush()
-    searchDocument = generateDocument(
-        originalMapObj,
-        metadataObj,
-        georefMapObj=georefMapObj,
-        logger=logger,
-        geometry=GeorefMap.getExtentForMapId(originalMapObj.id, dbsession)
-    )
-    logger.debug(searchDocument)
-    esIndex.index(
-        index=ES_INDEX_NAME,
-        doc_type=None,
-        id=searchDocument['map_id'],
-        body=searchDocument
-    )
+
+    try:
+        searchDocument = generateDocument(
+            originalMapObj,
+            metadataObj,
+            georefMapObj=georefMapObj,
+            logger=logger,
+            geometry=getGeometry(originalMapObj.id, dbsession)
+        )
+        logger.debug(searchDocument)
+        esIndex.index(
+            index=ES_INDEX_NAME,
+            doc_type=None,
+            id=searchDocument['map_id'],
+            body=searchDocument
+        )
+    except Exception as e:
+        logger.error('Failed to write document to es for original map %s.' % originalMapObj.id)
+        logger.error(searchDocument)
+        logger.error(e)
+        logger.error(traceback.format_exc())
 
 def getGeometry(originalMapId, dbsession):
     """ This function helps to extract the geometry for a given georeferenced map in GeoJSON structure. It checks if a clip polygon
@@ -284,8 +298,8 @@ def getGeometry(originalMapId, dbsession):
     georefMapObj = GeorefMap.byOriginalMapId(originalMapId, dbsession)
 
     # Check if there is a clip polygon and if yes return it.
-    clipGeometry = Transformation.getClipForTransformationId(georefMapObj.transformation_id, dbsession)
-    if clipGeometry != None:
-        return clipGeometry
-    else:
-        return GeorefMap.getExtentForMapId(originalMapId, dbsession)
+    if georefMapObj != None:
+        clipGeometry = Transformation.getClipForTransformationId(georefMapObj.transformation_id, dbsession)
+        if clipGeometry != None:
+            return clipGeometry
+    return GeorefMap.getExtentForMapId(originalMapId, dbsession)

@@ -95,6 +95,9 @@ class Transformation(Base):
     @classmethod
     def getClipForTransformationId(cls, transformationId, dbsession):
         """ Returns the clip polygon as GeoJSON for a given map id.
+        
+            The clip polygon is access via ConvexHull function, because elasticsearch currently has some problems with
+            valid but complex (crossing) polygon geometries.
 
         :param transformationId: Id of the transformation
         :type transformationId: int
@@ -103,7 +106,7 @@ class Transformation(Base):
         :result: GeoJSON  in EPSG:4326
         :rtype: GeoJSON
         """
-        query = "SELECT st_asgeojson(st_transform(clip, 4326)) FROM transformations WHERE id = %s" % transformationId
+        query = "SELECT st_asgeojson(ST_ConvexHull(st_transform(clip, 4326))) FROM transformations WHERE id = %s" % transformationId
         response = dbsession.execute(query).fetchone()
         if response != None and response[0] != None:
             return json.loads(response[0])
