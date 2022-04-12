@@ -76,7 +76,7 @@ def _getOnlineResourceWMS(originalMapObj):
     """
     # append WMS
     return {
-        'url': '%(link_service)s?SERVICE=WMS&VERSION=2.0.0&REQUEST=GetCapabilities' % ({
+        'url': '%(link_service)s?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities' % ({
             'link_service': TEMPLATE_PUBLIC_WMS_URL % originalMapObj.id,
         }),
         'type': 'WMS'
