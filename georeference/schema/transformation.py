@@ -6,6 +6,8 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 
+from georeference.schema.general import TwoDimensionalPoint
+
 # Example:
 #
 # {
@@ -30,69 +32,70 @@
 #     'user_id': 'test'
 # }
 
-TransformationSchema = {
+_BaseTransformationSchema = {
     "type": "object",
     "properties": {
-        # in order for the "additionalProperties" key to work correctly, all expected properties have to be defined here
         "clip": {
             "type": "object",
             "properties": {
                 "type": {
                     "enum": ["Polygon"]
                 },
-                "crs": {
-                    "type": "object",
-                    "properties": {
-                        "type": {
-                            "type": "string"
-                        },
-                        "properties": {
-                            "type": "object",
-                            "properties": {
-                                "name": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                },
                 "coordinates": {
-                    "type": "array"
+                    "type": "array",
+                    "items": {
+                        "type:": "array",
+                        # at least 3 2-dimensional coordinates for a polygon
+                        "minItems": 3,
+                        "items": TwoDimensionalPoint
+                    }
                 }
             },
-            "required": ["type", "crs", "coordinates"]
+            "required": ["type", "coordinates"],
+            "additionalProperties": False
         },
         "params": {
             "type": "object",
             "properties": {
-                "source": {"enum": ["pixel"]},
-                "target": {"type": "string"},
                 "algorithm": {"enum": ["tps", "affine", "polynom"]},
                 "gcps": {
                     "type": "array",
                     "items": {
                         "type": "object",
+                        "minItems": 3,
                         "properties": {
-                            "source": {
-                                "type": "array",
-                                "items": {
-                                    "type": "number"
-                                }
-                            },
-                            "target": {
-                                "type": "array",
-                                "items": {
-                                    "type": "number"
-                                }
-                            }
+                            "source": TwoDimensionalPoint,
+                            "target": TwoDimensionalPoint
                         }
                     }
                 }
             },
-            "required": ["source", "target", "algorithm", "gcps"]
-        },
-        "overwrites": {"type": "number"},
-        "user_id": {"type": "string"},
+            "required": ["algorithm", "gcps"],
+            "additionalProperties": False
+        }
     },
-    "required": ["params", "overwrites", "user_id"]
+    "required": ["params"]
+}
+
+TransformationSchema = {
+    "allOf": [
+        _BaseTransformationSchema,
+        {
+            "type": "object",
+            "properties": {
+                "overwrites": {"type": "number"},
+                "user_id": {"type": "string"},
+                "map_id": {"type": "string"}
+            },
+            "required": ["overwrites", "user_id", "map_id"]
+        }
+    ]
+}
+
+IdOnlyTransformationSchema = {
+    "type": "object",
+    "properties": {
+        "transformation_id": {"type": "number"}
+    },
+    "required": ["transformation_id"]
 }

@@ -14,6 +14,7 @@ requires = [
     'pyramid==2.0',
     'pyramid_tm==2.4',
     'pyramid_retry==2.1.1',
+    'pyproj==3.3.1',
     'psycopg2==2.9.1',
     'SQLAlchemy==1.4.23',
     'waitress==2.0',
@@ -31,7 +32,7 @@ tests_require = [
 
 setup(
     name='georeference',
-    version='1.0',
+    version='1.1',
     description='georeference',
     classifiers=[
         "Programming Language :: Python",

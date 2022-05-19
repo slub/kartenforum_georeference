@@ -7,7 +7,7 @@ MAP
 
   WEB
     METADATA
-        "wms_srs" "epsg:3857 epsg:4314 epsg:4326"
+        "wms_srs" "epsg:3857 epsg:4326"
         "wms_onlineresource" "$wmsUrl"
         "wms_enable_request" "*"
         "wms_titel" "Temporary Web Map Service for georeference new images."

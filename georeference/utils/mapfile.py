@@ -10,15 +10,16 @@ from osgeo import osr
 from osgeo.gdalconst import GA_ReadOnly
 from string import Template
 
-def parseGeoTiffMetadata(tiffPath):
+
+def parse_geo_tiff_metadata(tiff_path):
     """ Functions parses the metadata from a geotiff and returns it.
 
-    :param tiffPath: str
-    :type tiffPath: Path to the tiff file
+    :param tiff_path: str
+    :type tiff_path: Path to the tiff file
     :return: Dictionary containing relevant tiff metadata
     :rtype: dict """
     try:
-        dataset = gdal.Open(tiffPath, GA_ReadOnly)
+        dataset = gdal.Open(tiff_path, GA_ReadOnly)
 
         # Parse epsg code / projection
         proj = dataset.GetProjection()
@@ -42,26 +43,30 @@ def parseGeoTiffMetadata(tiffPath):
     finally:
         del dataset
 
-def writeMapfile(targetPath, templatePath, templateValues):
+
+def write_mapfile(target_path, template_path, template_values):
     """ Functions writes a mapfile. It replaces the template with the given params dict.
 
-    :param targetPath: Path of the target file
-    :type targetPath: str
-    :param templatePath: Path to the template file
-    :type templatePath: str
-    :param templateValues: Dictionary containing the template values
-    :type templateValues: Dict
+    :param target_path: Path of the target file
+    :type target_path: str
+    :param template_path: Path to the template file
+    :type template_path: str
+    :param template_values: Dictionary containing the template values
+    :type template_values: Dict
     :return: Path to template file
     :rtype: str
     """
 
     # Create new template string
-    content = None
-    with open(templatePath, 'r') as f:
-        src = Template(f.read())
-        content = src.substitute(templateValues)
+    try:
+        content = None
+        with open(template_path, 'r') as f:
+            src = Template(f.read())
+            content = src.substitute(template_values)
 
-    if content != None:
-        with open(targetPath, 'w') as f:
-            f.write(content)
-    return targetPath
+        if content is not None:
+            with open(target_path, 'w') as f:
+                f.write(content)
+        return target_path
+    finally:
+        f.close()

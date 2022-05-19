@@ -17,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 # ``Base.metadata`` prior to any initialization routines.
 from .jobs import Job
 from .transformations import Transformation
-from .original_maps import OriginalMap
+from .raw_maps import RawMap
 from .metadata import Metadata
 from .map_view import MapView
 

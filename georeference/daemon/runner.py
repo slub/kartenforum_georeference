@@ -19,7 +19,7 @@ sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
 from georeference.settings import DAEMON_SETTINGS
-from georeference.daemon.runner_lifecyle import main
+from georeference.daemon.runner_lifecycle import main
 
 #
 # Initialize the daemon
@@ -46,9 +46,9 @@ try:
     pidFile.acquire(timeout=1)
     with context:
         main(
-            iniFile=os.path.join(BASE_PATH, '../../production.ini'),
-            waitOnStart = DAEMON_SETTINGS['wait_on_startup'] if DAEMON_SETTINGS['wait_on_startup'] > 0 else 1,
-            waitOnLoop = DAEMON_SETTINGS['sleep_time'],
+            ini_file=os.path.join(BASE_PATH, '../../production.ini'),
+            wait_on_start= DAEMON_SETTINGS['wait_on_startup'] if DAEMON_SETTINGS['wait_on_startup'] > 0 else 1,
+            wait_on_loop= DAEMON_SETTINGS['sleep_time'],
         )
 except lockfile.LockTimeout:
     print("There seems to be already a process running")

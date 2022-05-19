@@ -6,6 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package.
 
+from georeference.schema.general import TwoDimensionalPoint
 
 map_view_schema = {
     "type": "object",
@@ -23,7 +24,7 @@ map_view_schema = {
                     "type": {"type": "string"}
                 },
                 "required": ["id", "label", "urls"]
-            }        
+            }
         },
         "is3dEnabled": {"type": "boolean"},
         "mapView": {"type": "object"},
@@ -37,8 +38,8 @@ map_view_schema = {
                     "isVisible": {"type": "boolean"},
                     "opacity": {"type": "number"},
                     "properties": {"type": "object"},
-                    "geojson": {"type" : "object"},
-                    "coordinates": {"type" : "array"}
+                    "geojson": {"type": "object"},
+                    "coordinates": {"type": "array"}
                 },
                 "if": {"properties": {"type": {"const": "geojson"}}, "required": ["type"]},
                 "then": {
@@ -66,10 +67,18 @@ map_view_schema = {
             "mapView": {
                 "type": "object",
                 "properties": {
-                    "direction": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
-                    "position": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
-                    "up": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
-                    "right": {"type": "object", "properties": { "x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}}, "additionalProperties": False},
+                    "direction": {"type": "object", "properties": {"x": {"type": "number"}, "y": {"type": "number"},
+                                                                   "z": {"type": "number"}},
+                                  "additionalProperties": False},
+                    "position": {"type": "object", "properties": {"x": {"type": "number"}, "y": {"type": "number"},
+                                                                  "z": {"type": "number"}},
+                                 "additionalProperties": False},
+                    "up": {"type": "object",
+                           "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}},
+                           "additionalProperties": False},
+                    "right": {"type": "object",
+                              "properties": {"x": {"type": "number"}, "y": {"type": "number"}, "z": {"type": "number"}},
+                              "additionalProperties": False},
                 },
                 "required": ["direction", "position", "up", "right"]
             }
@@ -80,7 +89,7 @@ map_view_schema = {
             "mapView": {
                 "type": "object",
                 "properties": {
-                    "center": {"type": "array"},
+                    "center": TwoDimensionalPoint,
                     "resolution": {"type": "number"},
                     "rotation": {"type": "number"},
                     "zoom": {"type": "number"},
@@ -94,3 +103,13 @@ map_view_schema = {
     "additionalProperties": False
 }
 
+# Define the request schema for this endpoint
+map_view_requestSchema = {
+    "type": "object",
+    "properties": {
+        "user_id": {"type": "string"},
+        "map_view_json": map_view_schema
+    },
+    "required": ["map_view_json", "user_id"],
+    "additionalProperties": False
+}

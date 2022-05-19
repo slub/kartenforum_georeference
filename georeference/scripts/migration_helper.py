@@ -22,9 +22,9 @@ sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
 from georeference.models.georef_maps import GeorefMap
-from georeference.models.original_maps import OriginalMap
+from georeference.models.raw_maps import RawMap
 from georeference.settings import DAEMON_LOGGER_SETTINGS
-from georeference.utils.logging import createLogger
+from georeference.utils.logging import create_logger
 
 
 def initializeDatabaseSession_():
@@ -63,7 +63,7 @@ def initializeLogger_(handler):
     )
 
     # Create and initialize the logger
-    return createLogger(
+    return create_logger(
         DAEMON_LOGGER_SETTINGS['name'],
         DAEMON_LOGGER_SETTINGS['level'],
         handler = handler,
@@ -82,10 +82,10 @@ def checkPathsOriginalImages(dbsession, logger):
     logger.info("Check for missing original images ...")
     foundImages = 0
     notFoundImages = []
-    for mapObj in OriginalMap.all(dbsession):
-        if os.path.exists(mapObj.getAbsPath()) != True and mapObj.enabled:
+    for mapObj in RawMap.all(dbsession):
+        if os.path.exists(mapObj.get_abs_path()) != True and mapObj.enabled:
             notFoundImages.append(
-                mapObj.getAbsPath()
+                mapObj.get_abs_path()
             )
         else:
             foundImages += 1
@@ -112,9 +112,9 @@ def checkPathsGeorefImages(dbsession, logger):
     foundImages = 0
     notFoundImages = []
     for georefMapObj in GeorefMap.all(dbsession):
-        if os.path.exists(georefMapObj.getAbsPath()) != True:
+        if os.path.exists(georefMapObj.get_abs_path()) != True:
             notFoundImages.append(
-                georefMapObj.getAbsPath()
+                georefMapObj.get_abs_path()
             )
         else:
             foundImages += 1

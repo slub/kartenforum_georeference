@@ -5,6 +5,7 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+import datetime
 import psycopg2
 import sys
 import os
@@ -18,11 +19,11 @@ ROOT_PATH = os.path.abspath(
     )
 )
 
-from georeference.models.jobs import TaskValues
+from georeference.models.jobs import EnumJobType
 
 sys.path.append(ROOT_PATH)
 
-def doTrgDbClean(conn):
+def do_trg_db_clean(conn):
     """ Empties all fields from the target database. This function should be used carefully, because
         it deletes all entries from the database and should only be used in developing environments.
 
@@ -38,7 +39,8 @@ def doTrgDbClean(conn):
         cur.execute('TRUNCATE georef_maps CASCADE;')
         cur.execute('TRUNCATE transformations CASCADE;')
         cur.execute('TRUNCATE metadata CASCADE;')
-        cur.execute('TRUNCATE original_maps CASCADE;')
+        cur.execute('TRUNCATE raw_maps CASCADE;')
+        cur.execute('TRUNCATE map_view CASCADE;')
 
         print('Delete all entries from the target database.')
     finally:
@@ -46,70 +48,54 @@ def doTrgDbClean(conn):
             cur.close()
 
 
-def doMigrationTableMetadata(srcConn, trgConn):
+def do_migration_table_metadata(src_conn, trg_conn):
     """ Migrations the data the "metadata" from the src database to the target database. The migration of the table
         "original_maps" has to be finished.
 
-    :param srcConn: Database connection to the source database
-    :type srcConn: psycopg2.connection
-    :param trgConn: Database connection to the target database
-    :type trgConn: psycopg2.connection
+    :param src_conn: Database connection to the source database
+    :type src_conn: psycopg2.connection
+    :param trg_conn: Database connection to the target database
+    :type trg_conn: psycopg2.connection
     """
     print('Migrate database "metadata" ...')
 
-    srcCur = None
-    trgCur = None
+    src_cur = None
+    trg_cur = None
     try:
-        srcCur = srcConn.cursor()
-        trgCur = trgConn.cursor()
+        src_cur = src_conn.cursor()
+        trg_cur = trg_conn.cursor()
 
         # Query source database and write records into trg database
-        srcCur.execute('SELECT md.mapid, md.title, md.titleshort, md.serientitle, md.description, md.measures, md.scale, md.type, md.technic, md.ppn, md.apspermalink, md.imagelicence, md.imageowner, md.imagejpg, md.imagezoomify, md.timepublish, md.thumbssmall, md.thumbsmid, m.apsobjectid, m.apsdateiname FROM metadata md, map m where m.id = md.mapid')
-        for row in srcCur.fetchall():
-            # Create a new permalink
-            permalink = "https://www.deutschefotothek.de/documents/obj/%s" % row[18] if row[18] != None else "https://www.deutschefotothek.de/list/freitext/%s" % row[9]
-            # Create insert statement for metadata table
-            insertStatement = 'INSERT INTO metadata(original_map_id, title, title_short, title_serie, description, ' \
-                              'measures, scale, type, technic, ppn, permalink, license, owner, link_jpg, link_zoomify,' \
-                              ' time_of_publication, link_thumb_small, link_thumb_mid, fotothek_id) VALUES (\'%s\', \'%s\', \'%s\', ' \
-                              '%s, \'%s\',\'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\',\'%s\', ' \
-                              '\'%s\', \'%s\', \'%s\',\'%s\', %s)' % (
-                row[0],
-                row[1].replace('\'', '\'\''),
-                row[2].replace('\'', '\'\''),
-                '\'%s\'' % row[3] if len(row[3]) > 0 else 'Null',
-                row[4].replace('\'', '\'\''),
-                row[5],
-                row[6],
-                row[7],
-                row[8],
-                row[9],
-                permalink,
-                row[11],
-                row[12],
-                row[13].replace('http', 'https'),
-                row[14].replace('http', 'https'),
-                row[15],
-                row[16].replace('http', 'https'),
-                row[17].replace('http', 'https'),
-                row[18] if row[18] != None else 'NULL'
+        src_cur.execute('select m.original_map_id, m.title , m.title_short , m.title_serie , m.description , m.measures , m."type", m.technic , m.ppn , m.permalink , m.license ,m."owner" , m.link_zoomify , m.link_thumb_small , m.link_thumb_mid, m.time_of_publication from metadata m')
+        for row in src_cur.fetchall():
+            insert_statement = "INSERT INTO metadata(raw_map_id, title, title_short, title_serie, description, " \
+                              "measures, type, technic, ppn, permalink, license, owner, link_zoomify," \
+                              " link_thumb_small, link_thumb_mid, time_of_publication) VALUES ({raw_map_id}, '{title}', '{title_short}', '{title_serie}', '{description}', " \
+                              "'{measures}', '{type}', '{technic}', '{ppn}', '{permalink}', '{license}', '{owner}', '{link_zoomify}'," \
+                              " '{link_thumb_small}', '{link_thumb_mid}', '{time_of_publication}')".format(
+                raw_map_id=row[0],
+                title=row[1].replace("\'", "\'\'"),
+                title_short=row[2].replace("\'", "\'\'"),
+                title_serie=row[3].replace("\'", "\'\'") if row[3] is not None else None,
+                description=row[4].replace("\'", "\'\'") if row[3] is not None else None,
+                measures=row[5],
+                type=row[6],
+                technic=row[7],
+                ppn=row[8],
+                permalink=row[9],
+                license=row[10],
+                owner=row[11],
+                link_zoomify=row[12],
+                link_thumb_small=row[13],
+                link_thumb_mid=row[14],
+                time_of_publication=row[15]
             )
-            print(insertStatement)
+            print(insert_statement)
 
-            trgCur.execute(insertStatement)
-
-            # Update map_scale original_maps
-            if len(row[6]) > 0 and ':' in row[6]:
-                newScale = int(row[6].split(':')[1])
-                updateStatement = 'UPDATE original_maps SET map_scale = %s WHERE id = %s' % (
-                    newScale if newScale > 0 else 'Null',
-                    row[0]
-                )
-                print(updateStatement)
-                trgCur.execute(updateStatement)
+            trg_cur.execute(insert_statement)
 
         # Commit writes
-        trgConn.commit()
+        trg_conn.commit()
 
         print('======================================================')
         print('Finished migration of database "metadata".')
@@ -117,48 +103,49 @@ def doMigrationTableMetadata(srcConn, trgConn):
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if srcCur != None:
-            srcCur.close()
-        if trgCur != None:
-            trgCur.close()
+        if src_cur != None:
+            src_cur.close()
+        if trg_cur != None:
+            trg_cur.close()
 
-def doMigrationTableOriginalMaps(srcConn, trgConn):
+def do_migration_table_raw_maps(src_conn, trg_conn):
     """ Migrations the data "original_maps" from the src database to the target database.
 
-    :param srcConn: Database connection to the source database
-    :type srcConn: psycopg2.connection
-    :param trgConn: Database connection to the target database
-    :type trgConn: psycopg2.connection
+    :param src_conn: Database connection to the source database
+    :type src_conn: psycopg2.connection
+    :param trg_conn: Database connection to the target database
+    :type trg_conn: psycopg2.connection
     """
-    print('Migrate database "original_maps" ...')
+    print('Migrate database "raw_maps" ...')
 
-    srcCur = None
-    trgCur = None
+    src_cur = None
+    trg_cur = None
     try:
-        srcCur = srcConn.cursor()
-        trgCur = trgConn.cursor()
+        src_cur = src_conn.cursor()
+        trg_cur = trg_conn.cursor()
 
         # Query source database and write records into trg database
-        srcCur.execute('SELECT id, apsdateiname, istaktiv, maptype, recommendedsrid, originalimage FROM map')
-        for row in srcCur.fetchall():
-            # Transform path to relative path
-            pathParts = row[5].split('/')
-            newPath = './'+ '/'.join([pathParts[-2], pathParts[-1]])
+        src_cur.execute('SELECT om.id, om.file_name, om.enabled, om.map_type, om.default_srs, om.rel_path, om.map_scale, m.time_of_publication FROM original_maps om join metadata m on om.id = m.original_map_id  ;')
+        for row in src_cur.fetchall():
+            year_of_publication = int(str(row[7]).split('-')[0])
 
             # Insert values into database
-            insertStatement = 'INSERT INTO original_maps(id, file_name, enabled, map_type, default_srs, rel_path) VALUES (%s, \'%s\', %s, \'%s\', %s, \'%s\')' % (
-                row[0],
-                row[1],
-                row[2],
-                row[3],
-                row[4],
-                newPath
+            insert_statement = "INSERT INTO raw_maps(id, file_name, enabled, map_type, default_crs, rel_path, map_scale, allow_download) VALUES ({id}, '{file_name}', {enabled}, '{map_type}', {default_crs}, '{rel_path}', {map_scale}, {allow_download})".format(
+                id=row[0],
+                file_name=row[1],
+                enabled=row[2],
+                map_type=row[3],
+                default_crs=row[4] if row[4] is not None else 'NULL',
+                rel_path=row[5],
+                map_scale=row[6] if row[6] is not None else 'NULL',
+                allow_download=year_of_publication <= 1900
             )
-            trgCur.execute(insertStatement)
-            print(insertStatement)
+
+            trg_cur.execute(insert_statement)
+            print(insert_statement)
 
         # Because of insert statements the data hase to be connected
-        trgConn.commit()
+        trg_conn.commit()
 
         print('======================================================')
         print('Finished migration of database "original_maps".')
@@ -166,12 +153,12 @@ def doMigrationTableOriginalMaps(srcConn, trgConn):
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if srcCur != None:
-            srcCur.close()
-        if trgCur != None:
-            trgCur.close()
+        if src_cur != None:
+            src_cur.close()
+        if trg_cur != None:
+            trg_cur.close()
 
-def doMigrationTableJobs(srcConn, trgConn):
+def do_migration_table_jobs(srcConn, trgConn):
     """ Migrations the data "jobs" from the src database to the target database.
 
     :param srcConn: Database connection to the source database
@@ -181,29 +168,26 @@ def doMigrationTableJobs(srcConn, trgConn):
     """
     print('Migrate database "jobs" ...')
 
-    srcCur = None
-    trgCur = None
+    src_cur = None
+    trg_cur = None
     try:
-        srcCur = srcConn.cursor()
-        trgCur = trgConn.cursor()
+        src_cur = srcConn.cursor()
+        trg_cur = trgConn.cursor()
 
         # Query source database and write records into trg database
-        srcCur.execute('SELECT id, processed, georefid, setto, timestamp, userid, comment FROM adminjobs')
-        for row in srcCur.fetchall():
-            # Insert values into database
-            insertStatement = 'INSERT INTO jobs(id, processed, task, task_name, submitted, user_id) VALUES (%s, %s, \'%s\', \'%s\', \'%s\', \'%s\')' % (
-                row[0],
-                row[1],
-                json.dumps({
-                    'transformation_id': row[2],
-                    'comment': row[6]
-                }),
-                TaskValues.TRANSFORMATION_SET_VALID.value if row[3] == 'isvalide' else TaskValues.TRANSFORMATION_SET_INVALID.value,
-                row[4],
-                row[5]
+        src_cur.execute('SELECT id, task_name, task, processed, submitted, user_id, comment FROM jobs')
+        for row in src_cur.fetchall():
+            insert_statement = "INSERT INTO jobs(id, type, description, state, submitted, user_id, comment) VALUES ({id}, '{type}', '{description}', '{state}', '{submitted}', '{user_id}', '{comment}')".format(
+                id=row[0],
+                type=row[1],
+                description=row[2],
+                state='completed' if row[3] else 'not_started',
+                submitted=row[4],
+                user_id=row[5],
+                comment=row[6]
             )
-            trgCur.execute(insertStatement)
-            print(insertStatement)
+            trg_cur.execute(insert_statement)
+            print(insert_statement)
 
         # Because of insert statements the data hase to be connected
         trgConn.commit()
@@ -214,52 +198,51 @@ def doMigrationTableJobs(srcConn, trgConn):
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if srcCur != None:
-            srcCur.close()
-        if trgCur != None:
-            trgCur.close()
+        if src_cur != None:
+            src_cur.close()
+        if trg_cur != None:
+            trg_cur.close()
 
-def doMigrationTableTransformations(srcConn, trgConn):
+def do_migration_table_transformations(src_conn, trg_conn):
     """ Migrations the data for the "transformations" table from the src database to the target database. The migration of the table
         "original_maps" has to be finished.
 
-    :param srcConn: Database connection to the source database
-    :type srcConn: psycopg2.connection
-    :param trgConn: Database connection to the target database
-    :type trgConn: psycopg2.connection
+    :param src_conn: Database connection to the source database
+    :type src_conn: psycopg2.connection
+    :param trg_conn: Database connection to the target database
+    :type trg_conn: psycopg2.connection
     """
     print('Migrate database "transformations" ...')
 
-    srcCur = None
-    trgCur = None
+    src_cur = None
+    trg_cur = None
     try:
-        srcCur = srcConn.cursor()
-        trgCur = trgConn.cursor()
+        src_cur = src_conn.cursor()
+        trg_cur = trg_conn.cursor()
 
         # Query source database and write records into trg database
-        srcCur.execute('SELECT id, timestamp, nutzerid, georefparams, adminvalidation, mapid, overwrites, comment, clip, algorithm FROM georeferenzierungsprozess')
-        for row in srcCur.fetchall():
-            params = json.loads(row[3])
-            params['algorithm'] = row[9]
-            # Create insert statement for metadata table
-            insertStatement = 'INSERT INTO transformations(id, submitted, user_id, params, validation, ' \
-                              'original_map_id, overwrites, comment, clip) VALUES (%s, \'%s\', \'%s\', ' \
-                              '\'%s\',\'%s\', %s, %s, %s, %s)' % (
-                row[0],
-                row[1],
-                row[2],
-                json.dumps(params),
-                'valid' if row[4] == 'isvalide' else 'invalid' if row[4] == 'invalide' else 'missing',
-                row[5],
-                row[6],
-                '\'%s\'' % row[7] if row[7] != None else 'Null',
-                '\'%s\'' % row[8] if row[8] != None else 'Null',
+        src_cur.execute('SELECT id, original_map_id, submitted, user_id, params, ST_AsGeoJSON(st_transform(clip, 4326)), overwrites, validation, comment FROM transformations')
+        for row in src_cur.fetchall():
+            # extract target crs
+            target_crs = int(json.loads(row[4])['target'].split(':')[1])
+            insert_statement = "INSERT INTO transformations(id, raw_map_id, submitted, user_id, params, clip, overwrites, validation, comment, target_crs) " \
+                               "VALUES ({id}, {raw_map_id}, '{submitted}', '{user_id}', '{params}', {clip}, {overwrites}, '{validation}', '{comment}', {target_crs})".format(
+                id=row[0],
+                raw_map_id=row[1],
+                submitted=row[2],
+                user_id=row[3],
+                params=row[4],
+                clip="ST_GeomFromGeoJSON('{}')".format(row[5]) if row[5] is not None else 'NULL',
+                overwrites=row[6],
+                validation=row[7],
+                comment=row[8],
+                target_crs=target_crs
             )
-            print(insertStatement)
-            trgCur.execute(insertStatement)
+            print(insert_statement)
+            trg_cur.execute(insert_statement)
 
         # Commit writes
-        trgConn.commit()
+        trg_conn.commit()
 
         print('======================================================')
         print('Finished migration of database "transformations".')
@@ -267,48 +250,43 @@ def doMigrationTableTransformations(srcConn, trgConn):
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if srcCur != None:
-            srcCur.close()
-        if trgCur != None:
-            trgCur.close()
+        if src_cur != None:
+            src_cur.close()
+        if trg_cur != None:
+            trg_cur.close()
 
-def doMigrationTableGeorefMaps(srcConn, trgConn):
+def do_migration_table_georef_maps(src_conn, trg_conn):
     """ Migrations the data for the "georef_maps" table from the src database to the target database. The migration of the table
         "original_maps" has to be finished.
 
-    :param srcConn: Database connection to the source database
-    :type srcConn: psycopg2.connection
-    :param trgConn: Database connection to the target database
-    :type trgConn: psycopg2.connection
+    :param src_conn: Database connection to the source database
+    :type src_conn: psycopg2.connection
+    :param trg_conn: Database connection to the target database
+    :type trg_conn: psycopg2.connection
     """
     print('Migrate database "georef_maps" ...')
 
-    srcCur = None
-    trgCur = None
+    src_cur = None
+    trg_cur = None
     try:
-        srcCur = srcConn.cursor()
-        trgCur = trgConn.cursor()
+        src_cur = src_conn.cursor()
+        trg_cur = trg_conn.cursor()
 
         # Query source database and write records into trg database
-        srcCur.execute('select m.id as original_map_id, g.id as transformation_id, m.georefimage, m.boundingbox, g.timestamp from georeferenzierungsprozess g, map m where g.isactive = true and g.mapid  = m.id')
-        for row in srcCur.fetchall():
-            # Transform path to relative path
-            pathParts = row[2].split('/')
-            newPath = './'+ '/'.join([pathParts[-2], pathParts[-1]])
-
-            # Create insert statement for metadata table
-            insertStatement = 'INSERT INTO georef_maps(original_map_id, transformation_id, rel_path, extent, last_processed) VALUES (%s, %s, \'%s\', \'%s\', \'%s\')' % (
-                row[0],
-                row[1],
-                newPath,
-                row[3],
-                row[4],
+        src_cur.execute('select original_map_id, transformation_id, rel_path, ST_AsGeoJSON(st_transform(extent, 4326)), last_processed from georef_maps')
+        for row in src_cur.fetchall():
+            insert_statement = "INSERT INTO georef_maps (raw_map_id, transformation_id, rel_path, extent, last_processed) VALUES ({raw_map_id}, {transformation_id}, '{rel_path}', {extent}, '{last_processed}')".format(
+                raw_map_id=row[0],
+                transformation_id=row[1],
+                rel_path=row[2],
+                extent="ST_GeomFromGeoJSON('{}')".format(row[3]) if row[3] is not None else 'NULL',
+                last_processed=row[4]
             )
-            print(insertStatement)
-            trgCur.execute(insertStatement)
+            print(insert_statement)
+            trg_cur.execute(insert_statement)
 
         # Commit writes
-        trgConn.commit()
+        trg_conn.commit()
 
         print('======================================================')
         print('Finished migration of database "georef_maps".')
@@ -316,12 +294,91 @@ def doMigrationTableGeorefMaps(srcConn, trgConn):
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if srcCur != None:
-            srcCur.close()
-        if trgCur != None:
-            trgCur.close()
+        if src_cur != None:
+            src_cur.close()
+        if trg_cur != None:
+            trg_cur.close()
 
-def getConnection(conn_params):
+def do_migration_table_mapview(src_conn, trg_conn):
+    """ Migrations the data for the "map_view" table from the src database to the target database. The migration of the table
+        "raw_maps" has to be finished.
+
+    :param src_conn: Database connection to the source database
+    :type src_conn: psycopg2.connection
+    :param trg_conn: Database connection to the target database
+    :type trg_conn: psycopg2.connection
+    """
+    print('Migrate database "map_view" ...')
+
+    src_cur = None
+    trg_cur = None
+    try:
+        src_cur = src_conn.cursor()
+        trg_cur = trg_conn.cursor()
+
+        # Query source database and write records into trg database
+        src_cur.execute('select id, map_view_json, public_id, submitted, request_count, last_request, user_id from map_view')
+        for row in src_cur.fetchall():
+            insert_statement = "INSERT INTO map_view (id, map_view_json, public_id, submitted, request_count, last_request, user_id) " \
+                               "VALUES ({id}, '{map_view_json}', '{public_id}', '{submitted}', {request_count}, '{last_request}', '{user_id}')".format(
+                id=row[0],
+                map_view_json=row[1],
+                public_id=row[2],
+                submitted=row[3],
+                request_count=row[4],
+                last_request=row[5],
+                user_id=row[6],
+            )
+            print(insert_statement)
+            trg_cur.execute(insert_statement)
+
+        # Commit writes
+        trg_conn.commit()
+
+        print('======================================================')
+        print('Finished migration of database "map_view".')
+        print('======================================================')
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if src_cur != None:
+            src_cur.close()
+        if trg_cur != None:
+            trg_cur.close()
+
+def update_sequences(trg_conn):
+    """ Updates all sequences on the database.
+
+    :param src_conn: Database connection to the source database
+    :type src_conn: psycopg2.connection
+    :param trg_conn: Database connection to the target database
+    :type trg_conn: psycopg2.connection
+    """
+    print('Updates all sequences ...')
+
+    trg_cur = None
+    try:
+        trg_cur = trg_conn.cursor()
+
+        # Query source database and write records into trg database
+        trg_cur.execute("SELECT setval('jobs_id_seq', max(id)) FROM jobs;")
+        trg_cur.execute("SELECT setval('raw_maps_id_seq', max(id)) FROM raw_maps;")
+        trg_cur.execute("SELECT setval('transformations_id_seq', max(id)) FROM transformations;")
+        trg_cur.execute("SELECT setval('map_view_id_seq', max(id)) FROM map_view;")
+
+        # Commit writes
+        trg_conn.commit()
+
+        print('Finished updating of sequences.')
+        print('======================================================')
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if trg_cur != None:
+            trg_cur.close()
+
+
+def get_connection(conn_params):
     """ Returns a database connection for the given database params.
 
     :param conn_params: Database connection parameters
@@ -343,38 +400,40 @@ def getConnection(conn_params):
 
 
 if __name__ == '__main__':
-    srcConn = None
-    trgConn = None
+    src_conn = None
+    trg_conn = None
     try:
         print('Initialize connections and clean the target database')
-        srcConn = getConnection({
+        src_conn = get_connection({
             'host':'localhost',
-            'database':'vkdb-migration-test',
+            'database':'vkdb_old',
             'user':'postgres',
             'password':'postgres'
         })
-        trgConn = getConnection({
+        trg_conn = get_connection({
             'host':'localhost',
-            'database':'vkdb-new',
+            'database':'vkdb_new',
             'user':'postgres',
             'password':'postgres'
         })
 
         print('Clean up target database')
-        doTrgDbClean(trgConn)
+        do_trg_db_clean(trg_conn)
 
         print('Start migration ...')
-        doMigrationTableOriginalMaps(srcConn, trgConn)
-        doMigrationTableMetadata(srcConn, trgConn)
-        doMigrationTableTransformations(srcConn, trgConn)
-        doMigrationTableJobs(srcConn, trgConn)
-        doMigrationTableGeorefMaps(srcConn, trgConn)
+        do_migration_table_mapview(src_conn, trg_conn)
+        do_migration_table_raw_maps(src_conn, trg_conn)
+        do_migration_table_metadata(src_conn, trg_conn)
+        do_migration_table_transformations(src_conn, trg_conn)
+        do_migration_table_jobs(src_conn, trg_conn)
+        do_migration_table_georef_maps(src_conn, trg_conn)
+        update_sequences(trg_conn)
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
     finally:
-        if srcConn != None:
-            srcConn.close()
+        if src_conn != None:
+            src_conn.close()
             print('Close source database connection.')
-        if trgConn != None:
-            trgConn.close()
+        if trg_conn != None:
+            trg_conn.close()
             print('Close target database connection.')

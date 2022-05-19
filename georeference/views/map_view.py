@@ -15,13 +15,13 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest, HTTPNotFound
 from georeference.models.map_view import MapView
 from georeference.settings import GLOBAL_ERROR_MESSAGE
-from georeference.schema.map_view import map_view_schema
+from georeference.schema.map_view import map_view_requestSchema
 
 LOGGER = logging.getLogger(__name__)
 
 
 @view_config(route_name='map_view', renderer='json')
-def GET_MapViewById(request):
+def GET_mapview_for_id(request):
     """ Endpoint for accessing map views for a given id of a map view.
 
     :param map_view_id: Id of the mapView object
@@ -37,21 +37,22 @@ def GET_MapViewById(request):
 
         # query mapView object
         map_view_id = request.matchdict['map_view_id']
-        mapObj = MapView.byPublicId(map_view_id, request.dbsession)
+        map_obj = MapView.by_public_id(map_view_id, request.dbsession)
 
-        if mapObj is None:
+        if map_obj is None:
             return HTTPNotFound("The requested map view does not exist.")
 
         # Build basic json response
-        responseObj = {
-            'map_view_json': mapObj.map_view_json,
+        response_obj = {
+            'map_view_json': map_obj.map_view_json,
         }
 
         # update metadata
-        MapView.queryByPublicId(map_view_id, request.dbsession).update({MapView.last_request: datetime.now().isoformat(), MapView.request_count: mapObj.request_count + 1})
+        MapView.query_by_public_id(map_view_id, request.dbsession).update(
+            {MapView.last_request: datetime.now().isoformat(), MapView.request_count: map_obj.request_count + 1})
         request.dbsession.flush()
 
-        return responseObj
+        return response_obj
     except Exception as e:
         LOGGER.error('Error while trying to return a GET map_view request')
         LOGGER.error(e)
@@ -60,7 +61,7 @@ def GET_MapViewById(request):
 
 
 @view_config(route_name='map_view', renderer='json', request_method='POST', accept='application/json')
-def POST_MapView(request):
+def POST_mapview(request):
     """ Endpoint to POST a new mapView
 
     :param json_body: Json object containing the parameters
@@ -77,49 +78,36 @@ def POST_MapView(request):
         if request.method != 'POST':
             return HTTPBadRequest('The endpoint only supports "POST" requests.')
 
-        # Define the request schema for this endpoint
-        request_schema = {
-            "type": "object",
-            "properties": {
-                "user_id": { "type": "string"},
-                "map_view_json": map_view_schema
-            },
-            "required": ["map_view_json", "user_id"],
-            "additionalProperties": False
-        }
-
-
         # Validate the request
         try:
-            validate(request.json_body, request_schema)
+            validate(request.json_body, map_view_requestSchema)
         except Exception as e:
             LOGGER.error(e)
             return HTTPBadRequest("Invalid request object at POST request")
 
         map_view_json = request.json_body['map_view_json']
-        userId = request.json_body['user_id']
+        user_id = request.json_body['user_id']
         submitted = datetime.now().isoformat()
         public_id = str(uuid.uuid4())
 
         # if the id is not unique, regenerate public_id
-        while MapView.queryByPublicId(public_id, request.dbsession).count() > 0:
+        while MapView.query_by_public_id(public_id, request.dbsession).count() > 0:
             public_id = str(uuid.uuid4())
-        
 
         # Save to MapView table
-        newMapView = MapView(
+        new_map_view = MapView(
             map_view_json=json.dumps(map_view_json),
             last_request=None,
             request_count=0,
             submitted=submitted,
-            user_id=userId,
+            user_id=user_id,
             public_id=public_id
         )
-        request.dbsession.add(newMapView)
+        request.dbsession.add(new_map_view)
         request.dbsession.flush()
 
         return {
-            'map_view_id': newMapView.public_id,
+            'map_view_id': new_map_view.public_id,
         }
     except Exception as e:
         LOGGER.error('Error while trying to process POST request')

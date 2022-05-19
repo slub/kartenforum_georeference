@@ -75,7 +75,7 @@ MAP
     END
     METADATA
         "wms_title" "$layerTitle"
-        "wms_srs" "epsg:3857 $layerProjection"
+        "wms_srs" "epsg:3857 epsg:4326 $layerProjection"
         "wms_enable_request" "*"
     END
   END
