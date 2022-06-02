@@ -86,21 +86,27 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
                 )
 
             # Synchronise the index with the current state of the raw map objects.
-            logger.debug(f'Write search record for raw map id {raw_map_obj.id} to index ...')
-            document = generate_es_document(
-                raw_map_obj,
-                Metadata.by_map_id(raw_map_obj.id, dbsession),
-                georef_map_obj=georef_map_obj if georef_map_obj is not None and os.path.exists(
-                    georef_map_obj.get_abs_path()) else None,
-                logger=logger,
-                geometry=get_geometry(raw_map_obj.id, dbsession)
-            )
-            es_index.index(
-                index=ES_INDEX_NAME,
-                doc_type=None,
-                id=document['map_id'],
-                body=document
-            )
+            try:
+                logger.debug(f'Write search record for raw map id {raw_map_obj.id} to index ...')
+                document = generate_es_document(
+                    raw_map_obj,
+                    Metadata.by_map_id(raw_map_obj.id, dbsession),
+                    georef_map_obj=georef_map_obj if georef_map_obj is not None and os.path.exists(
+                        georef_map_obj.get_abs_path()) else None,
+                    logger=logger,
+                    geometry=get_geometry(raw_map_obj.id, dbsession)
+                )
+                logger.debug(document)
+                es_index.index(
+                    index=ES_INDEX_NAME,
+                    doc_type=None,
+                    id=document['map_id'],
+                    body=document
+                )
+            except Exception as e:
+                logger.error('Error while trying to write document to index')
+                logger.error(e)
+                logger.error(traceback.format_exc())
 
         logger.info('Finish initalization job.')
         return True

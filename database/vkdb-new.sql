@@ -45,7 +45,8 @@ CREATE TABLE public.georef_maps (
     extent public.geometry,
     last_processed timestamp without time zone NOT NULL,
     CONSTRAINT enforce_dims_boundingbox CHECK ((public.st_ndims(extent) = 2)),
-    CONSTRAINT enforce_geotype_boundingbox CHECK (((public.geometrytype(extent) = 'POLYGON'::text) OR (extent IS NULL)))
+    CONSTRAINT enforce_geotype_boundingbox CHECK (((public.geometrytype(extent) = 'POLYGON'::text) OR (extent IS NULL))),
+    CONSTRAINT enforce_srid_the_extent CHECK ((public.st_srid(extent) = 4326))
 );
 
 
@@ -77,8 +78,8 @@ CREATE TABLE public.jobs (
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
     comment character varying DEFAULT ''::character varying,
-    CONSTRAINT check_state CHECK (((state)::text = ANY ((ARRAY['not_started'::character varying, 'completed'::character varying, 'failed'::character varying])::text[]))),
-    CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying])::text[])))
+    CONSTRAINT check_state CHECK (((state)::text = ANY (ARRAY[('not_started'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
+    CONSTRAINT check_type CHECK (((type)::text = ANY (ARRAY[('transformation_process'::character varying)::text, ('transformation_set_valid'::character varying)::text, ('transformation_set_invalid'::character varying)::text, ('maps_create'::character varying)::text, ('maps_delete'::character varying)::text, ('maps_update'::character varying)::text])))
 );
 
 
@@ -96,8 +97,8 @@ CREATE TABLE public.jobs_history (
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
     comment character varying DEFAULT ''::character varying,
-    CONSTRAINT check_state CHECK (((state)::text = ANY ((ARRAY['not_started'::character varying, 'completed'::character varying, 'failed'::character varying])::text[]))),
-    CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying])::text[])))
+    CONSTRAINT check_state CHECK (((state)::text = ANY (ARRAY[('not_started'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
+    CONSTRAINT check_type CHECK (((type)::text = ANY (ARRAY[('transformation_process'::character varying)::text, ('transformation_set_valid'::character varying)::text, ('transformation_set_invalid'::character varying)::text, ('maps_create'::character varying)::text, ('maps_delete'::character varying)::text, ('maps_update'::character varying)::text])))
 );
 
 
@@ -237,14 +238,16 @@ CREATE TABLE public.transformations (
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
     params character varying NOT NULL,
+    target_crs integer NOT NULL,
     validation character varying NOT NULL,
     raw_map_id integer NOT NULL,
     overwrites integer NOT NULL,
     comment character varying,
     clip public.geometry,
-    CONSTRAINT check_validation CHECK (((validation)::text = ANY ((ARRAY['missing'::character varying, 'valid'::character varying, 'invalid'::character varying])::text[]))),
+    CONSTRAINT check_validation CHECK (((validation)::text = ANY (ARRAY[('missing'::character varying)::text, ('valid'::character varying)::text, ('invalid'::character varying)::text]))),
     CONSTRAINT enforce_dims_clip CHECK ((public.st_ndims(clip) = 2)),
-    CONSTRAINT enforce_geotype_clip CHECK (((public.geometrytype(clip) = 'POLYGON'::text) OR (clip IS NULL)))
+    CONSTRAINT enforce_geotype_clip CHECK (((public.geometrytype(clip) = 'POLYGON'::text) OR (clip IS NULL))),
+    CONSTRAINT enforce_srid_the_clip CHECK ((public.st_srid(clip) = 4326))
 );
 
 

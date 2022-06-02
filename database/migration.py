@@ -68,23 +68,25 @@ def do_migration_table_metadata(src_conn, trg_conn):
         # Query source database and write records into trg database
         src_cur.execute('select m.original_map_id, m.title , m.title_short , m.title_serie , m.description , m.measures , m."type", m.technic , m.ppn , m.permalink , m.license ,m."owner" , m.link_zoomify , m.link_thumb_small , m.link_thumb_mid, m.time_of_publication from metadata m')
         for row in src_cur.fetchall():
+            title_series = row[3].replace("\'", "\'\'") if row[3] is not None and len(row[3]) > 0 else None
+            description = row[4].replace("\'", "\'\'") if row[4] is not None and len(row[4]) > 0 else None
             insert_statement = "INSERT INTO metadata(raw_map_id, title, title_short, title_serie, description, " \
                               "measures, type, technic, ppn, permalink, license, owner, link_zoomify," \
-                              " link_thumb_small, link_thumb_mid, time_of_publication) VALUES ({raw_map_id}, '{title}', '{title_short}', '{title_serie}', '{description}', " \
-                              "'{measures}', '{type}', '{technic}', '{ppn}', '{permalink}', '{license}', '{owner}', '{link_zoomify}'," \
+                              " link_thumb_small, link_thumb_mid, time_of_publication) VALUES ({raw_map_id}, '{title}', '{title_short}', {title_serie}, {description}, " \
+                              "{measures}, '{type}', {technic}, {ppn}, '{permalink}', {license}, {owner}, '{link_zoomify}'," \
                               " '{link_thumb_small}', '{link_thumb_mid}', '{time_of_publication}')".format(
                 raw_map_id=row[0],
                 title=row[1].replace("\'", "\'\'"),
                 title_short=row[2].replace("\'", "\'\'"),
-                title_serie=row[3].replace("\'", "\'\'") if row[3] is not None else None,
-                description=row[4].replace("\'", "\'\'") if row[3] is not None else None,
-                measures=row[5],
+                title_serie=f"'{title_series}'" if title_series is not None else 'NULL',
+                description=f"'{description}'" if title_series is not None else 'NULL',
+                measures=f"'{row[5]}'" if len(row[5]) > 0 else 'NULL',
                 type=row[6],
-                technic=row[7],
-                ppn=row[8],
+                technic=f"'{row[7]}'" if len(row[7]) > 0 else 'NULL',
+                ppn=f"'{row[8]}'" if len(row[8]) > 0 else 'NULL',
                 permalink=row[9],
-                license=row[10],
-                owner=row[11],
+                license=f"'{row[10]}'" if len(row[10]) > 0 else 'NULL',
+                owner=f"'{row[11]}'" if len(row[11]) > 0 else 'NULL',
                 link_zoomify=row[12],
                 link_thumb_small=row[13],
                 link_thumb_mid=row[14],
@@ -320,13 +322,13 @@ def do_migration_table_mapview(src_conn, trg_conn):
         src_cur.execute('select id, map_view_json, public_id, submitted, request_count, last_request, user_id from map_view')
         for row in src_cur.fetchall():
             insert_statement = "INSERT INTO map_view (id, map_view_json, public_id, submitted, request_count, last_request, user_id) " \
-                               "VALUES ({id}, '{map_view_json}', '{public_id}', '{submitted}', {request_count}, '{last_request}', '{user_id}')".format(
+                               "VALUES ({id}, '{map_view_json}', '{public_id}', '{submitted}', {request_count}, {last_request}, '{user_id}')".format(
                 id=row[0],
                 map_view_json=row[1],
                 public_id=row[2],
                 submitted=row[3],
                 request_count=row[4],
-                last_request=row[5],
+                last_request=f"'{row[5]}'" if row[5] is not None else 'NULL',
                 user_id=row[6],
             )
             print(insert_statement)
@@ -406,13 +408,13 @@ if __name__ == '__main__':
         print('Initialize connections and clean the target database')
         src_conn = get_connection({
             'host':'localhost',
-            'database':'vkdb_old',
+            'database':'vkdb_20220602',
             'user':'postgres',
             'password':'postgres'
         })
         trg_conn = get_connection({
             'host':'localhost',
-            'database':'vkdb_new',
+            'database':'vkdb_20220602_new',
             'user':'postgres',
             'password':'postgres'
         })
