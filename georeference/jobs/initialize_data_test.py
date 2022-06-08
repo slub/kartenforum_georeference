@@ -16,3 +16,7 @@ LOGGER = logging.getLogger(__name__)
 def test_load_initial_data_success(dbsession_only):
     success = run_initialize_data(dbsession_only, LOGGER, overwrite_map_scale=True)
     assert success == True
+
+def test_load_initial_data_without_service_regeneration_success(dbsession_only):
+    success = run_initialize_data(dbsession_only, LOGGER, overwrite_map_scale=True)
+    assert success == True

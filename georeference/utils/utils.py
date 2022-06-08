@@ -7,10 +7,44 @@
 # "LICENSE", which is part of this source code package
 import os
 import shutil
+import json
+from shapely.geometry import shape, mapping
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.transformations import Transformation
 from georeference.utils.georeference import get_extent_from_geotiff, get_epsg_code_from_geotiff
 from georeference.settings import PATH_MAPFILE_ROOT, PATH_TMS_ROOT, PATH_THUMBNAIL_ROOT, PATH_ZOOMIFY_ROOT
+
+def _same_coordinate(c1, c2):
+    return c1[0] == c2[0] and c1[1] == c2[1]
+
+def fix_polygon_geometry(geometry):
+    """ The function checks the given geometry for different typical failures, which leads
+        to indexing problems for the geometry.
+
+    :param geometry: GeoJSON geometry
+    :type geometry: dict
+    :result: GeoJSON geometry
+    :rtype: dict
+    """
+    if geometry['type'] == 'Polygon':
+        corrected_coordinates = []
+        for i in range(len(geometry['coordinates'][0])):
+            coordinate = geometry['coordinates'][0][i]
+            if i == 0:
+                corrected_coordinates.append(coordinate)
+            elif not _same_coordinate(coordinate, corrected_coordinates[-1]):
+                corrected_coordinates.append(coordinate)
+        return {
+            'type': 'Polygon',
+            'coordinates': [corrected_coordinates]
+        }
+    elif geometry['type'] == 'MultiPolygon':
+        shapely_geom = shape(geometry)
+        largest_polygon = max(shapely_geom, key=lambda a: a.area)
+        return json.loads(json.dumps(mapping(largest_polygon)))
+    else:
+        return geometry
+
 
 
 def get_extent_as_geojson_polygon(geo_tiff_path):
@@ -60,7 +94,7 @@ def get_geometry(map_id, dbsession):
     # Check if there is a clip polygon and if yes return it.
     clip_geometry = Transformation.get_valid_clip_geometry(georef_map_obj.transformation_id, dbsession)
     if clip_geometry:
-        return clip_geometry
+        return fix_polygon_geometry(clip_geometry)
     else:
         return GeorefMap.get_extent_for_raw_map_id(map_id, dbsession)
 
