@@ -9,6 +9,8 @@ from setuptools import setup, find_packages
 
 requires = [
     'elasticsearch==7.14.1',
+    'GDAL==3.2.2',
+    'jsonschema==4.4.0',
     'pillow==8.3.2',
     'python-daemon==2.3.0',
     'pyramid==2.0',
@@ -16,12 +18,11 @@ requires = [
     'pyramid_retry==2.1.1',
     'pyproj==3.3.1',
     'psycopg2==2.9.1',
+    'shapely==1.8.2',
     'SQLAlchemy==1.4.23',
-    'waitress==2.0',
-    'zope.sqlalchemy==1.5',
-    'GDAL==3.2.2',
     'uwsgi==2.0.20',
-    'jsonschema==4.4.0'
+    'waitress==2.0',
+    'zope.sqlalchemy==1.5'
 ]
 
 tests_require = [

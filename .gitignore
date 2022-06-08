@@ -28,3 +28,7 @@ scripts/uploads
 scripts/*.json
 scripts/*.tif
 scripts/*.tar.gz
+
+# do not track sql dumps and log files
+*.dump
+*.log
