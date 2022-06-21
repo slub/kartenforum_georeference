@@ -18,7 +18,7 @@ from georeference.models.raw_maps import RawMap
 from georeference.settings import ES_ROOT, ES_INDEX_NAME, BASE_PATH, PATH_IMAGE_ROOT
 from georeference.utils.es import get_es_index
 # Initialize the logger
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 from georeference.utils.utils import remove_if_exists, get_thumbnail_path, get_zoomify_path
 
 LOGGER = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ def test_run_process_create_maps_success(dbsession_only):
 
         index_res = es_index.search(index=ES_INDEX_NAME, body={
             'query': {
-                'bool': {'must': {'match': {'_id': to_public_oai(map_id)}}}
+                'bool': {'must': {'match': {'_id': to_public_map_id(map_id)}}}
             }
         })['hits']['hits']
 
@@ -106,7 +106,7 @@ def test_run_process_create_maps_success(dbsession_only):
 
         # cleanup
         dbsession_only.rollback()
-        es_index.delete(index=ES_INDEX_NAME, id=to_public_oai(map_id))
+        es_index.delete(index=ES_INDEX_NAME, id=to_public_map_id(map_id))
         es_index.close()
 
     finally:

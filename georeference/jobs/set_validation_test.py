@@ -16,7 +16,7 @@ from georeference.models.transformations import Transformation, EnumValidationVa
 from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
 from georeference.utils.es import get_es_index
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ def test_run_validation_job_success_with_overwrite(dbsession_only):
     assert g.transformation_id == t.overwrites
 
     # Check if the index was pushed to the es
-    es_doc = es_index.get(ES_INDEX_NAME, id=to_public_oai(map_id))
+    es_doc = es_index.get(ES_INDEX_NAME, id=to_public_map_id(map_id))
     assert es_doc is not None
     assert es_doc['_source']['geometry'] is not None
 
@@ -130,7 +130,7 @@ def test_run_validation_job_success_without_overwrite(dbsession_only):
     assert g is None
 
     # Check if the index was pushed to the es
-    es_doc = es_index.get(ES_INDEX_NAME, id=to_public_oai(map_id))
+    es_doc = es_index.get(ES_INDEX_NAME, id=to_public_map_id(map_id))
     assert es_doc is not None
     assert es_doc['_source']['geometry'] is None
 

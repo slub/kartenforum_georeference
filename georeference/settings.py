@@ -130,8 +130,11 @@ TEMPLATE_PUBLIC_ZOOMIFY_URL = 'https://zoomify-slub.pikobytes.de/zoomify/{}/Imag
 # WMS Service default url template
 TEMPLATE_TRANSFORMATION_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/{}'
 
-# Template for proper building of ids
-TEMPLATE_OAI_ID = 'oai:de:slub-dresden:vk:id-{}'
+# Template string for the public id of a single georefence map
+TEMPLATE_PUBLIC_MAP_ID = 'oai:de:slub-dresden:vk:id-{}'
+
+# Template string for the public id of a mosaic map
+TEMPLATE_PUBLIC_MOSAIC_MAP_ID = 'oai:de:slub-dresden:vk:mosaic:id-{}'
 
 #
 # Settings of the daemon. For more information regarding the supported log level see

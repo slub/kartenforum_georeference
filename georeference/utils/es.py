@@ -11,7 +11,7 @@ import traceback
 import json
 from elasticsearch import Elasticsearch
 from georeference.utils.georeference import get_image_size
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 from georeference.settings import TEMPLATE_PUBLIC_WMS_URL, TEMPLATE_PUBLIC_WCS_URL, GLOBAL_PERMALINK_RESOLVER, \
     TEMPLATE_TMS_URLS
 
@@ -182,7 +182,7 @@ def generate_es_document(raw_map_obj, metadata_obj, georef_map_obj=None, logger=
         keywords = ';'.join(list(filter(lambda x: x is not None, [metadata_obj.type, metadata_obj.technic])))
 
         return {
-            'map_id': to_public_oai(raw_map_obj.id),
+            'map_id': to_public_map_id(raw_map_obj.id),
             'file_name': raw_map_obj.file_name,
             'description': metadata_obj.description,
             'map_scale': int(raw_map_obj.map_scale) if raw_map_obj.map_scale is not None else None,

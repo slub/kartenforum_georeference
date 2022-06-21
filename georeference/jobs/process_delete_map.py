@@ -13,7 +13,7 @@ import traceback
 from georeference.models import RawMap, Metadata, Transformation
 from georeference.models.georef_maps import GeorefMap
 from georeference.settings import ES_INDEX_NAME
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 from georeference.utils.utils import get_thumbnail_path, get_zoomify_path
 
 
@@ -56,7 +56,7 @@ def run_process_delete_maps(es_index, dbsession, logger, job):
         message = 'The delete has been written to the database, but the filesystem is not in sync.'
 
         # 3. Delete document from index
-        es_index.delete(index=ES_INDEX_NAME, doc_type=None, id=to_public_oai(map_id))
+        es_index.delete(index=ES_INDEX_NAME, doc_type=None, id=to_public_map_id(map_id))
 
         # 4. Delete files
         # 4 a) delete thumbnails

@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import json
 from georeference.models.transformations import Transformation
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 
 
 def to_transformation_response(transformation_obj, map_obj, metadata_obj, dbsession, is_active=False):
@@ -51,7 +51,7 @@ def to_transformation_response(transformation_obj, map_obj, metadata_obj, dbsess
         'submitted': str(transformation_obj.submitted),
         'overwrites': transformation_obj.overwrites,
         'user_id': transformation_obj.user_id,
-        'map_id': to_public_oai(map_obj.id),
+        'map_id': to_public_map_id(map_obj.id),
         'validation': transformation_obj.validation,
         'metadata': {
             'time_publish': str(metadata_obj.time_of_publication),
