@@ -43,12 +43,18 @@ def _add_overviews(dst_file, overview_levels, logger):
     try:
         logger.debug('Adding overviews to raster %s' % dst_file)
         command = '%s --config GDAL_CACHEMAX 500 -r average %s %s' % (GLOBAL_PATH_GDALADDO, dst_file, overview_levels)
-        subprocess.check_call(command, shell=True)
+        subprocess.check_output(
+            command,
+            shell=True,
+            stderr=subprocess.STDOUT
+        )
         return dst_file
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
     except Exception:
-        logger.error("%s - Unexpected error while trying add overviews to the raster: %s - with command - %s" % (
-            sys.stderr, sys.exc_info()[0], command))
-        raise Exception("Error while running subprocess via commandline!")
+        logger.error(f'{sys.stderr} - Unexpected error while trying add overviews to the raster: {sys.exc_info()[0]} - with command - {command}')
+        raise
 
 
 def _create_vrt(src_dataset, dst_file):
