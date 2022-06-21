@@ -95,7 +95,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         user_id character varying NOT NULL,
         comment character varying DEFAULT ''::character varying,
         CONSTRAINT check_state CHECK (((state)::text = ANY ((ARRAY['not_started'::character varying, 'completed'::character varying, 'failed'::character varying])::text[]))),
-        CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying])::text[])))
+        CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying, 'mosaic_map_create'::character varying, 'mosaic_map_delete'::character varying])::text[])))
     );
 
 
@@ -114,7 +114,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         user_id character varying NOT NULL,
         comment character varying DEFAULT ''::character varying,
         CONSTRAINT check_state CHECK (((state)::text = ANY ((ARRAY['not_started'::character varying, 'completed'::character varying, 'failed'::character varying])::text[]))),
-        CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying])::text[])))
+        CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying, 'mosaic_map_create'::character varying, 'mosaic_map_delete'::character varying])::text[])))
     );
 
 

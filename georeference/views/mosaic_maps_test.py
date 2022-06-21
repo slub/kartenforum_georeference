@@ -9,6 +9,7 @@ import json
 from datetime import datetime
 
 from georeference.settings import ROUTE_PREFIX
+from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.mosaic_maps import MosaicMap
 from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id, from_public_map_id, from_public_mosaic_map_id
 
@@ -26,7 +27,7 @@ test_data = {
 
 
 def test_GET_mosaic_map_not_found(testapp):
-    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{to_public_mosaic_map_id(1111)}', status=404)
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_map/{to_public_mosaic_map_id(1111)}', status=404)
     assert res.status_int == 404
 
 def test_GET_mosaic_map_without_empty_fields(testapp, dbsession):
@@ -38,7 +39,7 @@ def test_GET_mosaic_map_without_empty_fields(testapp, dbsession):
         }
     }])
 
-    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', status=200)
     assert res.status_int == 200
     assert res.json['id'] == test_data['id']
     assert res.json['name'] == test_data['name']
@@ -57,7 +58,7 @@ def test_GET_mosaic_map_with_empty_fields(testapp, dbsession):
         **test_data,
     }])
 
-    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', status=200)
     assert res.status_int == 200
     assert res.json['id'] == test_data['id']
     assert res.json['last_service_update'] is None
@@ -66,17 +67,21 @@ def test_GET_mosaic_map_with_empty_fields(testapp, dbsession):
     dbsession.rollback()
 
 
-def test_POST_new_mosaic_map_success(testapp):
+def test_POST_new_mosaic_map_success(testapp, dbsession):
     data = { **test_data }
     data.pop('id')
     data.pop('last_change')
 
-    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200
     assert res.json['id'] is not None
     assert res.json['last_change'] is not None
     assert res.json['last_service_update'] is None
     assert res.json['last_overview_update'] is None
+
+    # Check if the jobs was created successfully
+    jobs_create = Job.query_not_started_jobs([EnumJobType.MOSAIC_MAP_CREATE.value], dbsession)
+    assert len(jobs_create) == 1
 
 
 def test_POST_new_mosaic_map_failed(testapp):
@@ -85,7 +90,7 @@ def test_POST_new_mosaic_map_failed(testapp):
     data.pop('last_change')
     data['map_scale'] = '123'
 
-    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/', json.dumps(data), content_type='application/json; charset=utf-8', status=400)
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps', json.dumps(data), content_type='application/json; charset=utf-8', status=400)
     assert res.status_int == 400
 
 
@@ -98,7 +103,7 @@ def test_POST_update_mosaic_map_success(testapp, dbsession):
     data.pop('last_change')
     data['name'] = "Test"
 
-    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200
     assert res.json['id'] == test_data["id"]
     assert res.json['last_change'] != test_data['last_change']
@@ -108,6 +113,29 @@ def test_POST_update_mosaic_map_success(testapp, dbsession):
     mosaic_map_obj = MosaicMap.by_id(from_public_mosaic_map_id(test_data['id']), dbsession)
     assert mosaic_map_obj.name == data['name']
 
+    # Check if the jobs was created successfully
+    jobs_create = Job.query_not_started_jobs([EnumJobType.MOSAIC_MAP_CREATE.value], dbsession)
+    assert len(jobs_create) == 1
+
+    dbsession.rollback()
+
+
+def test_POST_refresh_mosaic_map_success(testapp, dbsession):
+    _insert_test_data(dbsession, [{
+        **test_data,
+    }])
+    data = { **test_data }
+    data.pop('id')
+    data.pop('last_change')
+
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}/refresh', status=200)
+    assert res.status_int == 200
+    assert res.json['status'] == 'ok'
+
+    # Check if the jobs was created successfully
+    jobs_create = Job.query_not_started_jobs([EnumJobType.MOSAIC_MAP_CREATE.value], dbsession)
+    assert len(jobs_create) == 1
+
     dbsession.rollback()
 
 
@@ -116,7 +144,7 @@ def test_DELETE_mosaic_map_success(testapp, dbsession):
         **test_data,
     }])
 
-    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
+    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', status=200)
     assert res.status_int == 200
     assert res.json['status'] == 'ok'
 
@@ -124,11 +152,15 @@ def test_DELETE_mosaic_map_success(testapp, dbsession):
     mosaic_map_obj = MosaicMap.by_id(from_public_mosaic_map_id(test_data['id']), dbsession)
     assert mosaic_map_obj is None
 
+    # Check if the jobs was created successfully
+    jobs_create = Job.query_not_started_jobs([EnumJobType.MOSAIC_MAP_DELETE.value], dbsession)
+    assert len(jobs_create) == 1
+
     dbsession.rollback()
 
 
 def test_DELETE_mosaic_map_failed_notfound(testapp, dbsession):
-    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_maps/{to_public_mosaic_map_id(121212)}', status=404)
+    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_map/{to_public_mosaic_map_id(121212)}', status=404)
     assert res.status_int == 404
 
 
