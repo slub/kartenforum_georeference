@@ -5,7 +5,7 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-from georeference.schema.general import RegExLink
+from georeference.schema.general import reg_ex_link
 
 
 map_schema = {
@@ -23,7 +23,7 @@ map_schema = {
         "link_zoomify": {"oneOf": [
             {
                 "type": "string",
-                "pattern": RegExLink
+                "pattern": reg_ex_link
             },
             { "type": "null" }
         ]},
@@ -31,7 +31,7 @@ map_schema = {
         "link_thumb_small": {"oneOf": [
             {
                 "type": "string",
-                "pattern": RegExLink
+                "pattern": reg_ex_link
             },
             { "type": "null" }
         ]},
@@ -39,7 +39,7 @@ map_schema = {
         "link_thumb_mid": {"oneOf": [
             {
                 "type": "string",
-                "pattern": RegExLink
+                "pattern": reg_ex_link
             },
             { "type": "null" }
         ]},

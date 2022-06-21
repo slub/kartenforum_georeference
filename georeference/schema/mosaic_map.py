@@ -5,18 +5,16 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-from georeference.schema.general import RegExLink
+from georeference.schema.general import reg_ex_link
 
 
-mosaic_map_schema = {
+mosaic_map_schema_write = {
     "type": "object",
     "properties": {
-        # Id of the mosaic_map
-        "id": {"type": "string"},
         # Name of the service"
         "name": {"type": "string"},
         # Ids of the associated raw maps
-        "raw_map_ids":  {"type": "string", "items": { "type": "string" }},
+        "raw_map_ids":  {"type": "array", "items": { "type": "string" }},
         # Title, e.g. "Äquidistantenkarte Sachsen, 1892 bis 1900"
         "title": {"type": "string"},
         # Title, e.g. Äquidistantenkarte
@@ -26,13 +24,36 @@ mosaic_map_schema = {
         # Thumbnail link of the mosaic map
         "link_thumb": {
             "type": "string",
-            "pattern": RegExLink
+            "pattern": reg_ex_link
         },
         # Map scale of the mosaic map
-        "map_scale": {"type": "number"},
-        "last_change": {"type": "string", "format": "date-time"},
-        "last_service_update": {"type": "string", "format": "date-time"},
-        "last_overview_update": {"type": "string", "format": "date-time"},
+        "map_scale": {"type": "number"}
     },
-    "required": ["id", "name", "raw_map_ids", "title", "title_short", "time_of_publication", "link_thumb", "map_scale"]
+    "required": ["name", "raw_map_ids", "title", "title_short", "time_of_publication", "link_thumb", "map_scale"]
+}
+
+
+mosaic_map_schema_read = {
+    "allOf": [
+        mosaic_map_schema_write,
+        {
+            "type": "object",
+            "properties": {
+                # Id of the mosaic_map
+                "id": {"type": ["string", "null"]},
+                "last_change": {"type": "string", "format": "date-time"},
+                "last_service_update": {"anyOf": [
+                    {"type": "string", "format": "date-time"},
+                    {"type": "null" }
+                    ]
+                },
+                "last_overview_update": {"anyOf": [
+                    {"type": "string", "format": "date-time"},
+                    {"type": "null" }
+                    ]
+                },
+            },
+            "required": ["id", "last_change", "last_service_update", "last_overview_update"]
+        }
+    ]
 }

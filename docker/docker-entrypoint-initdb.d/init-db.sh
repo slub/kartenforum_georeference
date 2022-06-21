@@ -552,6 +552,17 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     ALTER TABLE ONLY public.raw_maps
         ADD CONSTRAINT raw_maps_pkey PRIMARY KEY (id);
 
+    --
+    -- Name: mosaic_maps id; Type: DEFAULT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.mosaic_maps ALTER COLUMN id SET DEFAULT nextval('public.mosaic_maps_id_seq'::regclass);
+
+    --
+    -- Name: mosaic_maps_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+    --
+
+    SELECT pg_catalog.setval('public.mosaic_maps_id_seq', 1, false);
 
     --
     -- Name: transformations transformations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres

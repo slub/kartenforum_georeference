@@ -20,7 +20,7 @@ from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.transformations import Transformation, EnumValidationValue
 from georeference.models.raw_maps import RawMap
-from georeference.schema.transformation import TransformationSchema, IdOnlyTransformationSchema
+from georeference.schema.transformation import transformation_schema, id_only_transformation_schema
 from georeference.settings import GLOBAL_ERROR_MESSAGE, PATH_MAPFILE_TEMPLATES, PATH_TMP_TRANSFORMATION_ROOT, \
     PATH_TMP_ROOT, PATH_TMP_TRANSFORMATION_DATA_ROOT, TEMPLATE_TRANSFORMATION_WMS_URL
 from georeference.utils.api import to_transformation_response
@@ -154,9 +154,9 @@ def POST_transformation(request):
         # Validate json content
         try:
             if dry_run and transformation_id is not None:
-                validate(request.json_body, IdOnlyTransformationSchema)
+                validate(request.json_body, id_only_transformation_schema)
             else:
-                validate(request.json_body, TransformationSchema)
+                validate(request.json_body, transformation_schema)
         except Exception as e:
             _log_error(e, "Could not validate POST data for transformations endpoint")
             return HTTPBadRequest("Invalid request object for transformations POST request. %s" % e.message)

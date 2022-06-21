@@ -5,7 +5,7 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-import os
+import json
 from datetime import datetime
 
 from georeference.settings import ROUTE_PREFIX
@@ -59,12 +59,77 @@ def test_GET_mosaic_map_with_empty_fields(testapp, dbsession):
 
     res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
     assert res.status_int == 200
-    print(res.json)
     assert res.json['id'] == test_data['id']
     assert res.json['last_service_update'] is None
     assert res.json['last_overview_update'] is None
 
     dbsession.rollback()
+
+
+def test_POST_new_mosaic_map_success(testapp):
+    data = { **test_data }
+    data.pop('id')
+    data.pop('last_change')
+
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
+    assert res.status_int == 200
+    assert res.json['id'] is not None
+    assert res.json['last_change'] is not None
+    assert res.json['last_service_update'] is None
+    assert res.json['last_overview_update'] is None
+
+
+def test_POST_new_mosaic_map_failed(testapp):
+    data = { **test_data }
+    data.pop('id')
+    data.pop('last_change')
+    data['map_scale'] = '123'
+
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/', json.dumps(data), content_type='application/json; charset=utf-8', status=400)
+    assert res.status_int == 400
+
+
+def test_POST_update_mosaic_map_success(testapp, dbsession):
+    _insert_test_data(dbsession, [{
+        **test_data,
+    }])
+    data = { **test_data }
+    data.pop('id')
+    data.pop('last_change')
+    data['name'] = "Test"
+
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
+    assert res.status_int == 200
+    assert res.json['id'] == test_data["id"]
+    assert res.json['last_change'] != test_data['last_change']
+    assert res.json['name'] == data['name']
+
+    # Check also if the database was updated correctly
+    mosaic_map_obj = MosaicMap.by_id(from_public_mosaic_map_id(test_data['id']), dbsession)
+    assert mosaic_map_obj.name == data['name']
+
+    dbsession.rollback()
+
+
+def test_DELETE_mosaic_map_success(testapp, dbsession):
+    _insert_test_data(dbsession, [{
+        **test_data,
+    }])
+
+    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
+    assert res.status_int == 200
+    assert res.json['status'] == 'ok'
+
+    # Check also if the mosaic_map was removed from the database
+    mosaic_map_obj = MosaicMap.by_id(from_public_mosaic_map_id(test_data['id']), dbsession)
+    assert mosaic_map_obj is None
+
+    dbsession.rollback()
+
+
+def test_DELETE_mosaic_map_failed_notfound(testapp, dbsession):
+    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_maps/{to_public_mosaic_map_id(121212)}', status=404)
+    assert res.status_int == 404
 
 
 def _insert_test_data(dbsession, test_data):
