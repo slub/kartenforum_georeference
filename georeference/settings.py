@@ -22,12 +22,6 @@ ROUTE_PREFIX = ''
 # Global error message
 GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
-# Path to gdalwarp tool
-GLOBAL_PATH_GDALWARP = 'gdalwarp'
-
-# Path to gdaladdo tool
-GLOBAL_PATH_GDALADDO = 'gdaladdo'
-
 # Permalink resolver
 GLOBAL_PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
 
