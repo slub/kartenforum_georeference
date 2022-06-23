@@ -22,15 +22,17 @@ LOGGER = logging.getLogger(__name__)
 def test_create_mosaic_dataset():
     try:
         # Setup the test data. This also contains the process of creating test georeference images.
-        test_data_georef_images = _create_test_data()
+        tmp_dir = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            f'../__test_data/data_output/',
+            'test_create_mosaic_dataset'
+        )
+        test_data_georef_images = _create_test_data(tmp_dir)
 
         # Create the mosaic dataset
         test_dataset = create_mosaic_dataset(
             dataset_name='test_create_mosaic_dataset',
-            target_dir=os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),
-                    '../__test_data/data_output'
-                ),
+            target_dir=tmp_dir,
             geo_images=test_data_georef_images,
             target_crs=3857,
             logger=LOGGER
@@ -49,13 +51,10 @@ def test_create_mosaic_dataset():
         assert os.path.exists(test_dataset_overviews)
 
     finally:
-        if os.path.exists(test_dataset):
-            shutil.rmtree(os.path.dirname(test_dataset))
-        for f in test_data_georef_images:
-            if os.path.exists(f):
-                os.remove(f)
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
 
-def _create_test_data():
+def _create_test_data(tmp_dir):
     test_data = [
         {
             'raw_map_id': 11823,
@@ -129,9 +128,7 @@ def _create_test_data():
                     os.path.dirname(os.path.realpath(__file__)),
                     f'../__test_data/data_input/{f}.tif'
                 ),
-                os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),
-                    f'../__test_data/data_output/{f}_mosaics_tests.tif'
+                os.path.join(tmp_dir, f'{f}_mosaics_tests.tif'
                 ),
                 logger=LOGGER
             )

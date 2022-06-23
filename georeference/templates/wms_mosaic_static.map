@@ -26,14 +26,6 @@ MAP
     TRANSPARENT FALSE
   END # OUTPUTFORMAT
 
-  OUTPUTFORMAT
-    NAME "GEOTIFF"
-    DRIVER "GDAL/GTiff"
-    MIMETYPE "image/tiff"
-    IMAGEMODE "BYTE"
-    EXTENSION "tif"
-  END
-
   WEB
     METADATA
       "wms_srs" "epsg:3857 epsg:4326"
