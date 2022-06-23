@@ -21,7 +21,7 @@ from georeference.utils.parser import to_public_map_id
 LOGGER = logging.getLogger(__name__)
 
 
-def test_runProcessJobs_success(dbsession_only):
+def test_run_process_jobs_success(dbsession_only):
     """ The test checks the proper running of the process jobs
 
     :param dbsession_only: Database session

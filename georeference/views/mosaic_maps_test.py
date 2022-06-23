@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 from georeference.settings import ROUTE_PREFIX
-from georeference.models.jobs import Job, EnumJobType, EnumJobState
+from georeference.models.jobs import Job, EnumJobType
 from georeference.models.mosaic_maps import MosaicMap
 from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id, from_public_map_id, from_public_mosaic_map_id
 

@@ -45,7 +45,7 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
             georef_map_obj = GeorefMap.by_raw_map_id(raw_map_obj.id, dbsession)
             metadata_obj = Metadata.by_map_id(raw_map_obj.id, dbsession)
 
-            # If a georef map is registered within the database, make sure that also an geo image, a tms cache and
+            # If a georef map is registered within the database, make sure that also a geo image, a tms cache and
             # geo service (mapfile) does exist.
             if georef_map_obj != None and os.path.exists(raw_map_obj.get_abs_path()):
                 transformation_obj = Transformation.by_id(georef_map_obj.transformation_id, dbsession)
