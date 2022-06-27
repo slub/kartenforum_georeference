@@ -25,6 +25,53 @@ from georeference.utils.utils import without_keys
 
 LOGGER = logging.getLogger(__name__)
 
+@view_config(route_name='mosaic_maps', renderer='json', request_method='GET', accept='application/json')
+def GET_mosaic_maps(request):
+    """
+    Endpoint for GET mosaic_map data.
+
+    :param request: Pyramid request object
+    :type request: pyramid.request
+    :result: JSON object describing the mosaic map object
+    :rtype: Object according to the mosaic_map_schema_read
+    """
+    try:
+        response_objs = []
+        for mosaic_map_obj in MosaicMap.all(request.dbsession):
+            response_objs.append(
+                _create_mosaic_maps_response(mosaic_map_obj)
+            )
+        return response_objs
+    except Exception as e:
+        err_msg = 'Error while trying to handle a POST (create) mosaic map request'
+        log_error(e, err_msg)
+        raise HTTPInternalServerError(f'{err_msg}{e.message}')
+
+
+@view_config(route_name='mosaic_maps', renderer='json', request_method='POST', accept='application/json')
+def POST_mosaic_maps(request):
+    """
+    Endpoint for POST mosaic_map data. Supports creation and updating.
+
+    :param request: Pyramid request object
+    :type request: pyramid.request
+    :result: JSON object describing the mosaic map object
+    :rtype: Object according to the mosaic_map_schema_read
+    """
+    try:
+
+        return _handle_mosaic_map_create(
+            request.json_body,
+            request.dbsession
+        )
+    except ValidationError as e:
+        err_msg = 'Error while tyring to validate the POST data for the mosaic map request.'
+        raise HTTPBadRequest(f'{err_msg}{e.message}')
+    except Exception as e:
+        err_msg = 'Error while trying to handle a GET mosaic maps request'
+        log_error(e, err_msg)
+        raise HTTPInternalServerError(f'{err_msg}{e.message}')
+
 
 @view_config(route_name='mosaic_map', renderer='json', request_method='GET')
 def GET_mosaic_map(request):
@@ -86,29 +133,6 @@ def DELETE_mosaic_map(request):
         log_error(e, 'Error while trying to handle a DELETE mosaic map request')
         raise HTTPInternalServerError(GLOBAL_ERROR_MESSAGE)
 
-
-@view_config(route_name='mosaic_maps', renderer='json', request_method='POST', accept='application/json')
-def POST_mosaic_maps(request):
-    """
-    Endpoint for POST mosaic_map data. Supports creation and updating.
-
-    :param request: Pyramid request object
-    :type request: pyramid.request
-    :result: JSON object describing the mosaic map object
-    :rtype: Object according to the mosaic_map_schema_read
-    """
-    try:
-        return _handle_mosaic_map_create(
-            request.json_body,
-            request.dbsession
-        )
-    except ValidationError as e:
-        err_msg = 'Error while tyring to validate the POST data for the mosaic map request.'
-        raise HTTPBadRequest(f'{err_msg}{e.message}')
-    except Exception as e:
-        err_msg = 'Error while trying to handle a POST (create) mosaic map request'
-        log_error(e, err_msg)
-        raise HTTPInternalServerError(f'{err_msg}{e.message}')
 
 @view_config(route_name='mosaic_map', renderer='json', request_method='POST', accept='application/json')
 def POST_mosaic_map_update(request):

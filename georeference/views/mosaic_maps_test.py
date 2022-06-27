@@ -66,6 +66,22 @@ def test_GET_mosaic_map_with_empty_fields(testapp, dbsession):
 
     dbsession.rollback()
 
+def test_GET_mosaic_maps(testapp, dbsession):
+    _insert_test_data(dbsession, [{
+        **test_data,
+        **{
+            "last_service_update": datetime.now().isoformat(),
+            "last_overview_update":  datetime.now().isoformat()
+        }
+    }])
+
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps', status=200)
+    assert res.status_int == 200
+    assert len(res.json) == 1
+    assert res.json[0]['id'] == test_data['id']
+
+    dbsession.rollback()
+
 
 def test_POST_new_mosaic_map_success(testapp, dbsession):
     data = { **test_data }
