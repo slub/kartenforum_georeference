@@ -66,7 +66,10 @@ def test_run_process_delete_mosiac_map(dbsession_only):
         assert os.path.exists(test_mosaic_mapfile_path) == False
     finally:
         dbsession_only.rollback()
-        LOGGER.debug("CHECK")
+
+        # the session is commited in the delete job, thus we have to manually rollback
+        dbsession_only.query(Job).filter(Job.id == delete_job.id).delete()
+        dbsession_only.commit()
 
 
 def _create_test_data(dbsession, mosaic_id, es_index):

@@ -296,7 +296,6 @@ def _add_job(dbsession, mosaic_map_id, service_name, user_id='system', is_delete
     create_job = Job(
         description=json.dumps({
             'mosaic_map_id': mosaic_map_id,
-            'service_name': service_name,
         }, ensure_ascii=False),
         type=EnumJobType.MOSAIC_MAP_DELETE.value if is_delete else EnumJobType.MOSAIC_MAP_CREATE.value,
         state=EnumJobState.NOT_STARTED.value,
