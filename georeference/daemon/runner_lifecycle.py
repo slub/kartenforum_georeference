@@ -47,8 +47,8 @@ job_run_handlers = {
     EnumJobType.TRANSFORMATION_SET_VALID.value: run_process_new_validation,
     EnumJobType.TRANSFORMATION_SET_INVALID.value: run_process_new_validation,
     EnumJobType.TRANSFORMATION_PROCESS.value: run_process_new_transformation,
-    EnumJobType.MOSAIC_MAP_CREATE: run_process_create_mosiac_map,
-    EnumJobType.MOSAIC_MAP_DELETE: run_process_delete_mosiac_map
+    EnumJobType.MOSAIC_MAP_CREATE.value: run_process_create_mosiac_map,
+    EnumJobType.MOSAIC_MAP_DELETE.value: run_process_delete_mosiac_map
 }
 
 
