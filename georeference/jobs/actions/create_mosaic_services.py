@@ -11,15 +11,13 @@ from georeference.utils.mapfile import write_mapfile
 from georeference.utils.mapfile import parse_geo_tiff_metadata
 
 
-def run_process_mosaic_services(path_mapfile, path_geo_image, mapfile_name, layer_name, layer_title, logger, force=False):
+def run_process_mosaic_services(path_mapfile, path_geo_image, layer_name, layer_title, logger, force=False):
     """ This actions creates for a given geo image the mapfiles needed for publishing a WMS or WCS service.
 
-    :param pathMapFile: Path to the mapfile
-    :type pathMapFile: str
+    :param path_mapfile: Path to the mapfile
+    :type path_mapfile: str
     :param path_geo_image: Path to the original geo image
     :type path_geo_image: str
-    :param mapfile_name: Name of the mapfile
-    :type mapfile_name: str
     :param layer_name: Name of the layer
     :type layer_name: str
     :param layer_title: Title of the layer
@@ -47,7 +45,8 @@ def run_process_mosaic_services(path_mapfile, path_geo_image, mapfile_name, laye
     if os.path.exists(path_mapfile):
         os.remove(path_mapfile)
 
-    # Create the
+    # Create the template values
+    mapfile_name = os.path.basename(path_mapfile).replace('.map', '')
     template_values = {
         **parse_geo_tiff_metadata(path_geo_image),
         **{

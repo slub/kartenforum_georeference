@@ -32,7 +32,6 @@ def test_run_process_mosaic_services_success():
         test_subject = run_process_mosaic_services(
             path_mapfile=test_mapfile,
             path_geo_image=os.path.abspath(geo_dataset),
-            mapfile_name='test_run_process_mosaic_services_success',
             layer_name='my_layername',
             layer_title='my_layertitle',
             logger=LOGGER,

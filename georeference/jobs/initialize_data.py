@@ -18,7 +18,7 @@ from georeference.models.metadata import Metadata
 from georeference.models.raw_maps import RawMap
 from georeference.models.transformations import Transformation
 from georeference.settings import ES_ROOT, ES_INDEX_NAME
-from georeference.utils.es import generate_es_document, get_es_index
+from georeference.utils.es_index import generate_es_original_map_document, get_es_index
 
 
 def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
@@ -88,7 +88,7 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
             # Synchronise the index with the current state of the raw map objects.
             try:
                 logger.debug(f'Write search record for raw map id {raw_map_obj.id} to index ...')
-                document = generate_es_document(
+                document = generate_es_original_map_document(
                     raw_map_obj,
                     Metadata.by_map_id(raw_map_obj.id, dbsession),
                     georef_map_obj=georef_map_obj if georef_map_obj is not None and os.path.exists(

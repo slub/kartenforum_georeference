@@ -55,6 +55,9 @@ PATH_IMAGE_ROOT = os.path.join(BASE_PATH, './__test_data/data_input')
 # Path to the georef root directory
 PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp/geo')
 
+# Path to the mosaic root directory
+PATH_MOSAIC_ROOT = os.path.join(BASE_PATH, '../tmp/mosaic')
+
 # Path to the tms root directoy
 PATH_TMS_ROOT = os.path.join(BASE_PATH, '../tmp/tms')
 

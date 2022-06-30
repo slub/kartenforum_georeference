@@ -16,7 +16,7 @@ from georeference.models.raw_maps import RawMap
 from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.mosaic_maps import MosaicMap
 from georeference.settings import ES_ROOT, ES_INDEX_NAME
-from georeference.utils.es import get_es_index
+from georeference.utils.es_index import get_es_index
 from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id, from_public_map_id, from_public_mosaic_map_id
 from .process_create_mosaic_map import run_process_create_mosiac_map
 
@@ -24,7 +24,7 @@ from .process_create_mosaic_map import run_process_create_mosiac_map
 LOGGER = logging.getLogger(__name__)
 
 test_data = {
-    "name": "Test name",
+    "name": "test_service",
     "raw_map_ids": [to_public_map_id(10007521), to_public_map_id(10009405)],
     "title": "Test title",
     "title_short": "Test title_short",
@@ -44,6 +44,11 @@ def test_run_process_create_mosiac_map(dbsession):
     # Get the index object
     es_index = get_es_index(ES_ROOT, ES_INDEX_NAME, force_recreation=True, logger=LOGGER)
 
+    # Backup value for later assert control
+    test_mosaic_map = MosaicMap.by_id(from_public_mosaic_map_id(public_mosaic_id), dbsession)
+    last_service_update_before_test = test_mosaic_map.last_service_update
+
+    # Run the test
     run_process_create_mosiac_map(
         es_index=es_index,
         dbsession=dbsession,
@@ -53,6 +58,11 @@ def test_run_process_create_mosiac_map(dbsession):
 
     # Check if the index was pushed to the es
     assert es_index.get(ES_INDEX_NAME, id=public_mosaic_id) is not None
+
+    # Check if the database object was updated correctly
+    test_mosaic_map = MosaicMap.by_id(from_public_mosaic_map_id(public_mosaic_id), dbsession)
+    assert last_service_update_before_test == None
+    assert last_service_update_before_test != test_mosaic_map.last_service_update
 
     dbsession.rollback()
 

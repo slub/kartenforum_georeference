@@ -116,7 +116,7 @@ def create_mosaic_dataset(dataset_name, target_dir, geo_images, target_crs, logg
         logger=logger
     )
 
-    return target_dataset
+    return os.path.abspath(target_dataset)
 
 
 def _build_vrt(target_dataset, image_dir, logger):

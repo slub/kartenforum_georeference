@@ -5,6 +5,7 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+import os
 from osgeo import gdal
 from osgeo import osr
 from osgeo.gdalconst import GA_ReadOnly
@@ -53,7 +54,7 @@ def write_mapfile(target_path, template_path, template_values):
     :type template_path: str
     :param template_values: Dictionary containing the template values
     :type template_values: Dict
-    :return: Path to template file
+    :return: Path to the new mapfile
     :rtype: str
     """
 
@@ -67,6 +68,6 @@ def write_mapfile(target_path, template_path, template_values):
         if content is not None:
             with open(target_path, 'w') as f:
                 f.write(content)
-        return target_path
+        return os.path.abspath(target_path)
     finally:
         f.close()

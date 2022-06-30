@@ -18,7 +18,7 @@ from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.metadata import Metadata
 from georeference.models.raw_maps import RawMap
 from georeference.settings import ES_ROOT, ES_INDEX_NAME, BASE_PATH, PATH_IMAGE_ROOT
-from georeference.utils.es import get_es_index
+from georeference.utils.es_index import get_es_index
 from georeference.utils.parser import to_public_map_id
 from georeference.utils.utils import remove_if_exists, get_thumbnail_path, get_zoomify_path
 

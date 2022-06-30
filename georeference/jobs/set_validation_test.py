@@ -15,7 +15,7 @@ from georeference.models.raw_maps import RawMap
 from georeference.models.transformations import Transformation, EnumValidationValue
 from georeference.settings import ES_ROOT
 from georeference.settings import ES_INDEX_NAME
-from georeference.utils.es import get_es_index
+from georeference.utils.es_index import get_es_index
 from georeference.utils.parser import to_public_map_id
 
 # Initialize the logger
