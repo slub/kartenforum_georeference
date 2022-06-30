@@ -9,14 +9,15 @@ import json
 import os
 import shutil
 import tempfile
+import traceback
 from datetime import datetime
 from georeference.jobs.actions.create_mosaic_services import run_process_mosaic_services
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.jobs import EnumJobType
 from georeference.models.mosaic_maps import MosaicMap
-from georeference.settings import ES_ROOT, ES_INDEX_NAME, PATH_MAPFILE_ROOT, PATH_MOSAIC_ROOT, PATH_TMP_ROOT
-from georeference.utils.es_index import generate_es_mosaic_map_document, get_es_index
-from georeference.utils.mosaics import create_mosaic_dataset
+from georeference.settings import ES_INDEX_NAME, PATH_MAPFILE_ROOT, PATH_MOSAIC_ROOT, PATH_TMP_ROOT
+from georeference.utils.es_index import generate_es_mosaic_map_document
+from georeference.utils.mosaics import create_mosaic_dataset, get_mosaic_dataset_path, get_mosaic_mapfile_path
 from georeference.utils.utils import get_geometry_for_mosaic_map
 
 
@@ -72,13 +73,7 @@ def run_process_create_mosiac_map(es_index, dbsession, logger, job):
         )
 
         # 4. Create the target directory of the mosaic dataset and mosaic service
-        mosaic_file_part = tmp_mosaic_dataset.replace(tmp_dir, '.')
-        trg_mosaic_dataset = os.path.abspath(
-            os.path.join(
-                PATH_MOSAIC_ROOT,
-                mosaic_file_part
-            )
-        )
+        trg_mosaic_dataset = get_mosaic_dataset_path(PATH_MOSAIC_ROOT, mosaic_map_obj.name)
 
         # 5. Copy or replace current mosaic dataset
         logger.debug('Copy or replace current mosaic dataset ...')
@@ -86,13 +81,8 @@ def run_process_create_mosiac_map(es_index, dbsession, logger, job):
 
         # 6. Create the mapfile in a tmp folder
         logger.debug('Create mosaic service in tmp directory ...')
-        trg_mosaic_service = run_process_mosaic_services(
-            path_mapfile=os.path.abspath(
-                os.path.join(
-                    PATH_MAPFILE_ROOT,
-                    f'{mosaic_map_obj.name}.map'
-                )
-            ),
+        run_process_mosaic_services(
+            path_mapfile=get_mosaic_mapfile_path(PATH_MAPFILE_ROOT, mosaic_map_obj.name),
             path_geo_image=trg_mosaic_dataset,
             layer_name=mosaic_map_obj.name,
             layer_title=mosaic_map_obj.title_short,
@@ -112,6 +102,12 @@ def run_process_create_mosiac_map(es_index, dbsession, logger, job):
         # 8. Update the database fields
         mosaic_map_obj.last_service_update = datetime.now().isoformat()
         dbsession.flush()
+
+    except Exception as e:
+        logger.error('Error while running the daemon')
+        logger.error(e)
+        logger.error(traceback.format_exc())
+        raise
     finally:
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir)
@@ -124,6 +120,7 @@ def _copy_mosaic_dataset(source_path, target_path):
         shutil.rmtree(target_parent_dir)
 
     shutil.copytree(source_parent_dir, target_parent_dir)
+
 
 def _push_to_es_index(es_index, mosaic_map_obj, trg_mosaic_dataset, logger):
     """ Creates/Updates the document for a mosaic_map_obj at the es_index.

@@ -87,7 +87,8 @@ def create_mosaic_dataset(dataset_name, target_dir, geo_images, target_crs, logg
     logger.debug('Start creating of mosaic dataset.')
 
     # Create the root directory for the dataset as well as the images directory
-    root_dir = os.path.join(target_dir, dataset_name)
+    target_dataset = get_mosaic_dataset_path(target_dir, dataset_name)
+    root_dir = os.path.dirname(target_dataset)
     image_dir = os.path.join(root_dir, 'images')
     os.makedirs(image_dir, exist_ok=True)
 
@@ -106,7 +107,6 @@ def create_mosaic_dataset(dataset_name, target_dir, geo_images, target_crs, logg
             )
         )
 
-    target_dataset = os.path.join(root_dir, f'{dataset_name}.vrt')
     logger.debug(f'Build VRT file {target_dataset} for {len(dataset_images)} images ...')
 
     # The VRT is build with the command gdalbuildvrt
@@ -118,6 +118,41 @@ def create_mosaic_dataset(dataset_name, target_dir, geo_images, target_crs, logg
 
     return os.path.abspath(target_dataset)
 
+def get_mosaic_dataset_path(target_dir, dataset_name):
+    """ Function for creating a mosaic dataset path.
+
+
+    :param target_dir: Directory where to place the dataset
+    :type target_dir: str
+    :param dataset_name: Name of the dataset.
+    :type dataset_name: str
+    :result: Path of the mosaic dataset
+    :rtype: str
+    """
+    return os.path.abspath(
+        os.path.join(
+            target_dir,
+            dataset_name,
+            f'{dataset_name}.vrt'
+        )
+    )
+
+def get_mosaic_mapfile_path(target_dir, service_name):
+    """ Function for creating a mosaic mapfile path.
+
+    :param target_dir: Directory where to place the mapfile
+    :type target_dir: str
+    :param service_name: Name of the service.
+    :type service_name: str
+    :result: Path of the mosaic mapfile
+    :rtype: str
+    """
+    return os.path.abspath(
+        os.path.join(
+            target_dir,
+            f'{service_name}.map'
+        )
+    )
 
 def _build_vrt(target_dataset, image_dir, logger):
     """ Creates a virtual raster dataset.

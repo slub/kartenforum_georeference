@@ -22,19 +22,21 @@ BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, '../../'))
 sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
+from georeference.jobs.initialize_data import run_initialize_data
 from georeference.jobs.process_create_map import run_process_create_map
 from georeference.jobs.process_delete_map import run_process_delete_maps
 from georeference.jobs.process_update_maps import run_process_update_maps
 from georeference.jobs.process_create_mosaic_map import run_process_create_mosiac_map
+from georeference.jobs.process_delete_mosaic_map import run_process_delete_mosiac_map
+from georeference.jobs.process_transformation import run_process_new_transformation
+from georeference.jobs.set_validation import run_process_new_validation
 from georeference.models import Job
 from georeference.models.jobs import EnumJobType, EnumJobState, JobHistory
-from georeference.settings import DAEMON_LOGGER_SETTINGS, DAEMON_SETTINGS
+from georeference.settings import DAEMON_LOGGER_SETTINGS
 from georeference.utils import create_data_directories
 from georeference.utils.es_index import get_es_index
 from georeference.utils.logging import create_logger
-from georeference.jobs.initialize_data import run_initialize_data
-from georeference.jobs.process_transformation import run_process_new_transformation
-from georeference.jobs.set_validation import run_process_new_validation
+
 from georeference.settings import ES_ROOT, ES_INDEX_NAME
 from georeference.utils.utils import without_keys
 
@@ -46,6 +48,7 @@ job_run_handlers = {
     EnumJobType.TRANSFORMATION_SET_INVALID.value: run_process_new_validation,
     EnumJobType.TRANSFORMATION_PROCESS.value: run_process_new_transformation,
     EnumJobType.MOSAIC_MAP_CREATE: run_process_create_mosiac_map,
+    EnumJobType.MOSAIC_MAP_DELETE: run_process_delete_mosiac_map
 }
 
 
