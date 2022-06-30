@@ -36,7 +36,9 @@ def create_mosaic_overviews(target_dataset, logger, overview_levels='2 4 8 16'):
     :type target_dataset: str
     :param logger: Logger
     :type logger: logging.Logger
-    :param overview_levels: Overview levels to compute
+    :param overview_levels: Overview levels to compute. The setting of the overview_levels is the central point for optimizing
+                            performance. For large mosaic maps overview_levels like "2 4 8 16 32 64 128 256 512 1024 2048" or
+                            larger should be used.
     :type overview_levels: str
     :results: Path of the overviews
     :rtype:
