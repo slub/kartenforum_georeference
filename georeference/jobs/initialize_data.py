@@ -36,7 +36,7 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
     :rtype: bool
     """
     try:
-        logger.info('Run initialization job ...')
+        logger.debug('Run initialization job ...')
         logger.debug('Create index ...')
         es_index = get_es_index(ES_ROOT, ES_INDEX_NAME, True, logger)
 

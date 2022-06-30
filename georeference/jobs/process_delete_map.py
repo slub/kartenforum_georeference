@@ -31,7 +31,7 @@ def run_process_delete_maps(es_index, dbsession, logger, job):
     """
     message = 'The delete failed before the map has been delete from the database.'
     try:
-        logger.info(f'Start processing delete_map job with id {job.id}')
+        logger.debug(f'Start processing delete_map job with id {job.id}')
         description = json.loads(job.description)
         map_id = description['map_id']
 
@@ -50,7 +50,7 @@ def run_process_delete_maps(es_index, dbsession, logger, job):
 
         # already commit this changes here, so the db session does not get rolled back if something
         # happens when deleting the files
-        logger.info(f'Successfully deleted information from db for Map {map_id}')
+        logger.debug(f'Successfully deleted information from db for Map {map_id}')
         dbsession.commit()
 
         message = 'The delete has been written to the database, but the filesystem is not in sync.'
@@ -81,7 +81,7 @@ def run_process_delete_maps(es_index, dbsession, logger, job):
         if raw_map_path is not None and os.path.exists(raw_map_path):
             os.remove(raw_map_path)
 
-        logger.info("Finished processing delete_map job.")
+        logger.debug("Finished processing delete_map job.")
 
     except Exception as e:
         logger.error('Error while running the daemon')

@@ -33,7 +33,7 @@ def run_process_update_maps(es_index, dbsession, logger, job):
     :param job: Job which will be processed
     :type job: georeference.models.jobs.Job
     """
-    logger.info('Process maps_update job ...')
+    logger.debug('Process maps_update job ...')
     description = json.loads(job.description)
     map_id = description['map_id']
     metadata_updates = {}
