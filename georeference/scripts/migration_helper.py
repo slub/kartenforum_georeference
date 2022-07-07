@@ -86,7 +86,7 @@ if __name__ == '__main__':
     LOGGER.info('Start running migration helper tasks...')
     try:
         dbsession = initialize_database_session(
-            iniFile=os.path.join(BASE_PATH, '../../production.ini')
+            os.path.join(BASE_PATH, '../../production.ini')
         )
         check_paths_original_images(dbsession, LOGGER)
         check_paths_georef_images(dbsession, LOGGER)

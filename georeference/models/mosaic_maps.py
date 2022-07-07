@@ -18,6 +18,7 @@ class MosaicMap(Base):
     raw_map_ids = Column(ARRAY(Integer))
     title = Column(String)
     title_short = Column(String)
+    description = Column(String)
     time_of_publication = Column(DateTime(timezone=False))
     link_thumb = Column(String)
     map_scale = Column(Integer)

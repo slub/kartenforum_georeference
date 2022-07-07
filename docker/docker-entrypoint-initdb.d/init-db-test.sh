@@ -150,6 +150,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         raw_map_ids integer[] NOT NULL,
         title character varying,
         title_short character varying NOT NULL,
+        description character varying NOT NULL,
         time_of_publication timestamp without time zone NOT NULL,
         link_thumb character varying NOT NULL,
         map_scale integer NOT NULL,

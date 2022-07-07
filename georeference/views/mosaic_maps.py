@@ -213,6 +213,7 @@ def _handle_mosaic_map_create(json_body, dbsession):
         raw_map_ids=map(lambda x: from_public_map_id(x), json_body["raw_map_ids"]),
         title=json_body["title"],
         title_short=json_body["title_short"],
+        description=json_body["description"],
         time_of_publication=json_body["time_of_publication"],
         link_thumb=json_body["link_thumb"],
         map_scale=json_body["map_scale"],
@@ -261,6 +262,7 @@ def _handle_mosaic_map_update(public_mosaic_map_id, json_body, dbsession):
     mosaic_map_obj.raw_map_ids = map(lambda x: from_public_map_id(x), json_body["raw_map_ids"])
     mosaic_map_obj.title = json_body["title"]
     mosaic_map_obj.title_short = json_body["title_short"]
+    mosaic_map_obj.description = json_body["description"]
     mosaic_map_obj.time_of_publication = json_body["time_of_publication"]
     mosaic_map_obj.link_thumb = json_body["link_thumb"]
     mosaic_map_obj.map_scale = json_body["map_scale"]

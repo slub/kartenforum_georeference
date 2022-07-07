@@ -17,9 +17,10 @@ sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
 from datetime import datetime
-from georeference.scripts import initialize_logger, initialize_database_session
 from georeference.models.mosaic_maps import MosaicMap
 from georeference.utils.mosaics import create_mosaic_overviews, get_mosaic_dataset_path
+from georeference.scripts import initialize_logger, initialize_database_session
+from georeference.settings import PATH_MOSAIC_ROOT
 
 def add_overviews_to_mosaics(dbsession, mosaic_root_dir, logger):
     """ Function queries all mosaic maps from the database and checks if an mosaic map has
@@ -61,12 +62,18 @@ if __name__ == '__main__':
         logging.StreamHandler()
     )
 
-    LOGGER.info('Start running migration helper tasks...')
+    LOGGER.info('Start running processing of overviews for mosaic maps...')
     try:
         dbsession = initialize_database_session(
-            iniFile=os.path.join(BASE_PATH, '../../production.ini')
+            os.path.join(BASE_PATH, '../../production.ini')
         )
-        LOGGER.info('Finish sync.')
+        add_overviews_to_mosaics(
+            dbsession=dbsession,
+            mosaic_root_dir=PATH_MOSAIC_ROOT,
+            logger=LOGGER,
+        )
+
+        LOGGER.info('All mosaic overviews are up to date.')
     except Exception as e:
         LOGGER.error('Error while trying to calculate overviews for mosaics')
         LOGGER.error(e)

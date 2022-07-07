@@ -92,7 +92,7 @@ def run_process_create_mosiac_map(es_index, dbsession, logger, job):
 
         # 7. Update the search index
         logger.debug('Update the search index ...')
-        _push_to_es_index(
+        push_mosaic_to_es_index(
             es_index=es_index,
             mosaic_map_obj=mosaic_map_obj,
             trg_mosaic_dataset=trg_mosaic_dataset,
@@ -112,17 +112,8 @@ def run_process_create_mosiac_map(es_index, dbsession, logger, job):
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir)
 
-def _copy_mosaic_dataset(source_path, target_path):
-    source_parent_dir = os.path.dirname(source_path)
-    target_parent_dir = os.path.dirname(target_path)
 
-    if os.path.exists(target_parent_dir):
-        shutil.rmtree(target_parent_dir)
-
-    shutil.copytree(source_parent_dir, target_parent_dir)
-
-
-def _push_to_es_index(es_index, mosaic_map_obj, trg_mosaic_dataset, logger):
+def push_mosaic_to_es_index(es_index, mosaic_map_obj, trg_mosaic_dataset, logger):
     """ Creates/Updates the document for a mosaic_map_obj at the es_index.
 
     :param es_index: Elasticsearch client
@@ -150,3 +141,11 @@ def _push_to_es_index(es_index, mosaic_map_obj, trg_mosaic_dataset, logger):
     )
 
 
+def _copy_mosaic_dataset(source_path, target_path):
+    source_parent_dir = os.path.dirname(source_path)
+    target_parent_dir = os.path.dirname(target_path)
+
+    if os.path.exists(target_parent_dir):
+        shutil.rmtree(target_parent_dir)
+
+    shutil.copytree(source_parent_dir, target_parent_dir)

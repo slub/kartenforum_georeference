@@ -226,7 +226,7 @@ def generate_es_mosaic_map_document(mosaic_map_obj, logger=LOGGER, geometry=None
         return {
             'map_id': to_public_mosaic_map_id(mosaic_map_obj.id),
             'file_name': None,
-            'description': None,
+            'description': mosaic_map_obj.description,
             'map_scale': int(mosaic_map_obj.map_scale) if mosaic_map_obj.map_scale is not None else None,
             'zoomify_url': None,
             'map_type': None,

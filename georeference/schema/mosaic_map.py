@@ -18,6 +18,7 @@ mosaic_map_schema_write = {
         },
         # Ids of the associated raw maps
         "raw_map_ids":  {"type": "array", "items": { "type": "string" }},
+        "description": {"type": ["string", "null"]},
         # Title, e.g. "Äquidistantenkarte Sachsen, 1892 bis 1900"
         "title": {"type": "string"},
         # Title, e.g. Äquidistantenkarte
@@ -32,7 +33,7 @@ mosaic_map_schema_write = {
         # Map scale of the mosaic map
         "map_scale": {"type": "number"}
     },
-    "required": ["name", "raw_map_ids", "title", "title_short", "time_of_publication", "link_thumb", "map_scale"]
+    "required": ["name", "raw_map_ids", "title", "title_short", "time_of_publication", "link_thumb", "map_scale", "description"]
 }
 
 

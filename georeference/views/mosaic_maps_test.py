@@ -16,6 +16,7 @@ from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id,
 test_data = {
     "id": to_public_mosaic_map_id(10),
     "name": "test_name",
+    "description": "testtest",
     "raw_map_ids": [to_public_map_id(10003265)],
     "title": "Test title",
     "title_short": "Test title_short",
@@ -46,6 +47,7 @@ def test_GET_mosaic_map_without_empty_fields(testapp, dbsession):
     assert res.json['raw_map_ids'][0] == test_data['raw_map_ids'][0]
     assert res.json['time_of_publication'] == test_data['time_of_publication']
     assert res.json['map_scale'] == test_data['map_scale']
+    assert res.json['description'] == test_data['description']
     assert res.json['last_change'] == test_data['last_change']
     assert res.json['last_service_update'] is not None
     assert res.json['last_overview_update'] is not None
@@ -189,6 +191,7 @@ def _insert_test_data(dbsession, test_data):
                 raw_map_ids=map(lambda x: from_public_map_id(x), rec["raw_map_ids"]),
                 title=rec["title"],
                 title_short=rec["title_short"],
+                description=rec["description"],
                 time_of_publication=rec["time_of_publication"],
                 link_thumb=rec["link_thumb"],
                 map_scale=rec["map_scale"],

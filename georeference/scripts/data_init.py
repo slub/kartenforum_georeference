@@ -33,7 +33,7 @@ if __name__ == '__main__':
     LOGGER.info('Start syncing files and search documents...')
     try:
         dbsession = initialize_database_session(
-            iniFile=os.path.join(BASE_PATH, '../../production.ini')
+            os.path.join(BASE_PATH, '../../production.ini')
         )
         run_initialize_data(
             dbsession=dbsession,
