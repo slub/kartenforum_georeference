@@ -38,12 +38,13 @@ def add_overviews_to_mosaics(dbsession, mosaic_root_dir, logger):
     # Query all mosaic maps and find the mosaic maps for which an update of the overviews
     # should be processed.
     for mosaic_map_obj in MosaicMap.all(dbsession):
+        mosaic_dataset = get_mosaic_dataset_path(mosaic_root_dir, mosaic_map_obj.name)
 
-        if mosaic_map_obj.last_overview_update is None or mosaic_map_obj.last_overview_update < mosaic_map_obj.last_service_update:
+        if mosaic_map_obj.last_overview_update is None or mosaic_map_obj.last_overview_update < mosaic_map_obj.last_service_update or _has_overview(mosaic_dataset) == False:
             new_datetime = datetime.now()
 
             dataset_overviews = create_mosaic_overviews(
-                target_dataset=get_mosaic_dataset_path(mosaic_root_dir,mosaic_map_obj.name),
+                target_dataset=mosaic_dataset,
                 logger=logger,
                 overview_levels='4 8 16 32 64 128 256 512'
             )
@@ -56,6 +57,15 @@ def add_overviews_to_mosaics(dbsession, mosaic_root_dir, logger):
             mosaic_map_obj.last_overview_update = new_datetime
             dbsession.commit()
 
+def _has_overview(mosaic_dataset):
+    """ Checks if overviews are existing for this mosaic_dataset.
+
+    :param mosaic_dataset: Path to the mosaic dataset
+    :type mosaic_dataset: str
+    :result: True if an overview file exists
+    :rtype: str
+    """
+    return os.path.exists(mosaic_dataset + '.ovr')
 
 if __name__ == '__main__':
     LOGGER = initialize_logger(

@@ -33,7 +33,7 @@ mosaic_map_schema_write = {
         # Map scale of the mosaic map
         "map_scale": {"type": "number"}
     },
-    "required": ["name", "raw_map_ids", "title", "title_short", "time_of_publication", "link_thumb", "map_scale", "description"]
+    "required": ["name", "raw_map_ids", "title", "title_short", "time_of_publication", "link_thumb", "map_scale"]
 }
 
 

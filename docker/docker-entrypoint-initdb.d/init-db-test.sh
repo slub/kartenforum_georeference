@@ -146,7 +146,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
     CREATE TABLE public.mosaic_maps (
         id integer NOT NULL,
-        name character varying NOT NULL,
+        name character varying NOT NULL CONSTRAINT name_unique UNIQUE,
         raw_map_ids integer[] NOT NULL,
         title character varying,
         title_short character varying NOT NULL,
