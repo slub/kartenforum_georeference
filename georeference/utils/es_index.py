@@ -200,7 +200,7 @@ def generate_es_original_map_document(raw_map_obj, metadata_obj, georef_map_obj=
             'geometry': geometry if geometry is not None else None,  #
             'has_georeference': georef_map_obj is not None,
             'time_published': metadata_obj.time_of_publication.date().isoformat(),
-            'is_mosaic': False
+            'type': 'single_sheet'
         }
     except Exception as e:
         logger.error('Failed creating a es document for georef map %s.' % raw_map_obj.id)
@@ -236,12 +236,12 @@ def generate_es_mosaic_map_document(mosaic_map_obj, logger=LOGGER, geometry=None
             'permalink': None,
             'slub_url': None,
             'online_resources': online_resources,
-            'tms_urls': None,
+            'tms_urls': [],
             'thumb_url': str(mosaic_map_obj.link_thumb).replace('http:', ''),
             'geometry': geometry if geometry is not None else None,  #
             'has_georeference': True,
             'time_published': mosaic_map_obj.time_of_publication.date().isoformat(),
-            'is_mosaic': True
+            'type': 'mosaic'
         }
     except Exception as e:
         logger.error('Failed creating a es document for mosaic map %s.' % mosaic_map_obj.id)

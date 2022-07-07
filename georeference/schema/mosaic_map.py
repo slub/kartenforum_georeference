@@ -12,7 +12,10 @@ mosaic_map_schema_write = {
     "type": "object",
     "properties": {
         # Name of the service"
-        "name": {"type": "string"},
+        "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$"
+        },
         # Ids of the associated raw maps
         "raw_map_ids":  {"type": "array", "items": { "type": "string" }},
         # Title, e.g. "Äquidistantenkarte Sachsen, 1892 bis 1900"

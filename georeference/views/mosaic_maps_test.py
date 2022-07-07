@@ -15,7 +15,7 @@ from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id,
 
 test_data = {
     "id": to_public_mosaic_map_id(10),
-    "name": "Test name",
+    "name": "test_name",
     "raw_map_ids": [to_public_map_id(10003265)],
     "title": "Test title",
     "title_short": "Test title_short",
@@ -117,7 +117,7 @@ def test_POST_update_mosaic_map_success(testapp, dbsession):
     data = { **test_data }
     data.pop('id')
     data.pop('last_change')
-    data['name'] = "Test"
+    data['name'] = "test"
 
     res = testapp.post(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200
