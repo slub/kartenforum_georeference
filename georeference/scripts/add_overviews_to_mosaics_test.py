@@ -1,58 +1,68 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Created by jacob.mendt@pikobytes.de on 22.06.22
+# Created by jacob.mendt@pikobytes.de on 07.07.22
 #
 # This file is subject to the terms and conditions defined in file
-# 'LICENSE', which is part of this source code package
-import shutil
+# "LICENSE", which is part of this source code package
 import json
 import logging
 import os
-from datetime import datetime
+import shutil
+from datetime import datetime, timedelta
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.models.transformations import Transformation, EnumValidationValue
-from .mosaics import create_mosaic_dataset, create_mosaic_overviews
+from georeference.models.mosaic_maps import MosaicMap
+from georeference.utils.mosaics import get_mosaic_dataset_path, create_mosaic_dataset
+from .add_overviews_to_mosaics import add_overviews_to_mosaics
 
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
-def test_create_mosaic_dataset():
+def test_add_overviews_to_mosaics(dbsession_only):
     try:
         # Setup the test data. This also contains the process of creating test georeference images.
         tmp_dir = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             f'../__test_data/data_output/',
-            'test_create_mosaic_dataset'
+            'test_add_overviews_to_mosaics'
         )
-        test_data_georef_images = _create_test_data(tmp_dir)
+        test_mosaic_map_objs = _create_test_data(tmp_dir, dbsession_only)
+        test_mosaic_dataset_path = get_mosaic_dataset_path(tmp_dir, test_mosaic_map_objs[0].name)
 
-        # Create the mosaic dataset
-        test_dataset = create_mosaic_dataset(
-            dataset_name='test_create_mosaic_dataset',
-            target_dir=tmp_dir,
-            geo_images=test_data_georef_images,
-            target_crs=3857,
-            logger=LOGGER
-        )
-        assert test_dataset is not None
-        assert os.path.exists(test_dataset)
+        # Check if the test setup was build up correctly
+        test_last_overview_update_is_set = test_mosaic_map_objs[0].last_overview_update
+        test_last_overview_update_is_none = test_mosaic_map_objs[1].last_overview_update
+        assert os.path.exists(test_mosaic_dataset_path)
+        assert test_last_overview_update_is_set is not None
+        assert test_last_overview_update_is_none is None
 
-        # Test also creation of overviews
-        test_dataset_overviews = create_mosaic_overviews(
-            target_dataset=test_dataset,
+        add_overviews_to_mosaics(
+            dbsession=dbsession_only,
+            mosaic_root_dir=tmp_dir,
             logger=LOGGER,
-            overview_levels='2'
         )
-        LOGGER.debug(test_dataset_overviews)
-        assert test_dataset_overviews is not None
-        assert os.path.exists(test_dataset_overviews)
+
+        # Check if the database object was updated correctly
+        test_mosaic_map_obj = MosaicMap.by_id(test_mosaic_map_objs[0].id, dbsession_only)
+        assert test_mosaic_map_obj.last_overview_update is not None
+        assert test_mosaic_map_obj.last_overview_update > test_last_overview_update_is_set
+        test_mosaic_map_obj = MosaicMap.by_id(test_mosaic_map_objs[1].id, dbsession_only)
+        assert test_mosaic_map_obj.last_overview_update is not None
+
 
     finally:
-        if os.path.exists(tmp_dir):
-            shutil.rmtree(tmp_dir)
+        dbsession_only.rollback()
 
-def _create_test_data(tmp_dir):
+        # the session is commited in the delete job, thus we have to manually rollback
+        dbsession_only.query(MosaicMap).filter(MosaicMap.id == test_mosaic_map_objs[0].id).delete()
+        dbsession_only.query(MosaicMap).filter(MosaicMap.id == test_mosaic_map_objs[1].id).delete()
+        dbsession_only.commit()
+
+        # if os.path.exists(tmp_dir):
+        #     shutil.rmtree(tmp_dir)
+
+def _create_test_data(tmp_dir, dbsession):
     test_data = [
         {
             'raw_map_id': 11823,
@@ -126,10 +136,50 @@ def _create_test_data(tmp_dir):
                     os.path.dirname(os.path.realpath(__file__)),
                     f'../__test_data/data_input/{f}.tif'
                 ),
-                os.path.join(tmp_dir, f'{f}_mosaics_tests.tif'
-                ),
+                os.path.join(tmp_dir, f'{f}_mosaics_tests.tif'),
                 logger=LOGGER
             )
         )
 
-    return georef_images
+    # Add the MosaicMap to the database
+    mosaic_map_obj_1 = MosaicMap(
+        id=10,
+        name="test_service",
+        raw_map_ids=[10007521],
+        title="Test title",
+        title_short="Test title",
+        time_of_publication="1923-01-01T00:00:00",
+        link_thumb="https://link.test.de",
+        map_scale=25000,
+        last_change=datetime.now(),
+        last_service_update=datetime.now(),
+        last_overview_update=(datetime.now() - timedelta(hours = 1)),
+    )
+    dbsession.add(mosaic_map_obj_1)
+
+    mosaic_map_obj_2 = MosaicMap(
+        id=11,
+        name="test_service",
+        raw_map_ids=[10007521],
+        title="Test title",
+        title_short="Test title",
+        time_of_publication="1923-01-01T00:00:00",
+        link_thumb="https://link.test.de",
+        map_scale=25000,
+        last_change=datetime.now().isoformat(),
+        last_service_update=datetime.now().isoformat(),
+        last_overview_update=None,
+    )
+    dbsession.add(mosaic_map_obj_2)
+
+
+    # Create the mosaic dataset
+    test_dataset = create_mosaic_dataset(
+        dataset_name=mosaic_map_obj_1.name,
+        target_dir=tmp_dir,
+        geo_images=georef_images,
+        target_crs=3857,
+        logger=LOGGER
+    )
+
+    return [mosaic_map_obj_1, mosaic_map_obj_2]
