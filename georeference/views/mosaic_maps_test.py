@@ -27,7 +27,7 @@ test_data = {
 
 
 def test_GET_mosaic_map_not_found(testapp):
-    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_map/{to_public_mosaic_map_id(1111)}', status=404)
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{to_public_mosaic_map_id(1111)}', status=404)
     assert res.status_int == 404
 
 def test_GET_mosaic_map_without_empty_fields(testapp, dbsession):
@@ -39,7 +39,7 @@ def test_GET_mosaic_map_without_empty_fields(testapp, dbsession):
         }
     }])
 
-    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', status=200)
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
     assert res.status_int == 200
     assert res.json['id'] == test_data['id']
     assert res.json['name'] == test_data['name']
@@ -58,7 +58,7 @@ def test_GET_mosaic_map_with_empty_fields(testapp, dbsession):
         **test_data,
     }])
 
-    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', status=200)
+    res = testapp.get(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
     assert res.status_int == 200
     assert res.json['id'] == test_data['id']
     assert res.json['last_service_update'] is None
@@ -119,7 +119,7 @@ def test_POST_update_mosaic_map_success(testapp, dbsession):
     data.pop('last_change')
     data['name'] = "test"
 
-    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', json.dumps(data), content_type='application/json; charset=utf-8', status=200)
     assert res.status_int == 200
     assert res.json['id'] == test_data["id"]
     assert res.json['last_change'] != test_data['last_change']
@@ -144,7 +144,7 @@ def test_POST_refresh_mosaic_map_success(testapp, dbsession):
     data.pop('id')
     data.pop('last_change')
 
-    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}/refresh', status=200)
+    res = testapp.post(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}/refresh', status=200)
     assert res.status_int == 200
     assert res.json['status'] == 'ok'
 
@@ -160,7 +160,7 @@ def test_DELETE_mosaic_map_success(testapp, dbsession):
         **test_data,
     }])
 
-    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_map/{test_data["id"]}', status=200)
+    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_maps/{test_data["id"]}', status=200)
     assert res.status_int == 200
     assert res.json['status'] == 'ok'
 
@@ -176,7 +176,7 @@ def test_DELETE_mosaic_map_success(testapp, dbsession):
 
 
 def test_DELETE_mosaic_map_failed_notfound(testapp, dbsession):
-    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_map/{to_public_mosaic_map_id(121212)}', status=404)
+    res = testapp.delete(f'{ROUTE_PREFIX}/mosaic_maps/{to_public_mosaic_map_id(121212)}', status=404)
     assert res.status_int == 404
 
 
