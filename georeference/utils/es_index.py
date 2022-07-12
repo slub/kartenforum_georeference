@@ -188,7 +188,7 @@ def generate_es_original_map_document(raw_map_obj, metadata_obj, georef_map_obj=
             'description': metadata_obj.description,
             'map_scale': int(raw_map_obj.map_scale) if raw_map_obj.map_scale is not None else None,
             'zoomify_url': str(metadata_obj.link_zoomify).replace('http:', ''),
-            'map_type': raw_map_obj.map_type,
+            'map_type': raw_map_obj.map_type.lower(),
             'keywords': keywords if keywords is not None else '',
             'title_long': metadata_obj.title,
             'title': metadata_obj.title_short,

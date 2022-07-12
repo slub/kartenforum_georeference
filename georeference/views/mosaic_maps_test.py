@@ -171,8 +171,8 @@ def test_DELETE_mosaic_map_success(testapp, dbsession):
     assert mosaic_map_obj is None
 
     # Check if the jobs was created successfully
-    jobs_create = Job.query_not_started_jobs([EnumJobType.MOSAIC_MAP_DELETE.value], dbsession)
-    assert len(jobs_create) == 1
+    jobs_delete = Job.query_not_started_jobs([EnumJobType.MOSAIC_MAP_DELETE.value], dbsession)
+    assert len(jobs_delete) == 1
 
     dbsession.rollback()
 

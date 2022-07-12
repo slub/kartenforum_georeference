@@ -36,7 +36,7 @@ def run_process_delete_mosiac_map(es_index, dbsession, logger, job):
     # Parse job information
     job_desc = json.loads(job.description)
     mosaic_map_id = job_desc['mosaic_map_id']
-    mosaic_map_name = None
+    mosaic_map_name = job_desc['mosaic_map_name']
 
     try:
         # 1. Check if mosaic map exists and if yes delete it
@@ -54,18 +54,17 @@ def run_process_delete_mosiac_map(es_index, dbsession, logger, job):
         logger.debug(f'Remove mosaic map with id {mosaic_map_id} from search index.')
         es_index.delete(index=ES_INDEX_NAME, doc_type=None, id=to_public_mosaic_map_id(mosaic_map_id))
 
-        if mosaic_map_name is not None:
-            # Remove mosaic map services
-            mosaic_mapfile_path = get_mosaic_mapfile_path(PATH_MAPFILE_ROOT, mosaic_map_obj.name)
-            logger.debug(f'Remove mosaic mapfile {mosaic_mapfile_path} ...')
-            if os.path.exists(mosaic_mapfile_path):
-                os.remove(mosaic_mapfile_path)
+        # Remove mosaic map services
+        mosaic_mapfile_path = get_mosaic_mapfile_path(PATH_MAPFILE_ROOT, mosaic_map_name)
+        logger.debug(f'Remove mosaic mapfile {mosaic_mapfile_path} ...')
+        if os.path.exists(mosaic_mapfile_path):
+            os.remove(mosaic_mapfile_path)
 
-            # Remove mosaic map dataset
-            trg_mosaic_dataset = get_mosaic_dataset_path(PATH_MOSAIC_ROOT, mosaic_map_name)
-            logger.debug(f'Remove mosaic dataset {trg_mosaic_dataset} ...')
-            if os.path.exists(trg_mosaic_dataset):
-                shutil.rmtree(os.path.dirname(trg_mosaic_dataset))
+        # Remove mosaic map dataset
+        trg_mosaic_dataset = get_mosaic_dataset_path(PATH_MOSAIC_ROOT, mosaic_map_name)
+        logger.debug(f'Remove mosaic dataset {trg_mosaic_dataset} ...')
+        if os.path.exists(trg_mosaic_dataset):
+            shutil.rmtree(os.path.dirname(trg_mosaic_dataset))
 
     except Exception as e:
         logger.error('Error while running the daemon')

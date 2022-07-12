@@ -280,7 +280,7 @@ def _handle_mosaic_map_update(public_mosaic_map_id, json_body, dbsession):
     return _create_mosaic_maps_response(mosaic_map_obj)
 
 
-def _add_job(dbsession, mosaic_map_id, service_name, user_id='system', is_delete=False):
+def _add_job(dbsession, mosaic_map_id, mosaic_map_name, user_id='system', is_delete=False):
     """
     Handles the job creation for adding/updating maps, based on the supplied values
 
@@ -288,8 +288,8 @@ def _add_job(dbsession, mosaic_map_id, service_name, user_id='system', is_delete
     :type dbsession: sqlalchemy.orm.session.Session
     :param mosaic_map_id: Id of the mosaic_map
     :type mosaic_map_id: int
-    :param service_name: Name of the service
-    :type service_name: str
+    :param mosaic_map_name: Name of the mosaic_map
+    :type mosaic_map_name: str
     :param user_id: id of the user
     :type user_id: str
     :param is_delete: Flag if an existing map was updated or a new map was created
@@ -298,6 +298,7 @@ def _add_job(dbsession, mosaic_map_id, service_name, user_id='system', is_delete
     create_job = Job(
         description=json.dumps({
             'mosaic_map_id': mosaic_map_id,
+            'mosaic_map_name': mosaic_map_name
         }, ensure_ascii=False),
         type=EnumJobType.MOSAIC_MAP_DELETE.value if is_delete else EnumJobType.MOSAIC_MAP_CREATE.value,
         state=EnumJobState.NOT_STARTED.value,

@@ -169,7 +169,7 @@ def _build_vrt(target_dataset, image_dir, logger):
     :rtype: str
     """
     try:
-        build_vrt_command = 'gdalbuildvrt -overwrite {target_dataset} {input_files}'.format(
+        build_vrt_command = 'gdalbuildvrt -overwrite -srcnodata 0 {target_dataset} {input_files}'.format(
             target_dataset=target_dataset,
             input_files=f'{image_dir}/*.tif'
         )
