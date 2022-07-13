@@ -8,7 +8,8 @@
 from osgeo import gdal
 from georeference.settings import TEMPLATE_OAI_ID
 
-def fromPublicOAI(oai):
+
+def from_public_oai(oai):
     """ Transforms a given oai to an internal mapId.
 
     :param oai: Public oai
@@ -21,7 +22,8 @@ def fromPublicOAI(oai):
         raise TypeError('Can not process the given oai.')
     return int(mapId)
 
-def toInt(v):
+
+def to_int(v):
     """ Tries to cast a given value to an int.
 
     :param v: Any value
@@ -35,7 +37,8 @@ def toInt(v):
     else:
         raise TypeError('The given values is not an integer.')
 
-def toGDALGcps(gcps):
+
+def to_gdal_gcps(gcps):
     """ Transforms gcps in the service API notation to gdal gcps.
 
     :param gcps:  List of gcps
@@ -43,16 +46,18 @@ def toGDALGcps(gcps):
     :result: List of gdal.GCPs
     :rtype: [gdal.GCP]
     """
-    return list(map(lambda gcp: gdal.GCP(gcp['target'][0], gcp['target'][1], 0, gcp['source'][0], gcp['source'][1]), gcps))
+    return list(
+        map(lambda gcp: gdal.GCP(gcp['target'][0], gcp['target'][1], 0, gcp['source'][0], gcp['source'][1]), gcps))
 
-def toPublicOAI(mapId):
+
+def to_public_oai(map_id):
     """ Transforms a given id to a public.
 
-    :param mapId: Number representing a internal id
-    :type mapId: int
+    :param map_id: Number representing a internal id
+    :type map_id: int
     :result: Public OAI
     :rtype: str
     """
-    if '%s'not in TEMPLATE_OAI_ID:
+    if '{}' not in TEMPLATE_OAI_ID:
         raise BaseException('Could not process OAI_ID_TEMPLATE')
-    return TEMPLATE_OAI_ID % mapId
+    return TEMPLATE_OAI_ID.format(map_id)

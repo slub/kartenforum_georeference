@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 13.4 (Debian 13.4-4.pgdg110+1)
--- Dumped by pg_dump version 13.4 (Ubuntu 13.4-0ubuntu0.21.04.1)
+-- Dumped by pg_dump version 13.6 (Ubuntu 13.6-0ubuntu0.21.10.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -39,17 +39,32 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.georef_maps (
-    original_map_id integer NOT NULL,
+    raw_map_id integer NOT NULL,
     transformation_id integer NOT NULL,
     rel_path character varying,
     extent public.geometry,
     last_processed timestamp without time zone NOT NULL,
     CONSTRAINT enforce_dims_boundingbox CHECK ((public.st_ndims(extent) = 2)),
-    CONSTRAINT enforce_geotype_boundingbox CHECK (((public.geometrytype(extent) = 'POLYGON'::text) OR (extent IS NULL)))
+    CONSTRAINT enforce_geotype_boundingbox CHECK (((public.geometrytype(extent) = 'POLYGON'::text) OR (extent IS NULL))),
+    CONSTRAINT enforce_srid_the_extent CHECK ((public.st_srid(extent) = 4326))
 );
 
 
 ALTER TABLE public.georef_maps OWNER TO postgres;
+
+--
+-- Name: georef_maps_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.georef_maps_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.georef_maps_id_seq OWNER TO postgres;
 
 --
 -- Name: jobs; Type: TABLE; Schema: public; Owner: postgres
@@ -57,16 +72,37 @@ ALTER TABLE public.georef_maps OWNER TO postgres;
 
 CREATE TABLE public.jobs (
     id integer NOT NULL,
+    type character varying NOT NULL,
+    description character varying,
+    state character varying NOT NULL,
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
-    task character varying,
-    task_name character varying NOT NULL,
     comment character varying DEFAULT ''::character varying,
-    processed boolean DEFAULT false
+    CONSTRAINT check_state CHECK (((state)::text = ANY (ARRAY[('not_started'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
+    CONSTRAINT check_type CHECK (((type)::text = ANY (ARRAY[('transformation_process'::character varying)::text, ('transformation_set_valid'::character varying)::text, ('transformation_set_invalid'::character varying)::text, ('maps_create'::character varying)::text, ('maps_delete'::character varying)::text, ('maps_update'::character varying)::text])))
 );
 
 
 ALTER TABLE public.jobs OWNER TO postgres;
+
+--
+-- Name: jobs_history; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.jobs_history (
+    id integer NOT NULL,
+    type character varying NOT NULL,
+    description character varying,
+    state character varying NOT NULL,
+    submitted timestamp without time zone NOT NULL,
+    user_id character varying NOT NULL,
+    comment character varying DEFAULT ''::character varying,
+    CONSTRAINT check_state CHECK (((state)::text = ANY (ARRAY[('not_started'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
+    CONSTRAINT check_type CHECK (((type)::text = ANY (ARRAY[('transformation_process'::character varying)::text, ('transformation_set_valid'::character varying)::text, ('transformation_set_invalid'::character varying)::text, ('maps_create'::character varying)::text, ('maps_delete'::character varying)::text, ('maps_update'::character varying)::text])))
+);
+
+
+ALTER TABLE public.jobs_history OWNER TO postgres;
 
 --
 -- Name: jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -90,27 +126,63 @@ ALTER SEQUENCE public.jobs_id_seq OWNED BY public.jobs.id;
 
 
 --
+-- Name: map_view; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.map_view (
+    id integer NOT NULL,
+    map_view_json character varying NOT NULL,
+    public_id character varying NOT NULL,
+    submitted timestamp without time zone,
+    request_count integer,
+    last_request timestamp without time zone,
+    user_id character varying
+);
+
+
+ALTER TABLE public.map_view OWNER TO postgres;
+
+--
+-- Name: map_view_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.map_view_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.map_view_id_seq OWNER TO postgres;
+
+--
+-- Name: map_view_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.map_view_id_seq OWNED BY public.map_view.id;
+
+
+--
 -- Name: metadata; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.metadata (
-    original_map_id integer NOT NULL,
+    raw_map_id integer NOT NULL,
     title character varying,
     title_short character varying,
     title_serie character varying,
-    fotothek_id integer,
     description character varying,
     measures character varying,
-    scale character varying,
     type character varying,
     technic character varying,
     ppn character varying,
-    license character varying,
-    time_of_publication timestamp without time zone,
-    owner character varying,
     permalink character varying,
-    link_jpg character varying,
+    license character varying,
+    owner character varying,
     link_zoomify character varying,
+    time_of_publication timestamp without time zone,
     link_thumb_small character varying,
     link_thumb_mid character varying
 );
@@ -119,27 +191,28 @@ CREATE TABLE public.metadata (
 ALTER TABLE public.metadata OWNER TO postgres;
 
 --
--- Name: original_maps; Type: TABLE; Schema: public; Owner: postgres
+-- Name: raw_maps; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.original_maps (
+CREATE TABLE public.raw_maps (
     id integer NOT NULL,
     file_name character varying,
-    rel_path character varying,
     enabled boolean,
     map_type character varying,
-    default_srs integer DEFAULT 4326 NOT NULL,
-    map_scale integer
+    default_crs integer,
+    rel_path character varying,
+    map_scale integer,
+    allow_download boolean DEFAULT false NOT NULL
 );
 
 
-ALTER TABLE public.original_maps OWNER TO postgres;
+ALTER TABLE public.raw_maps OWNER TO postgres;
 
 --
--- Name: original_maps_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: raw_maps_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.original_maps_id_seq
+CREATE SEQUENCE public.raw_maps_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -147,13 +220,13 @@ CREATE SEQUENCE public.original_maps_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.original_maps_id_seq OWNER TO postgres;
+ALTER TABLE public.raw_maps_id_seq OWNER TO postgres;
 
 --
--- Name: original_maps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+-- Name: raw_maps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
-ALTER SEQUENCE public.original_maps_id_seq OWNED BY public.original_maps.id;
+ALTER SEQUENCE public.raw_maps_id_seq OWNED BY public.raw_maps.id;
 
 
 --
@@ -162,16 +235,19 @@ ALTER SEQUENCE public.original_maps_id_seq OWNED BY public.original_maps.id;
 
 CREATE TABLE public.transformations (
     id integer NOT NULL,
-    original_map_id integer NOT NULL,
     submitted timestamp without time zone NOT NULL,
     user_id character varying NOT NULL,
     params character varying NOT NULL,
-    clip public.geometry,
-    overwrites integer NOT NULL,
+    target_crs integer NOT NULL,
     validation character varying NOT NULL,
+    raw_map_id integer NOT NULL,
+    overwrites integer NOT NULL,
     comment character varying,
+    clip public.geometry,
+    CONSTRAINT check_validation CHECK (((validation)::text = ANY (ARRAY[('missing'::character varying)::text, ('valid'::character varying)::text, ('invalid'::character varying)::text]))),
     CONSTRAINT enforce_dims_clip CHECK ((public.st_ndims(clip) = 2)),
-    CONSTRAINT enforce_geotype_clip CHECK (((public.geometrytype(clip) = 'POLYGON'::text) OR (clip IS NULL)))
+    CONSTRAINT enforce_geotype_clip CHECK (((public.geometrytype(clip) = 'POLYGON'::text) OR (clip IS NULL))),
+    CONSTRAINT enforce_srid_the_clip CHECK ((public.st_srid(clip) = 4326))
 );
 
 
@@ -206,10 +282,17 @@ ALTER TABLE ONLY public.jobs ALTER COLUMN id SET DEFAULT nextval('public.jobs_id
 
 
 --
--- Name: original_maps id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Name: map_view id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.original_maps ALTER COLUMN id SET DEFAULT nextval('public.original_maps_id_seq'::regclass);
+ALTER TABLE ONLY public.map_view ALTER COLUMN id SET DEFAULT nextval('public.map_view_id_seq'::regclass);
+
+
+--
+-- Name: raw_maps id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.raw_maps ALTER COLUMN id SET DEFAULT nextval('public.raw_maps_id_seq'::regclass);
 
 
 --
@@ -224,7 +307,7 @@ ALTER TABLE ONLY public.transformations ALTER COLUMN id SET DEFAULT nextval('pub
 --
 
 ALTER TABLE ONLY public.georef_maps
-    ADD CONSTRAINT georef_maps_pkey PRIMARY KEY (original_map_id);
+    ADD CONSTRAINT georef_maps_pkey PRIMARY KEY (raw_map_id);
 
 
 --
@@ -236,19 +319,35 @@ ALTER TABLE ONLY public.jobs
 
 
 --
+-- Name: map_view map_view_pk; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map_view
+    ADD CONSTRAINT map_view_pk PRIMARY KEY (id);
+
+
+--
+-- Name: map_view map_view_public_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.map_view
+    ADD CONSTRAINT map_view_public_id_key UNIQUE (public_id);
+
+
+--
 -- Name: metadata metadata_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.metadata
-    ADD CONSTRAINT metadata_pkey PRIMARY KEY (original_map_id);
+    ADD CONSTRAINT metadata_pkey PRIMARY KEY (raw_map_id);
 
 
 --
--- Name: original_maps original_maps_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: raw_maps raw_maps_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.original_maps
-    ADD CONSTRAINT original_maps_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.raw_maps
+    ADD CONSTRAINT raw_maps_pkey PRIMARY KEY (id);
 
 
 --
@@ -260,25 +359,25 @@ ALTER TABLE ONLY public.transformations
 
 
 --
--- Name: original_maps unique_filename; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: raw_maps unique_filename; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.original_maps
+ALTER TABLE ONLY public.raw_maps
     ADD CONSTRAINT unique_filename UNIQUE (file_name);
 
 
 --
--- Name: fki_transformations_original_map_id_fkey; Type: INDEX; Schema: public; Owner: postgres
+-- Name: fki_transformations_raw_map_id_fkey; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE INDEX fki_transformations_original_map_id_fkey ON public.transformations USING btree (original_map_id);
+CREATE INDEX fki_transformations_raw_map_id_fkey ON public.transformations USING btree (raw_map_id);
 
 
 --
--- Name: idx_original_maps_id; Type: INDEX; Schema: public; Owner: postgres
+-- Name: idx_raw_maps_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
-CREATE UNIQUE INDEX idx_original_maps_id ON public.original_maps USING btree (id);
+CREATE UNIQUE INDEX idx_raw_maps_id ON public.raw_maps USING btree (id);
 
 
 --
@@ -289,11 +388,25 @@ CREATE UNIQUE INDEX idx_transformations_id ON public.transformations USING btree
 
 
 --
--- Name: georef_maps georef_maps_original_maps_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: map_view_id_uindex; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX map_view_id_uindex ON public.map_view USING btree (id);
+
+
+--
+-- Name: map_view_public_id_uindex; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX map_view_public_id_uindex ON public.map_view USING btree (public_id);
+
+
+--
+-- Name: georef_maps georef_maps_raw_maps_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.georef_maps
-    ADD CONSTRAINT georef_maps_original_maps_id_fkey FOREIGN KEY (original_map_id) REFERENCES public.original_maps(id);
+    ADD CONSTRAINT georef_maps_raw_maps_id_fkey FOREIGN KEY (raw_map_id) REFERENCES public.raw_maps(id) ON DELETE CASCADE;
 
 
 --
@@ -309,40 +422,18 @@ ALTER TABLE ONLY public.georef_maps
 --
 
 ALTER TABLE ONLY public.metadata
-    ADD CONSTRAINT metadata_maps_fkey FOREIGN KEY (original_map_id) REFERENCES public.original_maps(id);
+    ADD CONSTRAINT metadata_maps_fkey FOREIGN KEY (raw_map_id) REFERENCES public.raw_maps(id) ON DELETE CASCADE;
 
 
 --
--- Name: transformations transformations_original_maps_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: transformations transformations_raw_maps_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.transformations
-    ADD CONSTRAINT transformations_original_maps_id_fkey FOREIGN KEY (original_map_id) REFERENCES public.original_maps(id);
+    ADD CONSTRAINT transformations_raw_maps_id_fkey FOREIGN KEY (raw_map_id) REFERENCES public.raw_maps(id) ON DELETE CASCADE;
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-
-
---
--- New map_view table
---
-CREATE TABLE public.map_view
-(
-    id            serial
-        CONSTRAINT map_view_pk
-            PRIMARY KEY,
-    map_view_json character varying NOT NULL,
-    public_id character varying UNIQUE NOT NULL,
-    submitted     timestamp,
-    request_count integer,
-    last_request  timestamp,
-    user_id       character varying
-);
-
-ALTER TABLE public.map_view OWNER TO postgres;
-
-CREATE UNIQUE INDEX map_view_id_uindex ON public.map_view (id);
-CREATE UNIQUE INDEX map_view_public_id_uindex ON public.map_view (public_id);

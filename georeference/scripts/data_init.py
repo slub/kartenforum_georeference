@@ -28,8 +28,8 @@ sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
 from georeference.settings import DAEMON_LOGGER_SETTINGS
-from georeference.utils.logging import createLogger
-from georeference.daemon.jobs import loadInitialData
+from georeference.utils.logging import create_logger
+from georeference.jobs.initialize_data import run_initialize_data
 
 def initializeDatabaseSession():
     """ Functions loads and initialize a database session
@@ -67,7 +67,7 @@ def initializeLogger(handler):
     )
 
     # Create and initialize the logger
-    return createLogger(
+    return create_logger(
         DAEMON_LOGGER_SETTINGS['name'],
         DAEMON_LOGGER_SETTINGS['level'],
         handler = handler,
@@ -84,7 +84,7 @@ LOGGER = initializeLogger(
 LOGGER.info('Start syncing files and search documents...')
 try:
     dbsession = initializeDatabaseSession()
-    loadInitialData(
+    run_initialize_data(
         dbsession=dbsession,
         logger=LOGGER
     )

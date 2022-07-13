@@ -11,69 +11,67 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from sqlalchemy import desc
 
-LOGGER = logging.getLogger(__name__)
-
-from georeference.models.transformations import Transformation, ValidationValues
-from georeference.models.original_maps import OriginalMap
+from georeference.models.transformations import Transformation, EnumValidationValue
+from georeference.models.raw_maps import RawMap
 from georeference.models.metadata import Metadata
 from georeference.models.georef_maps import GeorefMap
-from georeference.utils.parser import toPublicOAI
+from georeference.utils.parser import to_public_oai
+
+LOGGER = logging.getLogger(__name__)
 
 GENERAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
-@view_config(route_name='user_history', renderer='json')
-def generateGeoreferenceHistory(request):
-    if request.method != 'GET':
-        return HTTPBadRequest('The endpoint only supports "GET" requests.')
 
-    if request.matchdict['user_id'] == None:
-        return HTTPBadRequest('Missing user_id')
-
+@view_config(route_name='user_history', renderer='json', request_method='GET')
+def GET_user_history(request):
     try:
+        if request.matchdict['user_id'] is None:
+            return HTTPBadRequest('Missing user_id')
+
         LOGGER.debug('Query georeference profile information from database for user %s' % request.matchdict['user_id'])
-        queryData = request.dbsession.query(Transformation, Metadata, OriginalMap, GeorefMap)\
-            .join(Metadata, Transformation.original_map_id == Metadata.original_map_id)\
-            .join(OriginalMap, Transformation.original_map_id == OriginalMap.id) \
+        query_data = request.dbsession.query(Transformation, Metadata, RawMap, GeorefMap) \
+            .join(Metadata, Transformation.raw_map_id == Metadata.raw_map_id) \
+            .join(RawMap, Transformation.raw_map_id == RawMap.id) \
             .join(GeorefMap, GeorefMap.transformation_id == Transformation.id, full=True) \
-            .filter(Transformation.user_id == request.matchdict['user_id'])\
+            .filter(Transformation.user_id == request.matchdict['user_id']) \
             .order_by(desc(Transformation.id))
 
         LOGGER.debug('Create response list')
         georef_profile = []
         points = 0
-        for record in queryData:
-            transformationObj = record[0]
-            metadataObj = record[1]
-            mapObj = record[2]
-            georefMapObj = record[3]
+        for record in query_data:
+            transformation_obj = record[0]
+            metadata_obj = record[1]
+            map_obj = record[2]
+            georef_map_obj = record[3]
 
             # Create response
-            responseRecord = {
-                'file_name': mapObj.file_name,
-                'is_transformed': True if georefMapObj != None else False,
-                'map_id': toPublicOAI(mapObj.id),
+            response_record = {
+                'file_name': map_obj.file_name,
+                'is_transformed': True if georef_map_obj != None else False,
+                'map_id': to_public_oai(map_obj.id),
                 'transformation': {
-                    'id': transformationObj.id,
-                    'params': transformationObj.getParamsAsDict(),
-                    'submitted': str(transformationObj.submitted),
-                    'validation': transformationObj.validation
+                    'id': transformation_obj.id,
+                    'params': transformation_obj.get_params_as_dict(),
+                    'submitted': str(transformation_obj.submitted),
+                    'validation': transformation_obj.validation
                 },
                 'metadata': {
-                    'thumbnail': metadataObj.link_thumb_mid,
-                    'time_published': str(metadataObj.time_of_publication),
-                    'title': metadataObj.title,
+                    'thumbnail': metadata_obj.link_thumb_mid,
+                    'time_published': str(metadata_obj.time_of_publication),
+                    'title': metadata_obj.title,
                 }
             }
 
             # calculate points
-            if transformationObj.validation != ValidationValues.INVALID.value:
+            if transformation_obj.validation != EnumValidationValue.INVALID.value:
                 points += 20
 
-            georef_profile.append(responseRecord)
+            georef_profile.append(response_record)
 
-        LOGGER.debug('Response: %s'%georef_profile)
+        LOGGER.debug('Response: %s' % georef_profile)
 
-        return {'georef_profile':georef_profile, 'points':points}
+        return {'georef_profile': georef_profile, 'points': points}
     except Exception as e:
         LOGGER.error('Error while trying to request georeference history information')
         LOGGER.error(e)

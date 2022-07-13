@@ -31,3 +31,14 @@ The old Virtual Map Forum relies on an older database schema. For usage with the
  > pg_dump --inserts --column-inserts -U postgres -h localhost vkdb-new > vkdb-new.dump
 
 6.) Adjust sequence id of the database
+
+## Scripts
+
+A scripts for updating the map_scale from raw_maps from the current scale field in metadata:
+
+```sql
+update raw_maps 
+set map_scale = split_part(metadata.scale, ':', 2)::int4
+from metadata 
+where id = metadata.raw_map_id and split_part(metadata.scale, ':', 2)::int4 > 0;
+```

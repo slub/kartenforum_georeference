@@ -3,10 +3,10 @@
 .idea/
 .coverage
 /deprecated
-/georeference_tests/data_output
-!/georeference_tests/data_output/.placeholder
-/georeference_tests/data_input
-!/georeference_tests/data_input/.placeholder
+/georeference/__test_data/data_output
+!/georeference/__test_data/data_output/.placeholder
+/georeference/__test_data/data_input
+!/georeference/__test_data/data_input/.placeholder
 /tmp
 !/tmp/.placeholder
 TODO.md
@@ -22,4 +22,13 @@ TODO.md
 *.pyc
 
 # configuration files
-create_tar.sh
+scripts/create_tar.sh
+scripts/uploaded.log
+scripts/uploads
+scripts/*.json
+scripts/*.tif
+scripts/*.tar.gz
+
+# do not track sql dumps and log files
+*.dump
+*.log

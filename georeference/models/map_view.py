@@ -5,18 +5,13 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import Text
-from sqlalchemy import DateTime
-from sqlalchemy import desc
+from sqlalchemy import Column, Integer, Text, DateTime, desc
 from .meta import Base
-
 
 
 class MapView(Base):
     __tablename__ = 'map_view'
-    __table_args__ = {'extend_existing':True}
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True)
     public_id = Column(Text())
     map_view_json = Column(Text())
@@ -25,20 +20,18 @@ class MapView(Base):
     last_request = Column(DateTime(timezone=False))
     user_id = Column(Integer)
 
-    
     @classmethod
-    def byId(cls, id, session):
-        return session.query(MapView).filter(MapView.id == id).first()
-    
-    @classmethod
-    def byPublicId(cls, public_id, session):
-        return cls.queryByPublicId(public_id, session).first()
+    def by_id(cls, id, dbsession):
+        return dbsession.query(MapView).filter(MapView.id == id).first()
 
     @classmethod
-    def queryByPublicId(cls, public_id, session):
-        return session.query(MapView).filter(MapView.public_id == public_id)
-
+    def by_public_id(cls, public_id, dbsession):
+        return cls.query_by_public_id(public_id, dbsession).first()
 
     @classmethod
-    def all(cls, session):
-        return session.query(MapView).order_by(desc(MapView.id))
+    def query_by_public_id(cls, public_id, dbsession):
+        return dbsession.query(MapView).filter(MapView.public_id == public_id)
+
+    @classmethod
+    def all(cls, dbsession):
+        return dbsession.query(MapView).order_by(desc(MapView.id))

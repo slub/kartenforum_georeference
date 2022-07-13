@@ -7,7 +7,8 @@
 # "LICENSE", which is part of this source code package
 import logging
 
-def createLogger(name, level, file=None, formatter=None, handler=None):
+
+def create_logger(name, level, file=None, formatter=None, handler=None):
     """ Creates a logger for the passed parameters.
 
     :param name: Name of the logger
@@ -24,15 +25,15 @@ def createLogger(name, level, file=None, formatter=None, handler=None):
     :result: Logger
     :rtype: `logging.Logger`
     """
-    if handler == None:
+    if handler is None:
         logging.basicConfig()
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
     if file and formatter:
-        logHandler = logging.FileHandler(file)
-        logHandler.setFormatter(formatter)
-        logger.addHandler(logHandler)
+        log_handler = logging.FileHandler(file)
+        log_handler.setFormatter(formatter)
+        logger.addHandler(log_handler)
     elif handler:
         logger.addHandler(handler)
 

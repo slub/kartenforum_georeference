@@ -6,19 +6,23 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import json
-from georeference.utils.parser import toPublicOAI
+from georeference.models.transformations import Transformation
+from georeference.utils.parser import to_public_oai
 
-def toTransformationResponse(transformationObj, mapObj, metadataObj, isActive = False):
+
+def to_transformation_response(transformation_obj, map_obj, metadata_obj, dbsession, is_active=False):
     """ Returns a transformation response.
 
-    :param transformationObj: Transformation object
-    :type transformationObj: georeference.models.transformations.Transformation
-    :param mapObj: Original Map object
-    :type mapObj: georeference.models.original_maps.OriginalMap
-    :param metadataObj: Metadata object
-    :type metadataObj: georeference.models.metadata.Metadata
-    :param isActive: Signals of a transformation is currently used for an active georeference map.
-    :type isActive: bool
+    :param transformation_obj: Transformation object
+    :type transformation_obj: georeference.models.transformations.Transformation
+    :param map_obj: Original Map object
+    :type map_obj: georeference.models.raw_maps.RawMap
+    :param metadata_obj: Metadata object
+    :type metadata_obj: georeference.models.metadata.Metadata
+    :param dbsession: Database session
+    :type dbsession: sqlalchemy.orm.session.Session
+    :param is_active: Signals of a transformation is currently used for an active georeference map.
+    :type is_active: bool
     :result: Public api of a transformation
     :rtype: {{
         is_active: bool,
@@ -34,23 +38,24 @@ def toTransformationResponse(transformationObj, mapObj, metadataObj, isActive = 
           title: str,
     }}
     """
-    clipJson =  json.loads(transformationObj.clip) if transformationObj.clip != None else None
-    if clipJson != None and 'crs' not in clipJson:
-        clipJson["crs"] = {"type":"name","properties":{"name":"EPSG:4326"}}
+    clip_geojson = Transformation.get_valid_clip_geometry(transformation_obj.id,
+                                                          dbsession=dbsession) if transformation_obj.clip is not None else None
+    if clip_geojson is not None and 'crs' not in clip_geojson:
+        clip_geojson["crs"] = {"type": "name", "properties": {"name": "EPSG:4326"}}
 
     return {
-        'is_active': isActive,
-        'transformation_id': transformationObj.id,
-        'clip': clipJson,
-        'params': transformationObj.getParamsAsDict(),
-        'submitted': str(transformationObj.submitted),
-        'overwrites': transformationObj.overwrites,
-        'user_id': transformationObj.user_id,
-        'map_id': toPublicOAI(mapObj.id),
-        'validation': transformationObj.validation,
+        'is_active': is_active,
+        'transformation_id': transformation_obj.id,
+        'clip': clip_geojson,
+        'params': transformation_obj.get_params_as_dict_in_epsg_4326(),
+        'submitted': str(transformation_obj.submitted),
+        'overwrites': transformation_obj.overwrites,
+        'user_id': transformation_obj.user_id,
+        'map_id': to_public_oai(map_obj.id),
+        'validation': transformation_obj.validation,
         'metadata': {
-            'time_publish': str(metadataObj.time_of_publication),
-            'title': metadataObj.title,
-            'title_short': metadataObj.title_short
+            'time_publish': str(metadata_obj.time_of_publication),
+            'title': metadata_obj.title,
+            'title_short': metadata_obj.title_short
         },
     }
