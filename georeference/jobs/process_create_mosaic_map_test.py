@@ -108,6 +108,7 @@ def _create_test_data(dbsession, mosaic_id):
     mosaic_map = MosaicMap(
         id=from_public_mosaic_map_id(mosaic_id),
         name=test_data["name"],
+        description="test",
         raw_map_ids=map(lambda x: from_public_map_id(x), test_data["raw_map_ids"]),
         title=test_data["title"],
         title_short=test_data["title_short"],
@@ -124,6 +125,7 @@ def _create_test_data(dbsession, mosaic_id):
     create_job = Job(
         description=json.dumps({
             'mosaic_map_id': mosaic_map.id,
+            'mosaic_map_name': mosaic_map.name,
             }, ensure_ascii=False),
         type=EnumJobType.MOSAIC_MAP_CREATE.value,
         state=EnumJobState.NOT_STARTED.value,

@@ -144,7 +144,8 @@ def _create_test_data(tmp_dir, dbsession):
     # Add the MosaicMap to the database
     mosaic_map_obj_1 = MosaicMap(
         id=10,
-        name="test_service",
+        description="test",
+        name="test_service_1",
         raw_map_ids=[10007521],
         title="Test title",
         title_short="Test title",
@@ -159,7 +160,8 @@ def _create_test_data(tmp_dir, dbsession):
 
     mosaic_map_obj_2 = MosaicMap(
         id=11,
-        name="test_service",
+        description="test",
+        name="test_service_2",
         raw_map_ids=[10007521],
         title="Test title",
         title_short="Test title",
@@ -174,8 +176,15 @@ def _create_test_data(tmp_dir, dbsession):
 
 
     # Create the mosaic dataset
-    test_dataset = create_mosaic_dataset(
+    create_mosaic_dataset(
         dataset_name=mosaic_map_obj_1.name,
+        target_dir=tmp_dir,
+        geo_images=georef_images,
+        target_crs=3857,
+        logger=LOGGER
+    )
+    create_mosaic_dataset(
+        dataset_name=mosaic_map_obj_2.name,
         target_dir=tmp_dir,
         geo_images=georef_images,
         target_crs=3857,
