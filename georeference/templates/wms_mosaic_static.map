@@ -26,26 +26,18 @@ MAP
     TRANSPARENT FALSE
   END # OUTPUTFORMAT
 
-  OUTPUTFORMAT
-    NAME "GEOTIFF"
-    DRIVER "GDAL/GTiff"
-    MIMETYPE "image/tiff"
-    IMAGEMODE "BYTE"
-    EXTENSION "tif"
-  END
-
   WEB
     METADATA
       "wms_srs" "epsg:3857 epsg:4326"
       "wms_onlineresource" "$wmsUrl"
       "wms_enable_request" "*"
       "wms_encoding" "UTF-8"
-      "wms_title" "Web Map Service for serving $layerName"
+      "wms_title" "WMS $layerTitle"
       "wms_accessconstraints" "Alle Metadaten stehen unter der CC0-Lizenz zur Verfuegung. Alle ueber die Infrastruktur des Virtuellen Kartenforum angeboten Karten mit einer Datierung vor 1900 stehen unter CC-BY-SA 4.0 zur Verfuegung. Für juengere Karten gilt aus urheberrechtlichen Gruenden Rechte vorbehalten/rights reserved. Naehere Informationen finden sie auch in den Nutzungsbestimmungen auf den Webseiten der SLUB (http://www.deutschefotothek.de)."
       "wms_contactorganization" "Saxon State and University Library Dresden (SLUB)"
       "wms_contactperson" "Alexander Bigga"
       "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
-      "wms_abstract" "Web Map Service for serving $layerName"
+      "wms_abstract" "WMS $layerTitle"
     END
   END
 

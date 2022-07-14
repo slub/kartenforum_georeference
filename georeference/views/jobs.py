@@ -15,7 +15,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPInternalServerError, HTTPBadRequest
 from georeference.models.jobs import Job, EnumJobState
 from georeference.settings import GLOBAL_ERROR_MESSAGE
-from georeference.schema.job import JobSchema
+from georeference.schema.job import job_schema
 
 LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ def POST_jobs(request):
     """
     try:
         try:
-            validate(request.json_body, JobSchema)
+            validate(request.json_body, job_schema)
         except Exception as e:
             LOGGER.error(e)
             LOGGER.error(traceback.format_exc())

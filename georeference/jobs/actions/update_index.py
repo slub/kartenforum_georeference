@@ -8,7 +8,7 @@
 import os
 from georeference.models.metadata import Metadata
 from georeference.settings import ES_INDEX_NAME
-from georeference.utils.es import generate_es_document
+from georeference.utils.es_index import generate_es_original_map_document
 from georeference.utils.utils import get_geometry
 
 
@@ -32,7 +32,7 @@ def run_update_index(es_index, raw_map_obj, georef_map_obj, dbsession, logger):
     """
     # Synchronise the index with the current state of the raw map objects.
     logger.debug('Write search record for raw map id %s to index ...' % (raw_map_obj.id))
-    document = generate_es_document(
+    document = generate_es_original_map_document(
         raw_map_obj,
         Metadata.by_map_id(raw_map_obj.id, dbsession),
         georef_map_obj=georef_map_obj if georef_map_obj != None and os.path.exists(georef_map_obj.get_abs_path()) else None,

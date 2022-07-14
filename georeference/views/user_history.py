@@ -15,7 +15,7 @@ from georeference.models.transformations import Transformation, EnumValidationVa
 from georeference.models.raw_maps import RawMap
 from georeference.models.metadata import Metadata
 from georeference.models.georef_maps import GeorefMap
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def GET_user_history(request):
             response_record = {
                 'file_name': map_obj.file_name,
                 'is_transformed': True if georef_map_obj != None else False,
-                'map_id': to_public_oai(map_obj.id),
+                'map_id': to_public_map_id(map_obj.id),
                 'transformation': {
                     'id': transformation_obj.id,
                     'params': transformation_obj.get_params_as_dict(),

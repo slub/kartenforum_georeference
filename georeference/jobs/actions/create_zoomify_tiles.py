@@ -40,13 +40,16 @@ def run_process_zoomify_tiles(path_src_raw_img, path_zoomify_tiles, logger, forc
         "path_trg": path_zoomify_tiles,
     }
 
-    logger.debug(command)
-    subprocess.check_call(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
+    try:
+        logger.debug(command)
+        subprocess.check_output(
+            command,
+            shell=True,
+            stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
 
     if not os.path.exists(path_zoomify_tiles):
         raise Exception('Something went wrong while trying to process zoomify tiles.')

@@ -12,7 +12,7 @@ from georeference.models.map_view import MapView
 from georeference.models.transformations import Transformation, EnumValidationValue
 from georeference.models.jobs import Job, EnumJobType
 from georeference.settings import ROUTE_PREFIX
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 
 
 def test_GET_mapview_for_id_success(testapp, dbsession):

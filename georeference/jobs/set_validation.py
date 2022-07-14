@@ -60,7 +60,7 @@ def run_process_new_validation(es_index, dbsession, logger, job):
         # If there is no previous valid transformation, but a currently active georef map, then disable it.
         active_georef_map_obj = GeorefMap.by_transformation_id(transformation_obj.id, dbsession)
         if prev_transformation_obj is None and active_georef_map_obj is not None:
-            logger.info('Disable georef map for transformation with id %s ...' % transformation_obj.id)
+            logger.debug('Disable georef map for transformation with id %s ...' % transformation_obj.id)
             run_disable_transformation(
                 transformation_obj,
                 es_index,
@@ -70,7 +70,7 @@ def run_process_new_validation(es_index, dbsession, logger, job):
 
         # If there is a previous valid transformation, enable it
         if prev_transformation_obj is not None and active_georef_map_obj is not None:
-            logger.info('Enable older transformation with id %s ...' % prev_transformation_obj.id)
+            logger.debug('Enable older transformation with id %s ...' % prev_transformation_obj.id)
             run_enable_transformation(
                 prev_transformation_obj,
                 es_index,

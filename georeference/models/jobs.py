@@ -22,6 +22,8 @@ class EnumJobType(enum.Enum, metaclass=EnumMeta):
     MAPS_CREATE = "maps_create"
     MAPS_DELETE = "maps_delete"
     MAPS_UPDATE = "maps_update"
+    MOSAIC_MAP_CREATE = "mosaic_map_create"
+    MOSAIC_MAP_DELETE = "mosaic_map_delete"
 
 
 class EnumJobState(enum.Enum, metaclass=EnumMeta):

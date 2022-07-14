@@ -11,16 +11,13 @@ from georeference.utils.mapfile import write_mapfile
 from georeference.utils.mapfile import parse_geo_tiff_metadata
 
 
-def run_process_geo_services(path_mapfile, path_geo_image, mapfile_name, layer_name, layer_title, logger,
-                             with_wcs=False, force=False):
+def run_process_mosaic_services(path_mapfile, path_geo_image, layer_name, layer_title, logger, force=False):
     """ This actions creates for a given geo image the mapfiles needed for publishing a WMS or WCS service.
 
-    :param pathMapFile: Path to the mapfile
-    :type pathMapFile: str
+    :param path_mapfile: Path to the mapfile
+    :type path_mapfile: str
     :param path_geo_image: Path to the original geo image
     :type path_geo_image: str
-    :param mapfile_name: Name of the mapfile
-    :type mapfile_name: str
     :param layer_name: Name of the layer
     :type layer_name: str
     :param layer_title: Title of the layer
@@ -36,24 +33,24 @@ def run_process_geo_services(path_mapfile, path_geo_image, mapfile_name, layer_n
     """
     if not os.path.exists(path_geo_image):
         logger.debug(
-            f'Skip processing of map services for geo image "{path_geo_image}", because of missing geo image.')
+            'Skip processing of map services for geo image "%s", because of missing geo image.' % path_geo_image)
         return None
 
     if os.path.exists(path_mapfile) and force == False:
         logger.debug(
-            f'Skip processing of map services for geo image "{path_geo_image}", because of an already existing mapfile. Use "force" parameter in case you want to overwrite it.')
+            'Skip processing of map services for geo image "%s", because of an already existing mapfile. Use "force" parameter in case you want to overwrite it.' % path_geo_image)
         return path_mapfile
 
     # Remove the mapfile if it exists
     if os.path.exists(path_mapfile):
         os.remove(path_mapfile)
 
-    # Create the
+    # Create the template values
+    mapfile_name = os.path.basename(path_mapfile).replace('.map', '')
     template_values = {
         **parse_geo_tiff_metadata(path_geo_image),
         **{
             'wmsUrl': TEMPLATE_PUBLIC_WMS_URL.format(mapfile_name),
-            'wcsUrl': TEMPLATE_PUBLIC_WCS_URL.format(mapfile_name),
             'layerName': layer_name,
             'layerDataPath': path_geo_image,
             'layerTitle': layer_title
@@ -63,6 +60,6 @@ def run_process_geo_services(path_mapfile, path_geo_image, mapfile_name, layer_n
 
     return write_mapfile(
         path_mapfile,
-        os.path.join(PATH_MAPFILE_TEMPLATES, './wms_wcs_static.map' if with_wcs == True else './wms_static.map'),
+        os.path.join(PATH_MAPFILE_TEMPLATES, './wms_mosaic_static.map'),
         template_values,
     )

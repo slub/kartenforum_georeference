@@ -11,7 +11,7 @@ import traceback
 import json
 from elasticsearch import Elasticsearch
 from georeference.utils.georeference import get_image_size
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id
 from georeference.settings import TEMPLATE_PUBLIC_WMS_URL, TEMPLATE_PUBLIC_WCS_URL, GLOBAL_PERMALINK_RESOLVER, \
     TEMPLATE_TMS_URLS
 
@@ -41,7 +41,8 @@ MAPPING = {
     # "http://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_5248_1933.jpg"
     'geometry': {'type': 'geo_shape'},  # GeoJSON
     'has_georeference': {'type': 'boolean', 'index': True},
-    'time_published': {'type': 'date', 'index': True}  # "1939-1-1"
+    'time_published': {'type': 'date', 'index': True},  # "1939-1-1",
+    'is_mosaic': {'type': 'boolean', 'index': True} # Signals if the given map is a mosaic map layer
 }
 
 
@@ -71,17 +72,17 @@ def _get_online_resource_permalink_oai(oai):
     }
 
 
-def _get_online_resource_wms(raw_map_obj):
+def _get_online_resource_wms(service_name):
     """
-    :param raw_map_obj: Map
-    :type raw_map_obj: georeference.models.original_maps.Map
+    :param service_name: Name of the service
+    :type service_name: str
     :result: A online resource which describes a wms
     :rtype: dict
     """
     # append WMS
     return {
         'url': '%(link_service)s?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities' % ({
-            'link_service': TEMPLATE_PUBLIC_WMS_URL.format(raw_map_obj.id),
+            'link_service': TEMPLATE_PUBLIC_WMS_URL.format(service_name),
         }),
         'type': 'WMS'
     }
@@ -139,8 +140,8 @@ def _get_online_resource_wcs_for_download(georef_map_obj, coverage_title, extent
     }
 
 
-def generate_es_document(raw_map_obj, metadata_obj, georef_map_obj=None, logger=LOGGER, geometry=None):
-    """ Generates a document which matches the es mapping.
+def generate_es_original_map_document(raw_map_obj, metadata_obj, georef_map_obj=None, logger=LOGGER, geometry=None):
+    """ Generates an elasticsearch document for an original_map.
 
     :param raw_map_obj: Original map
     :type raw_map_obj: georeference.models.raw_maps.RawMap
@@ -161,7 +162,7 @@ def generate_es_document(raw_map_obj, metadata_obj, georef_map_obj=None, logger=
 
         # We can only create georeference ressources if the absolute path exists
         if georef_map_obj is not None and os.path.exists(georef_map_obj.get_abs_path()):
-            online_resources.append(_get_online_resource_wms(raw_map_obj))
+            online_resources.append(_get_online_resource_wms(raw_map_obj.id))
             if raw_map_obj.allow_download:
                 extent = json.loads(georef_map_obj.extent)
                 online_resources.append(_get_online_resource_wcs(raw_map_obj))
@@ -182,12 +183,12 @@ def generate_es_document(raw_map_obj, metadata_obj, georef_map_obj=None, logger=
         keywords = ';'.join(list(filter(lambda x: x is not None, [metadata_obj.type, metadata_obj.technic])))
 
         return {
-            'map_id': to_public_oai(raw_map_obj.id),
+            'map_id': to_public_map_id(raw_map_obj.id),
             'file_name': raw_map_obj.file_name,
             'description': metadata_obj.description,
             'map_scale': int(raw_map_obj.map_scale) if raw_map_obj.map_scale is not None else None,
             'zoomify_url': str(metadata_obj.link_zoomify).replace('http:', ''),
-            'map_type': raw_map_obj.map_type,
+            'map_type': raw_map_obj.map_type.lower(),
             'keywords': keywords if keywords is not None else '',
             'title_long': metadata_obj.title,
             'title': metadata_obj.title_short,
@@ -198,10 +199,52 @@ def generate_es_document(raw_map_obj, metadata_obj, georef_map_obj=None, logger=
             'thumb_url': str(metadata_obj.link_thumb_small).replace('http:', ''),
             'geometry': geometry if geometry is not None else None,  #
             'has_georeference': georef_map_obj is not None,
-            'time_published': metadata_obj.time_of_publication.date().isoformat()
+            'time_published': metadata_obj.time_of_publication.date().isoformat(),
+            'type': 'single_sheet'
         }
     except Exception as e:
-        logger.error('Failed creating a es document for original map %s.' % raw_map_obj.id)
+        logger.error('Failed creating a es document for georef map %s.' % raw_map_obj.id)
+        logger.error(e)
+        logger.error(traceback.format_exc())
+
+def generate_es_mosaic_map_document(mosaic_map_obj, logger=LOGGER, geometry=None):
+    """ Generates an elasticsearch document for a mosaic_map.
+
+    :param mosaic_map_obj: Mosaic map
+    :type mosaic_map_obj: georeference.models.mosaic_maps.MosaicMap
+    :param logger: Logger
+    :type logger: logging.Logger
+    :param geometry: GeoJSON geometry
+    :type geometry: dict
+    :result: Document matching the es mapping
+    :rtype: dict
+    """
+    try:
+        # Necessary for creating the online ressource
+        online_resources = [_get_online_resource_wms(mosaic_map_obj.name)]
+
+        return {
+            'map_id': to_public_mosaic_map_id(mosaic_map_obj.id),
+            'file_name': None,
+            'description': mosaic_map_obj.description,
+            'map_scale': int(mosaic_map_obj.map_scale) if mosaic_map_obj.map_scale is not None else None,
+            'zoomify_url': None,
+            'map_type': None,
+            'keywords': '',
+            'title_long': mosaic_map_obj.title,
+            'title': mosaic_map_obj.title_short,
+            'permalink': None,
+            'slub_url': None,
+            'online_resources': online_resources,
+            'tms_urls': [],
+            'thumb_url': str(mosaic_map_obj.link_thumb).replace('http:', ''),
+            'geometry': geometry if geometry is not None else None,  #
+            'has_georeference': True,
+            'time_published': mosaic_map_obj.time_of_publication.date().isoformat(),
+            'type': 'mosaic'
+        }
+    except Exception as e:
+        logger.error('Failed creating a es document for mosaic map %s.' % mosaic_map_obj.id)
         logger.error(e)
         logger.error(traceback.format_exc())
 

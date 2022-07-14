@@ -15,7 +15,7 @@
 #     task_name: "transformation_process"
 # }
 
-JobSchema = {
+job_schema = {
     "type": "object",
     "additionalProperties": False,
     "properties": {

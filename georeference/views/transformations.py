@@ -20,13 +20,13 @@ from georeference.models.metadata import Metadata
 from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.transformations import Transformation, EnumValidationValue
 from georeference.models.raw_maps import RawMap
-from georeference.schema.transformation import TransformationSchema, IdOnlyTransformationSchema
+from georeference.schema.transformation import transformation_schema, id_only_transformation_schema
 from georeference.settings import GLOBAL_ERROR_MESSAGE, PATH_MAPFILE_TEMPLATES, PATH_TMP_TRANSFORMATION_ROOT, \
     PATH_TMP_ROOT, PATH_TMP_TRANSFORMATION_DATA_ROOT, TEMPLATE_TRANSFORMATION_WMS_URL
 from georeference.utils.api import to_transformation_response
 from georeference.utils.georeference import get_image_extent, rectify_image
 from georeference.utils.mapfile import write_mapfile
-from georeference.utils.parser import from_public_oai, to_int, to_gdal_gcps, to_public_oai
+from georeference.utils.parser import from_public_map_id, to_int, to_gdal_gcps, to_public_map_id
 from georeference.utils.proj import get_crs_for_transformation_params, transform_to_params_to_target_crs
 
 # For correct resolving of the paths we use derive the base_path of the file
@@ -62,7 +62,7 @@ def GET_transformations_for_map_id(request):
     try:
         user_id = request.params['user_id'] if 'user_id' in request.params else None
         validation = request.params['validation'] if 'validation' in request.params else None
-        map_id = to_int(from_public_oai(request.params['map_id'])) if 'map_id' in request.params else None
+        map_id = to_int(from_public_map_id(request.params['map_id'])) if 'map_id' in request.params else None
         additional_properties = str(request.params[
                                         'additional_properties']).lower() == "true" if 'additional_properties' in request.params else False
 
@@ -154,9 +154,9 @@ def POST_transformation(request):
         # Validate json content
         try:
             if dry_run and transformation_id is not None:
-                validate(request.json_body, IdOnlyTransformationSchema)
+                validate(request.json_body, id_only_transformation_schema)
             else:
-                validate(request.json_body, TransformationSchema)
+                validate(request.json_body, transformation_schema)
         except Exception as e:
             _log_error(e, "Could not validate POST data for transformations endpoint")
             return HTTPBadRequest("Invalid request object for transformations POST request. %s" % e.message)
@@ -168,7 +168,7 @@ def POST_transformation(request):
 
         # Make sure the reference map_obj exists
         map_obj_id = transformation_obj.raw_map_id if transformation_obj is not None else to_int(
-            from_public_oai(request.json_body['map_id']))
+            from_public_map_id(request.json_body['map_id']))
         map_obj = RawMap.by_id(map_obj_id, request.dbsession)
         if map_obj is None:
             return HTTPBadRequest('Could not find original map for passed map id.')

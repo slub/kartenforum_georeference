@@ -12,8 +12,6 @@ import subprocess
 import sys
 import logging
 from PIL import Image
-from osgeo import gdal
-from osgeo.gdalconst import GA_ReadOnly
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, '../../'))
@@ -77,15 +75,16 @@ def _build_tms_cache(path_image, target_root_path, logger, processes, map_scale)
     os.makedirs(tms_target_dir)
     command = f'gdal2tiles.py --zoom={zoom_level} --processes={processes} --webviewer=none --resampling=average {path_image} {tms_target_dir}'
 
-    logger.debug('Execute - %s' % command)
-    subprocess.call(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
-    print('------------------------------------------------------------------')
-
+    try:
+        logger.debug('Execute - %s' % command)
+        subprocess.check_output(
+            command,
+            shell=True,
+            stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
     return tms_target_dir
 
 

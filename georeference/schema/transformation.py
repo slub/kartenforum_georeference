@@ -6,7 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 
-from georeference.schema.general import TwoDimensionalPoint
+from georeference.schema.general import two_dimensional_point
 
 # Example:
 #
@@ -32,7 +32,7 @@ from georeference.schema.general import TwoDimensionalPoint
 #     'user_id': 'test'
 # }
 
-_BaseTransformationSchema = {
+_base_transformation_schema = {
     "type": "object",
     "properties": {
         "clip": {
@@ -47,7 +47,7 @@ _BaseTransformationSchema = {
                         "type:": "array",
                         # at least 3 2-dimensional coordinates for a polygon
                         "minItems": 3,
-                        "items": TwoDimensionalPoint
+                        "items": two_dimensional_point
                     }
                 }
             },
@@ -64,8 +64,8 @@ _BaseTransformationSchema = {
                         "type": "object",
                         "minItems": 3,
                         "properties": {
-                            "source": TwoDimensionalPoint,
-                            "target": TwoDimensionalPoint
+                            "source": two_dimensional_point,
+                            "target": two_dimensional_point
                         }
                     }
                 }
@@ -77,9 +77,9 @@ _BaseTransformationSchema = {
     "required": ["params"]
 }
 
-TransformationSchema = {
+transformation_schema = {
     "allOf": [
-        _BaseTransformationSchema,
+        _base_transformation_schema,
         {
             "type": "object",
             "properties": {
@@ -92,7 +92,7 @@ TransformationSchema = {
     ]
 }
 
-IdOnlyTransformationSchema = {
+id_only_transformation_schema = {
     "type": "object",
     "properties": {
         "transformation_id": {"type": "number"}

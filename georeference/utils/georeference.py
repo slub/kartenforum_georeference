@@ -14,8 +14,7 @@ import pyproj
 from osgeo import gdal
 from osgeo import osr
 from osgeo.gdalconst import GA_ReadOnly
-from georeference.settings import GDAL_CACHEMAX, GDAL_WARP_MEMORY, GDAL_NUM_THREADS, GLOBAL_PATH_GDALWARP, \
-    GLOBAL_PATH_GDALADDO
+from georeference.settings import GDAL_CACHEMAX, GDAL_WARP_MEMORY, GDAL_NUM_THREADS
 
 # For a full list of all supported config options have a look at https://gdal.org/user/configoptions.html
 GC_PARAMTER = [
@@ -42,13 +41,19 @@ def _add_overviews(dst_file, overview_levels, logger):
     :raise: Exception """
     try:
         logger.debug('Adding overviews to raster %s' % dst_file)
-        command = '%s --config GDAL_CACHEMAX 500 -r average %s %s' % (GLOBAL_PATH_GDALADDO, dst_file, overview_levels)
-        subprocess.check_call(command, shell=True)
+        command = f'gdaladdo --config GDAL_CACHEMAX 500 -r average {dst_file} {overview_levels}'
+        subprocess.check_output(
+            command,
+            shell=True,
+            stderr=subprocess.STDOUT
+        )
         return dst_file
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
     except Exception:
-        logger.error("%s - Unexpected error while trying add overviews to the raster: %s - with command - %s" % (
-            sys.stderr, sys.exc_info()[0], command))
-        raise Exception("Error while running subprocess via commandline!")
+        logger.error(f'{sys.stderr} - Unexpected error while trying add overviews to the raster: {sys.exc_info()[0]} - with command - {command}')
+        raise
 
 
 def _create_vrt(src_dataset, dst_file):
@@ -209,7 +214,7 @@ def rectify_image(src_file, dst_file, algorithm, gcps, srs, logger, tmp_dir, cli
             logger.info('Rectify image with a %s transformation ...' % (algorithm))
 
             # For a full understanding of the warp command, have a look at the documentation: https://gdal.org/programs/gdalwarp.html
-            warp_command = "{gdalwarp_path} -overwrite {config_options} {creation_options} {resampling_method} {warp_memory} {algorithm} {cutline} -dstalpha -overwrite {source_file} {target_file}".format(
+            warp_command = "gdalwarp -overwrite {config_options} {creation_options} {resampling_method} {warp_memory} {algorithm} {cutline} -dstalpha -overwrite {source_file} {target_file}".format(
                 # In case no algorithm is set, the gdalwarp command tries to detect the correct order of a polynom by using
                 # the count of gcps attached to the image
                 algorithm="-tps" if algorithm == "tps" else "-order 1" if algorithm == "affine" else "",
@@ -218,7 +223,6 @@ def rectify_image(src_file, dst_file, algorithm, gcps, srs, logger, tmp_dir, cli
                 cutline="-crop_to_cutline -cutline '{geojson}'".format(
                     geojson=str(clip_geo_json).replace("'", '"')) if clip_geo_json is not None else "",
                 creation_options=" ".join(['-co "%s=%s"' % (el[0], el[1]) for el in CO_PARAMETER]),
-                gdalwarp_path=GLOBAL_PATH_GDALWARP,
                 resampling_method="-r near",
                 source_file=tmp_file,
                 target_file=dst_file,

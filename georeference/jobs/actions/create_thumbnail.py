@@ -50,13 +50,16 @@ def run_process_thumbnail(path_src_raw_img, path_thumbnail, logger, width=None, 
         height=height if height != None else ""
     )
 
-    logger.debug(command)
-    subprocess.check_call(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
+    try:
+        logger.debug(command)
+        subprocess.check_output(
+            command,
+            shell=True,
+            stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
 
     if not os.path.exists(path_thumbnail):
         raise Exception('Something went wrong while trying to process thumbnail.')

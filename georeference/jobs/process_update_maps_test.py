@@ -17,7 +17,7 @@ from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.raw_maps import RawMap
 from georeference.settings import ES_ROOT, ES_INDEX_NAME, BASE_PATH, PATH_IMAGE_ROOT, TEMPLATE_PUBLIC_THUMBNAIL_URL, \
     TEMPLATE_PUBLIC_ZOOMIFY_URL
-from georeference.utils.es import get_es_index
+from georeference.utils.es_index import get_es_index
 from georeference.utils.utils import remove_if_exists, get_zoomify_path, get_thumbnail_path
 
 LOGGER = logging.getLogger(__name__)

@@ -95,7 +95,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         user_id character varying NOT NULL,
         comment character varying DEFAULT ''::character varying,
         CONSTRAINT check_state CHECK (((state)::text = ANY (ARRAY[('not_started'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
-        CONSTRAINT check_type CHECK (((type)::text = ANY (ARRAY[('transformation_process'::character varying)::text, ('transformation_set_valid'::character varying)::text, ('transformation_set_invalid'::character varying)::text, ('maps_create'::character varying)::text, ('maps_delete'::character varying)::text, ('maps_update'::character varying)::text])))
+        CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying, 'mosaic_map_create'::character varying, 'mosaic_map_delete'::character varying])::text[])))
     );
 
 
@@ -114,7 +114,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         user_id character varying NOT NULL,
         comment character varying DEFAULT ''::character varying,
         CONSTRAINT check_state CHECK (((state)::text = ANY (ARRAY[('not_started'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
-        CONSTRAINT check_type CHECK (((type)::text = ANY (ARRAY[('transformation_process'::character varying)::text, ('transformation_set_valid'::character varying)::text, ('transformation_set_invalid'::character varying)::text, ('maps_create'::character varying)::text, ('maps_delete'::character varying)::text, ('maps_update'::character varying)::text])))
+        CONSTRAINT check_type CHECK (((type)::text = ANY ((ARRAY['transformation_process'::character varying, 'transformation_set_valid'::character varying, 'transformation_set_invalid'::character varying, 'maps_create'::character varying, 'maps_delete'::character varying, 'maps_update'::character varying, 'mosaic_map_create'::character varying, 'mosaic_map_delete'::character varying])::text[])))
     );
 
 
@@ -140,6 +140,47 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
     ALTER SEQUENCE public.jobs_id_seq OWNED BY public.jobs.id;
 
+    --
+    -- Name: mosaic_maps; Type: TABLE; Schema: public; Owner: postgres
+    --
+
+    CREATE TABLE public.mosaic_maps (
+        id integer NOT NULL,
+        name character varying NOT NULL CONSTRAINT name_unique UNIQUE,
+        raw_map_ids integer[] NOT NULL,
+        title character varying,
+        title_short character varying NOT NULL,
+        description character varying NOT NULL,
+        time_of_publication timestamp without time zone NOT NULL,
+        link_thumb character varying NOT NULL,
+        map_scale integer NOT NULL,
+        last_change timestamp without time zone NOT NULL,
+        last_service_update timestamp without time zone,
+        last_overview_update timestamp without time zone
+    );
+
+    ALTER TABLE public.mosaic_maps OWNER TO postgres;
+
+    --
+    -- Name: mosaic_maps_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+    --
+
+    CREATE SEQUENCE public.mosaic_maps_id_seq
+        AS integer
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1;
+
+
+    ALTER TABLE public.mosaic_maps_id_seq OWNER TO postgres;
+
+    --
+    -- Name: mosaic_maps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+    --
+
+    ALTER SEQUENCE public.mosaic_maps_id_seq OWNED BY public.mosaic_maps.id;
 
     --
     -- Name: map_view; Type: TABLE; Schema: public; Owner: postgres
@@ -443,6 +484,18 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
     SELECT pg_catalog.setval('public.raw_maps_id_seq', 1, false);
 
+
+    --
+    -- Name: mosaic_maps id; Type: DEFAULT; Schema: public; Owner: postgres
+    --
+
+    ALTER TABLE ONLY public.mosaic_maps ALTER COLUMN id SET DEFAULT nextval('public.mosaic_maps_id_seq'::regclass);
+
+    --
+    -- Name: mosaic_maps_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+    --
+
+    SELECT pg_catalog.setval('public.mosaic_maps_id_seq', 1, false);
 
     --
     -- Name: transformations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres

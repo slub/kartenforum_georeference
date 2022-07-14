@@ -26,8 +26,8 @@ from georeference.models.jobs import EnumJobType, EnumJobState, Job
 from georeference.models.metadata import Metadata
 from georeference.models.raw_maps import RawMap
 from georeference.settings import GLOBAL_ERROR_MESSAGE, PATH_TMP_NEW_MAP_ROOT
-from georeference.utils.parser import to_public_oai, from_public_oai
-from georeference.schema.maps import maps_schema
+from georeference.utils.parser import to_public_map_id, from_public_map_id
+from georeference.schema.map import map_schema
 from georeference.utils.utils import without_keys
 
 LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def GET_map_for_map_id(request):
             return HTTPBadRequest('Missing map_id')
 
         # query map object and metadata
-        map_id = to_int(from_public_oai(request.matchdict['map_id']))
+        map_id = to_int(from_public_map_id(request.matchdict['map_id']))
         map_obj = RawMap.by_id(map_id, request.dbsession)
         metadata_obj = Metadata.by_map_id(map_obj.id, request.dbsession).__dict__
 
@@ -64,7 +64,7 @@ def GET_map_for_map_id(request):
 
         # add in fields from map_obj
         response_obj["file_name"] = map_obj.file_name
-        response_obj["map_id"] = to_public_oai(map_obj.id)
+        response_obj["map_id"] = to_public_map_id(map_obj.id)
         response_obj["transformation_id"] = None
         response_obj["map_type"] = map_obj.map_type
 
@@ -92,7 +92,7 @@ def DELETE_map_for_map_id(request):
             return HTTPBadRequest('Path parameter map_id is required for the delete operation')
 
         try:
-            map_id = to_int(from_public_oai(request.matchdict['map_id']))
+            map_id = to_int(from_public_map_id(request.matchdict['map_id']))
         except Exception as e:
             err_message = 'Invalid map_id.'
             _log_error(e, err_message)
@@ -239,7 +239,7 @@ def _handle_map_create(request):
     _add_job(request, metadata, file_path, request.POST['file'].filename, map_id, _get_user_id_from_request(request),
              False)
 
-    return {'map_id': to_public_oai(map_id)}
+    return {'map_id': to_public_map_id(map_id)}
 
 
 def _handle_map_update(request):
@@ -251,7 +251,7 @@ def _handle_map_update(request):
     :param: request - pyramid request object
     """
     try:
-        map_id = to_int(from_public_oai(request.matchdict['map_id']))
+        map_id = to_int(from_public_map_id(request.matchdict['map_id']))
     except Exception as e:
         err_message = 'Invalid map_id.'
         _log_error(e, err_message)
@@ -287,7 +287,7 @@ def _handle_map_update(request):
     _add_job(request, metadata, file_path, None if file_path is None else request.POST['file'].filename, map_id,
              _get_user_id_from_request(request), True)
 
-    return {'map_id': to_public_oai(map_id)}
+    return {'map_id': to_public_map_id(map_id)}
 
 
 def _log_error(e, message):
@@ -328,7 +328,7 @@ def validate_metadata(metadata):
     """
     try:
         LOGGER.debug(f'Validate metadata {metadata} for map.')
-        validate(metadata, maps_schema)
+        validate(metadata, map_schema)
     except Exception as e:
         err_message = 'Invalid metadata object at POST request.'
         _log_error(e, err_message)

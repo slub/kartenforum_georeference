@@ -5,16 +5,25 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-from georeference.settings import TEMPLATE_OAI_ID
-from georeference.utils.parser import from_public_oai
-from georeference.utils.parser import to_public_oai
+from georeference.settings import TEMPLATE_PUBLIC_MAP_ID, TEMPLATE_PUBLIC_MOSAIC_MAP_ID
+from georeference.utils.parser import from_public_map_id, from_public_mosaic_map_id, to_public_map_id, to_public_mosaic_map_id
 
 
-def test_to_public_oai_success():
+def test_to_public_id_success():
     # Check if it returns the correct id
-    assert to_public_oai(1) == TEMPLATE_OAI_ID.format(1)
+    assert to_public_map_id(1) == TEMPLATE_PUBLIC_MAP_ID.format(1)
 
 
-def test_from_public_oai_success():
+def test_to_public_mosaic_id_success():
+    # Check if it returns the correct id
+    assert to_public_mosaic_map_id(1) == TEMPLATE_PUBLIC_MOSAIC_MAP_ID.format(1)
+
+
+def test_from_public_map_id_success():
     # Check for proper resolving of a public oai
-    assert from_public_oai(TEMPLATE_OAI_ID.format(1)) == 1
+    assert from_public_map_id(TEMPLATE_PUBLIC_MAP_ID.format(1)) == 1
+
+
+def test_from_public_mosaic_map_id_success():
+    # Check for proper resolving of a public oai
+    assert from_public_mosaic_map_id(TEMPLATE_PUBLIC_MOSAIC_MAP_ID.format('1')) == 1

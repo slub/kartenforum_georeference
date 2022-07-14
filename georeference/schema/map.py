@@ -5,10 +5,10 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+from georeference.schema.general import reg_ex_link
 
-link_regex = 'https:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,4}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)'
 
-maps_schema = {
+map_schema = {
     "type": "object",
     "properties": {
         # Allows the download of the raw data
@@ -23,7 +23,7 @@ maps_schema = {
         "link_zoomify": {"oneOf": [
             {
                 "type": "string",
-                "pattern": link_regex
+                "pattern": reg_ex_link
             },
             { "type": "null" }
         ]},
@@ -31,7 +31,7 @@ maps_schema = {
         "link_thumb_small": {"oneOf": [
             {
                 "type": "string",
-                "pattern": link_regex
+                "pattern": reg_ex_link
             },
             { "type": "null" }
         ]},
@@ -39,7 +39,7 @@ maps_schema = {
         "link_thumb_mid": {"oneOf": [
             {
                 "type": "string",
-                "pattern": link_regex
+                "pattern": reg_ex_link
             },
             { "type": "null" }
         ]},
@@ -88,4 +88,4 @@ maps_schema = {
 raw_map_keys = ['allow_download', 'default_crs', 'map_scale', 'map_type']
 
 # Keys which will be stored in the metadata model
-metadata_keys = [item for item in maps_schema['properties'].keys() if item not in raw_map_keys]
+metadata_keys = [item for item in map_schema['properties'].keys() if item not in raw_map_keys]

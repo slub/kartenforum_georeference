@@ -11,11 +11,11 @@ from georeference.jobs.actions.enable_transformation import run_enable_transform
 from georeference.models.transformations import Transformation
 
 
-def run_process_new_transformation(esIndex, dbsession, logger, job):
+def run_process_new_transformation(es_index, dbsession, logger, job):
     """ Runs jobs of type "transformation_process"
 
-    :param esIndex: Elasticsearch client
-    :type esIndex: elasticsearch.Elasticsearch
+    :param es_index: Elasticsearch client
+    :type es_index: elasticsearch.Elasticsearch
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
     :param logger: Logger
@@ -23,14 +23,14 @@ def run_process_new_transformation(esIndex, dbsession, logger, job):
     :param job: Job which will be processed
     :type job: georeference.models.jobs.Job
     """
-    logger.info('Start processing transformation job ...')
+    logger.debug('Start processing transformation job ...')
     # Query the associated transformation process
     transformation = Transformation.by_id(json.loads(job.description)['transformation_id'], dbsession)
 
     # Process the transformation
-    transformation = run_enable_transformation(
+    run_enable_transformation(
         transformation,
-        esIndex,
+        es_index,
         dbsession,
         logger
     )
