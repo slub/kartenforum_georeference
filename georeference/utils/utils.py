@@ -8,6 +8,7 @@
 import os
 import shutil
 import json
+from osgeo import gdal
 from shapely.geometry import shape, mapping
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.transformations import Transformation
@@ -83,7 +84,8 @@ def get_geometry(map_id, dbsession):
     :type map_id: int
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
-    :result: JSON describing a
+    :result: GeoJSON describing a geometry
+    :rtype: dict
     """
     # Extract the GeorefMap object for the original map
     georef_map_obj = GeorefMap.by_raw_map_id(map_id, dbsession)
@@ -98,6 +100,16 @@ def get_geometry(map_id, dbsession):
     else:
         return GeorefMap.get_extent_for_raw_map_id(map_id, dbsession)
 
+def get_geometry_for_mosaic_map(mosaic_dataset):
+    """ This function helps to build a geometry for a mosaic map.
+
+    :param mosaic_dataset: Path of the mosaic dataset
+    :type mosaic_dataset: str
+    :result: GeoJSON describing a geometry
+    :rtype: dict
+    """
+    info = gdal.Info(mosaic_dataset, format='json')
+    return info['wgs84Extent']
 
 def get_mapfile_id(raw_map_obj):
     """ Function returns the mapfile id.

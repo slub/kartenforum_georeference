@@ -6,6 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import logging
+import traceback
 
 
 def create_logger(name, level, file=None, formatter=None, handler=None):
@@ -38,3 +39,16 @@ def create_logger(name, level, file=None, formatter=None, handler=None):
         logger.addHandler(handler)
 
     return logger
+
+def log_error(e, message):
+    """
+    Forward an error to the logger
+
+    :param: e - error that triggered the logger invocation
+    :param: message - a custom message supplied to the logger
+    """
+    log = logging.getLogger(__name__)
+    log.error(message)
+    log.error(e)
+    log.error(traceback.format_exc())
+

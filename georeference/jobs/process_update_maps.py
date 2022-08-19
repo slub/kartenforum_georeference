@@ -15,7 +15,7 @@ from georeference.jobs.actions.create_zoomify_tiles import run_process_zoomify_t
 from georeference.jobs.actions.update_index import run_update_index
 from georeference.models import RawMap, Metadata, Transformation
 from georeference.models.georef_maps import GeorefMap
-from georeference.schema.maps import raw_map_keys
+from georeference.schema.map import raw_map_keys
 from georeference.settings import PATH_IMAGE_ROOT, TEMPLATE_PUBLIC_THUMBNAIL_URL, TEMPLATE_PUBLIC_ZOOMIFY_URL
 from georeference.utils import create_path_if_not_exists
 from georeference.utils.utils import without_keys, remove_if_exists, get_thumbnail_path, get_zoomify_path
@@ -33,7 +33,7 @@ def run_process_update_maps(es_index, dbsession, logger, job):
     :param job: Job which will be processed
     :type job: georeference.models.jobs.Job
     """
-    logger.info('Process maps_update job ...')
+    logger.debug('Process maps_update job ...')
     description = json.loads(job.description)
     map_id = description['map_id']
     metadata_updates = {}

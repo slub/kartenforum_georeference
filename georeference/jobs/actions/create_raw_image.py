@@ -80,13 +80,16 @@ def run_process_raw_image(path_src_raw_img, path_trg_raw_img, logger, force=Fals
         set_metadata_options=" ".join(['-mo "%s=%s"' % (el[0], el[1]) for el in MO_PARAMETER]),
     )
 
-    logger.debug(command)
-    subprocess.check_call(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
+    try:
+        logger.debug(command)
+        subprocess.check_output(
+            command,
+            shell=True,
+            stderr=subprocess.STDOUT
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
 
     if not os.path.exists(path_trg_raw_img):
         raise Exception('Something went wrong while trying to process raw image.')

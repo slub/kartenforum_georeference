@@ -11,7 +11,7 @@ from georeference.models.raw_maps import RawMap
 from georeference.models.transformations import Transformation, EnumValidationValue
 from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.settings import ROUTE_PREFIX
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 
 
 def test_GET_transformations_for_map_id_success(testapp, dbsession):
@@ -57,7 +57,7 @@ def test_GET_transformations_for_map_id_success(testapp, dbsession):
     dbsession.flush()
 
     # Build test request
-    res = testapp.get(ROUTE_PREFIX + f'/transformations?map_id={to_public_oai(map_id)}&additional_properties=true',
+    res = testapp.get(ROUTE_PREFIX + f'/transformations?map_id={to_public_map_id(map_id)}&additional_properties=true',
                       status=200)
     assert res.status_int == 200
     assert len(res.json['transformations']) == 5
@@ -77,7 +77,7 @@ def test_GET_transformations_for_map_id_success(testapp, dbsession):
 
 def test_GET_transformations_for_map_id_success_empty_result(testapp):
     # Build test request
-    res = testapp.get(ROUTE_PREFIX + f'/transformations?map_id={to_public_oai(10003265)}&additional_properties=true',
+    res = testapp.get(ROUTE_PREFIX + f'/transformations?map_id={to_public_map_id(10003265)}&additional_properties=true',
                       status=200)
     assert res.status_int == 200
     assert len(res.json['transformations']) == 0
@@ -85,7 +85,7 @@ def test_GET_transformations_for_map_id_success_empty_result(testapp):
 
 def test_GET_transformations_for_map_id_success_two_results(testapp):
     # Build test request
-    res = testapp.get(ROUTE_PREFIX + f'/transformations?map_id={to_public_oai(10009466)}&additional_properties=true',
+    res = testapp.get(ROUTE_PREFIX + f'/transformations?map_id={to_public_map_id(10009466)}&additional_properties=true',
                       status=200)
     assert res.status_int == 200
     assert len(res.json['transformations']) == 2
@@ -122,7 +122,7 @@ def test_GET_transformations_for_map_id_success_transformations_only_invalid(tes
 
     # Build test request
     res = testapp.get(
-        ROUTE_PREFIX + f'/transformations?map_id={to_public_oai(map_id)}&additional_properties=false&validation={EnumValidationValue.INVALID.value}',
+        ROUTE_PREFIX + f'/transformations?map_id={to_public_map_id(map_id)}&additional_properties=false&validation={EnumValidationValue.INVALID.value}',
         status=200)
     assert res.status_int == 200
     assert len(res.json['transformations']) == 1
@@ -177,7 +177,7 @@ def test_POST_transformation_success_dry_run(testapp):
                      {'source': [6687, 1160], 'target': [14.809553411787, 50.894672081543]},
                      {'source': [6687, 1160], 'target': [14.809553411787, 50.894672081543]}]
         },
-        'map_id': to_public_oai(10001556),
+        'map_id': to_public_map_id(10001556),
         'overwrites': 0,
         'user_id': 'test'
     })
@@ -285,7 +285,7 @@ def test_POST_transformation_success_dry_run_with_clip(testapp):
                              [14.782294867, 50.800358074], [14.829388684, 50.800594678], [14.829132977, 50.900185772],
                              [14.829130294, 50.900185772], [14.66364715, 50.899831877]]]
         },
-        'map_id': to_public_oai(10001556),
+        'map_id': to_public_map_id(10001556),
         'overwrites': 0,
         'user_id': 'test'
     })
@@ -412,7 +412,7 @@ def test_POST_transformations_success_new_transformation(testapp, dbsession):
         },
         'overwrites': 0,
         'user_id': 'test',
-        'map_id': to_public_oai(map_id)
+        'map_id': to_public_map_id(map_id)
     }
 
     # Build test request
@@ -540,7 +540,7 @@ def test_POST_transformations_success_new_transformation_multiple_times(testapp,
         },
         'overwrites': 0,
         'user_id': 'test',
-        'map_id': to_public_oai(map_id)
+        'map_id': to_public_map_id(map_id)
     }
 
     # Build test request
@@ -668,7 +668,7 @@ def test_POST_transformations_success_new_transformation_without_clip(testapp, d
         },
         'overwrites': 0,
         'user_id': 'test',
-        'map_id': to_public_oai(map_id)
+        'map_id': to_public_map_id(map_id)
     }
 
     # Build test request

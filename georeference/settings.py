@@ -22,12 +22,6 @@ ROUTE_PREFIX = ''
 # Global error message
 GLOBAL_ERROR_MESSAGE = 'Something went wrong while trying to process your requests. Please try again or contact the administrators of the Virtual Map Forum 2.0.'
 
-# Path to gdalwarp tool
-GLOBAL_PATH_GDALWARP = 'gdalwarp'
-
-# Path to gdaladdo tool
-GLOBAL_PATH_GDALADDO = 'gdaladdo'
-
 # Permalink resolver
 GLOBAL_PERMALINK_RESOLVER = 'http://digital.slub-dresden.de/'
 
@@ -60,6 +54,9 @@ PATH_IMAGE_ROOT = os.path.join(BASE_PATH, './__test_data/data_input')
 
 # Path to the georef root directory
 PATH_GEOREF_ROOT = os.path.join(BASE_PATH, '../tmp/geo')
+
+# Path to the mosaic root directory
+PATH_MOSAIC_ROOT = os.path.join(BASE_PATH, '../tmp/mosaic')
 
 # Path to the tms root directoy
 PATH_TMS_ROOT = os.path.join(BASE_PATH, '../tmp/tms')
@@ -130,8 +127,11 @@ TEMPLATE_PUBLIC_ZOOMIFY_URL = 'https://zoomify-slub.pikobytes.de/zoomify/{}/Imag
 # WMS Service default url template
 TEMPLATE_TRANSFORMATION_WMS_URL = 'http://localhost:8080/?map=/etc/mapserver/{}'
 
-# Template for proper building of ids
-TEMPLATE_OAI_ID = 'oai:de:slub-dresden:vk:id-{}'
+# Template string for the public id of a single georefence map
+TEMPLATE_PUBLIC_MAP_ID = 'oai:de:slub-dresden:vk:id-{}'
+
+# Template string for the public id of a mosaic map
+TEMPLATE_PUBLIC_MOSAIC_MAP_ID = 'oai:de:slub-dresden:vk:mosaic:id-{}'
 
 #
 # Settings of the daemon. For more information regarding the supported log level see

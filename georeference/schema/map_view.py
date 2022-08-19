@@ -6,7 +6,7 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package.
 
-from georeference.schema.general import TwoDimensionalPoint
+from georeference.schema.general import two_dimensional_point
 
 map_view_schema = {
     "type": "object",
@@ -89,7 +89,7 @@ map_view_schema = {
             "mapView": {
                 "type": "object",
                 "properties": {
-                    "center": TwoDimensionalPoint,
+                    "center": two_dimensional_point,
                     "resolution": {"type": "number"},
                     "rotation": {"type": "number"},
                     "zoom": {"type": "number"},

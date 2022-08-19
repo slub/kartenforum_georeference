@@ -11,14 +11,17 @@ import traceback
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.jobs.actions.create_tms import run_process_tms
 from georeference.jobs.actions.create_geo_services import run_process_geo_services
+from georeference.jobs.process_create_mosaic_map import push_mosaic_to_es_index
+from georeference.utils.es_index import generate_es_original_map_document, get_es_index
+from georeference.utils.mosaics import get_mosaic_dataset_path
 from georeference.utils.utils import get_extent_as_geojson_polygon, get_geometry, get_mapfile_id, get_mapfile_path, \
     get_tms_directory
 from georeference.models.georef_maps import GeorefMap
 from georeference.models.metadata import Metadata
+from georeference.models.mosaic_maps import MosaicMap
 from georeference.models.raw_maps import RawMap
 from georeference.models.transformations import Transformation
-from georeference.settings import ES_ROOT, ES_INDEX_NAME
-from georeference.utils.es import generate_es_document, get_es_index
+from georeference.settings import PATH_MOSAIC_ROOT, ES_ROOT, ES_INDEX_NAME
 
 
 def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
@@ -37,15 +40,16 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
     """
     try:
         logger.info('Run initialization job ...')
-        logger.debug('Create index ...')
+        logger.info('Create index ...')
         es_index = get_es_index(ES_ROOT, ES_INDEX_NAME, True, logger)
 
-        logger.debug('Start processing all active maps ...')
+        logger.info('Start processing all single sheet maps ...')
         for raw_map_obj in RawMap.all(dbsession):
+            logger.info(f'Initialize single sheet map with id {raw_map_obj.id} ...')
             georef_map_obj = GeorefMap.by_raw_map_id(raw_map_obj.id, dbsession)
             metadata_obj = Metadata.by_map_id(raw_map_obj.id, dbsession)
 
-            # If a georef map is registered within the database, make sure that also an geo image, a tms cache and
+            # If a georef map is registered within the database, make sure that also a geo image, a tms cache and
             # geo service (mapfile) does exist.
             if georef_map_obj != None and os.path.exists(raw_map_obj.get_abs_path()):
                 transformation_obj = Transformation.by_id(georef_map_obj.transformation_id, dbsession)
@@ -88,7 +92,7 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
             # Synchronise the index with the current state of the raw map objects.
             try:
                 logger.debug(f'Write search record for raw map id {raw_map_obj.id} to index ...')
-                document = generate_es_document(
+                document = generate_es_original_map_document(
                     raw_map_obj,
                     Metadata.by_map_id(raw_map_obj.id, dbsession),
                     georef_map_obj=georef_map_obj if georef_map_obj is not None and os.path.exists(
@@ -104,11 +108,29 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
                     body=document
                 )
             except Exception as e:
-                logger.error('Error while trying to write document to index')
+                logger.error('Error while trying to write single sheet document to index')
                 logger.error(e)
                 logger.error(traceback.format_exc())
+        logger.info('Finish initializing single sheet maps.')
 
-        logger.info('Finish initalization job.')
+        logger.info('Start processing all mosaic maps ...')
+        for mosaic_map_obj in MosaicMap.all(dbsession):
+            logger.info(f'Initialize mosaic map with id {mosaic_map_obj.id} ...')
+            try:
+                trg_mosaic_dataset = get_mosaic_dataset_path(PATH_MOSAIC_ROOT, mosaic_map_obj.name)
+                push_mosaic_to_es_index(
+                    es_index=es_index,
+                    mosaic_map_obj=mosaic_map_obj,
+                    trg_mosaic_dataset=trg_mosaic_dataset,
+                    logger=logger
+                )
+            except Exception as e:
+                logger.error('Error while trying to mosaic document to index')
+                logger.error(e)
+                logger.error(traceback.format_exc())
+        logger.info('Finish initializing mosaic maps.')
+
+        logger.info('Finish initialization job.')
         return True
     except Exception as e:
         logger.error('Error while trying to process initialisation job.')

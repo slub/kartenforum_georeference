@@ -14,14 +14,14 @@ from georeference.models.jobs import Job, EnumJobType, EnumJobState
 from georeference.models.raw_maps import RawMap
 from georeference.models.transformations import Transformation, EnumValidationValue
 from georeference.settings import ES_ROOT, ES_INDEX_NAME
-from georeference.utils.es import get_es_index
-from georeference.utils.parser import to_public_oai
+from georeference.utils.es_index import get_es_index
+from georeference.utils.parser import to_public_map_id
 
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
 
-def test_runProcessJobs_success(dbsession_only):
+def test_run_process_jobs_success(dbsession_only):
     """ The test checks the proper running of the process jobs
 
     :param dbsession_only: Database session
@@ -94,7 +94,7 @@ def test_runProcessJobs_success(dbsession_only):
     assert g is not None
 
     # Check if the index was pushed to the es
-    assert es_index.get(ES_INDEX_NAME, id=to_public_oai(map_id)) is not None
+    assert es_index.get(ES_INDEX_NAME, id=to_public_map_id(map_id)) is not None
 
     dbsession_only.rollback()
     es_index.close()

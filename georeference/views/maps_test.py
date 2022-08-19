@@ -9,7 +9,7 @@ import os
 from webtest import Upload
 
 from georeference.settings import ROUTE_PREFIX
-from georeference.utils.parser import to_public_oai
+from georeference.utils.parser import to_public_map_id
 
 # Necessary for proper testing of the file upload
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -29,7 +29,7 @@ test_metadata = """{
 
 def test_getMapsById_success_withoutGeorefId(testapp):
     # For clean test setup the test data should also be added to the database within this method
-    map_id = to_public_oai(10003265)
+    map_id = to_public_map_id(10003265)
 
     # Build test request
     res = testapp.get(ROUTE_PREFIX + '/maps/%s' % map_id, status=200)
@@ -41,7 +41,7 @@ def test_getMapsById_success_withoutGeorefId(testapp):
 
 def test_getMapsById_success_withGeorefId(testapp):
     # For clean test setup the test data should also be added to the database within this method
-    map_id = to_public_oai(10001556)
+    map_id = to_public_map_id(10001556)
 
     # Build test request
     res = testapp.get(ROUTE_PREFIX + '/maps/%s' % map_id, status=200)
@@ -170,7 +170,7 @@ def test_create_new_map_successful(testapp, dbsession):
 
 def test_update_map_successful_file(testapp, dbsession):
     infile = os.path.join(os.path.dirname(os.path.realpath(__file__)), './__test_data/test.tif')
-    map_id = to_public_oai(10003265)
+    map_id = to_public_map_id(10003265)
     with open(infile, 'rb') as testfile:
         contents = testfile.read()
 
@@ -188,7 +188,7 @@ def test_update_map_successful_file(testapp, dbsession):
 
 
 def test_update_map_successful_metadata(testapp, dbsession):
-    map_id = to_public_oai(10003265)
+    map_id = to_public_map_id(10003265)
 
     data = {
         'metadata': test_metadata
@@ -204,7 +204,7 @@ def test_update_map_successful_metadata(testapp, dbsession):
 
 
 def test_update_map_missing_file_and_metadata(testapp, dbsession):
-    map_id = to_public_oai(10003265)
+    map_id = to_public_map_id(10003265)
     data = {}
 
     res = testapp.post(f'/maps/{map_id}', data, status=400)
@@ -216,7 +216,7 @@ def test_update_map_missing_file_and_metadata(testapp, dbsession):
 
 
 def test_update_map_invalid_file(testapp, dbsession):
-    map_id = to_public_oai(10003265)
+    map_id = to_public_map_id(10003265)
     infile = os.path.join(os.path.dirname(os.path.realpath(__file__)), './__test_data/test.txt')
 
     with open(infile, 'rb') as testfile:

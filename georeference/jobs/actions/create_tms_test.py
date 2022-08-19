@@ -21,7 +21,7 @@ def test_runProcessTMS_success():
         # Perform the test
         testData = create_test_data('test_runProcessTMS_success')
         testTmsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                           '../../georeference_tests/data_output/test_tms_%s.tif' % 'test_runProcessTMS_success')
+                           '../../data_output/test_tms_%s.tif' % 'test_runProcessTMS_success')
         pathGeoImage = run_process_geo_image(
             testData['transformationObj'],
             testData['srcPath'],
@@ -49,7 +49,7 @@ def test_runProcessTMS_force_success():
         # Initial create the process
         testData = create_test_data('test_runProcessTMS_force_success')
         testTmsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                           '../../georeference_tests/data_output/test_tms_%s.tif' % 'test_runProcessTMS_force_success')
+                           '../../data_output/test_tms_%s.tif' % 'test_runProcessTMS_force_success')
         pathGeoImage = run_process_geo_image(
             testData['transformationObj'],
             testData['srcPath'],
