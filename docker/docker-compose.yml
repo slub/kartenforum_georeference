@@ -7,7 +7,6 @@ services:
   db:
     container_name: pg_container
     image: postgis/postgis:13-master
-    restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -18,7 +17,6 @@ services:
   mapserver:
     container_name: mapserver
     image: camptocamp/mapserver
-    restart: unless-stopped
     volumes:
       - ../tmp/tmp/:/etc/mapserver/
       - ../tmp/tmp/:/mapdata/
