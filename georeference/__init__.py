@@ -80,7 +80,7 @@ def createApplication(debug_mode=False, **settings):
     config.scan('views', onerror=onError)
 
     # Enable cors
-    config.include('.cors')
+    # config.include('.cors')
 
     # Make json renderer output datetimes
     json_renderer = config.registry.getUtility(IRendererFactory, name="json")

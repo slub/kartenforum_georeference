@@ -26,6 +26,7 @@ scripts/uploads
 scripts/*.json
 scripts/*.tif
 scripts/*.tar.gz
+scripts/kartenforum_georeference
 
 # do not track sql dumps and log files
 *.dump
