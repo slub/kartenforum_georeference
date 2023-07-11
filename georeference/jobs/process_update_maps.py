@@ -196,11 +196,11 @@ def _reset_georef_state_for_map(map_id, dbsession):
         georef_path = georef_map_object.get_abs_path()
         remove_if_exists(georef_path)
 
-    # remove georef map from db
-    dbsession.delete(georef_map_object)
+        # remove georef map from db
+        dbsession.delete(georef_map_object)
 
-    # Delete all related transformations
-    dbsession.query(Transformation).filter(Transformation.raw_map_id == map_id).delete()
+        # Delete all related transformations
+        dbsession.query(Transformation).filter(Transformation.raw_map_id == map_id).delete()
 
 
 def _should_generate_files(metadata, metadata_updates, key, base_url, is_file_updated):
