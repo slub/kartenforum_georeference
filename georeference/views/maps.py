@@ -67,6 +67,8 @@ def GET_map_for_map_id(request):
         response_obj["map_id"] = to_public_map_id(map_obj.id)
         response_obj["transformation_id"] = None
         response_obj["map_type"] = map_obj.map_type
+        response_obj["allow_download"] = map_obj.allow_download
+        response_obj["map_scale"] = map_obj.map_scale if map_obj.map_scale is not None else 25000
 
         # In case there is currently an active georeference process for the map return the id
         georef_map_obj = GeorefMap.by_raw_map_id(map_obj.id, request.dbsession)

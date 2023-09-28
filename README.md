@@ -69,4 +69,20 @@ docker-compose up
 
 * If the execution of the command `./python_env/bin/python setup.py develop` fails with "Unknown distribution option: 'use_2to3_fixers'", install an older version of the setup tools in your virtualenv (<58).
 
+## Test requests
 
+Following some curl commands for testing the maps endpoint:
+
+``` 
+# Creates a new map
+curl 'http://localhost:6543/maps/?user_id=test_user' \
+  -s \
+  -F 'file=@/home/someuser/test.tif' \
+  -F 'metadata={"allow_download":false,"description":"Test","license":"CC-BY-SA 4.0","map_type":"ak","map_scale":25000,"time_of_publication":"1846-01-01T00:00:00","title":"Der volle Titel der PIKOMAP","title_short":"PIKOMAP"}
+  
+# Updates a map 
+curl 'http://localhost:6543/maps/{map_id}?user_id=test_user' \
+  -s \
+  -F 'file=@/home/someuser/test.tif' \
+  -F 'metadata={"allow_download":false,"description":"Noch ein test","license":"CC-BY-SA 4.0","map_type":"ak","map_scale":25000,"time_of_publication":"1846-01-01T00:00:00","title":"Der volle Titel der PIKOMAP","title_short":"PIKOMAP"}'
+```
