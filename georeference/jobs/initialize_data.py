@@ -24,17 +24,13 @@ from georeference.models.transformations import Transformation
 from georeference.settings import PATH_MOSAIC_ROOT, ES_ROOT, ES_INDEX_NAME
 
 
-def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
+def run_initialize_data(dbsession, logger):
     """ This job checks the database and initially builds the index and missing georeference images.
 
     :param dbsession: Database session object
     :type dbsession: sqlalchemy.orm.session.Session
     :param logger: Logger
     :type logger: logging.Logger
-    :param overwrite_map_scale: Allows a default setting of the map_scale used for tms cache generation. In production
-        this parameter should be skipped. In testing this parameter can be used for allow faster test excution, because
-        the tms generation is a long running process. (Default: False)
-    :type overwrite_map_scale: bool
     :result: True if performed successfully
     :rtype: bool
     """
@@ -51,7 +47,7 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
 
             # If a georef map is registered within the database, make sure that also a geo image, a tms cache and
             # geo service (mapfile) does exist.
-            if georef_map_obj != None and os.path.exists(raw_map_obj.get_abs_path()):
+            if georef_map_obj is not None and os.path.exists(raw_map_obj.get_abs_path()):
                 transformation_obj = Transformation.by_id(georef_map_obj.transformation_id, dbsession)
 
                 # Make sure to process the geo image. We do not use the "force" parameter, which skips this
@@ -75,7 +71,6 @@ def run_initialize_data(dbsession, logger, overwrite_map_scale=False):
                     get_tms_directory(raw_map_obj),
                     path_geo_image,
                     logger=logger,
-                    map_scale=10000000 if overwrite_map_scale == True else raw_map_obj.map_scale,
                 )
 
                 # Process the map file

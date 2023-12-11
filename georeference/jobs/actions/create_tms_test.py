@@ -15,13 +15,14 @@ from .create_tms import run_process_tms
 # Initialize the logger
 LOGGER = logging.getLogger(__name__)
 
+
 def test_runProcessTMS_success():
     """ The proper working of the action for processing tms directories. """
     try:
         # Perform the test
         testData = create_test_data('test_runProcessTMS_success')
         testTmsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                           '../../data_output/test_tms_%s.tif' % 'test_runProcessTMS_success')
+                                  '../../georeference_tests/data_output/test_tms_%s.tif' % 'test_runProcessTMS_success')
         pathGeoImage = run_process_geo_image(
             testData['transformationObj'],
             testData['srcPath'],
@@ -33,7 +34,6 @@ def test_runProcessTMS_success():
             testTmsDir,
             pathGeoImage,
             logger=LOGGER,
-            map_scale=10000000,
         )
 
         assert True == os.path.exists(pathGeoImage)
@@ -43,13 +43,14 @@ def test_runProcessTMS_success():
         if os.path.exists(tmsDir):
             shutil.rmtree(tmsDir)
 
+
 def test_runProcessTMS_force_success():
     """ The proper working of the action for processing tms directories. """
     try:
         # Initial create the process
         testData = create_test_data('test_runProcessTMS_force_success')
         testTmsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                           '../../data_output/test_tms_%s.tif' % 'test_runProcessTMS_force_success')
+                                  '../../georeference_tests/data_output/test_tms_%s.tif' % 'test_runProcessTMS_force_success')
         pathGeoImage = run_process_geo_image(
             testData['transformationObj'],
             testData['srcPath'],
@@ -61,7 +62,6 @@ def test_runProcessTMS_force_success():
             testTmsDir,
             pathGeoImage,
             logger=LOGGER,
-            map_scale=10000000,
         )
         firstModificationTime = os.path.getmtime(subject)
 
@@ -71,7 +71,6 @@ def test_runProcessTMS_force_success():
             testTmsDir,
             pathGeoImage,
             logger=LOGGER,
-            map_scale=10000000,
         )
         secondModificationTime = os.path.getmtime(subject)
 
@@ -81,7 +80,6 @@ def test_runProcessTMS_force_success():
             testTmsDir,
             pathGeoImage,
             logger=LOGGER,
-            map_scale=10000000,
             force=True
         )
         thirdModificationTime = os.path.getmtime(subject)
