@@ -6,6 +6,8 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import argparse
+import math
+from osgeo import gdal
 import os
 import shutil
 import subprocess
@@ -39,7 +41,45 @@ def _add_base_tile(target_dir):
         image.save(base_tile, 'PNG')
 
 
-def _build_tms_cache(path_image, target_root_path, logger, processes, map_scale):
+def get_max_zoom_level(path_image):
+    """ This function calculates the best maximum zoom level for a given image based on https://wiki.openstreetmap.org/wiki/Zoom_levels
+
+    :param path_image: Path to the target image
+    :type path_image: str
+    :return number
+    """
+
+    geo_tiff = gdal.Open(path_image)
+    geo_transform = geo_tiff.GetGeoTransform()
+    spatial_ref = geo_tiff.GetSpatialRef()
+    coordinate_reference_system_unit = spatial_ref.GetAttrValue("UNIT", 0)
+
+    # Constants
+    radius = 6378137
+    equator_circumference = 2 * math.pi * radius
+    pixels_per_tile = 256
+    max_zoom_level = 20
+
+    # Calculate resolution based on spatial reference units
+    try:
+        if coordinate_reference_system_unit == "metre":
+            resolution = geo_transform[1]
+
+        else:
+            # Approximate meters per degree at the equator
+            meters_per_degree = equator_circumference / 360
+            resolution = geo_transform[1] * meters_per_degree
+
+        # Calculate the optimal zoom level
+        zoom_level = math.log((equator_circumference / pixels_per_tile) / resolution, 2)
+        optimal_max_zoom_level = min(math.floor(zoom_level), max_zoom_level)
+
+        return optimal_max_zoom_level
+    except Exception as e:
+        raise ValueError(f"Error calculating the maximum zoom level: {e}")
+
+
+def _build_tms_cache(path_image, target_root_path, logger, processes):
     """ Functions calculates a Tile Map Service cache for a given georeferenced source file.
 
     :param path_image: Path to target image
@@ -50,8 +90,6 @@ def _build_tms_cache(path_image, target_root_path, logger, processes, map_scale)
     :type logger: logging.Logger
     :param processes: Number of processes used by gdal2tiles
     :type processes: int
-    :param map_scale: Scale of the map as a number.
-    :type map_scale: int
     :return: str  """
     logger.debug('------------------------------------------------------------------')
     logger.debug('Source image %s' % path_image)
@@ -64,14 +102,8 @@ def _build_tms_cache(path_image, target_root_path, logger, processes, map_scale)
         logger.debug('Remove old tsm cache directory ...')
         shutil.rmtree(tms_target_dir)
 
-    zoom_level = '0-15'
-    if map_scale is not None and 5000 >= map_scale > 0:
-        zoom_level = '0-17'
-    elif map_scale is not None and 15000 >= map_scale > 5000:
-        zoom_level = '0-16'
-    elif map_scale is not None and map_scale >= 10000000:
-        zoom_level = '0-10'
-
+    max_zoom_level = get_max_zoom_level(path_image)
+    zoom_level = f'0-{max_zoom_level}'
     os.makedirs(tms_target_dir)
     command = f'gdal2tiles.py --zoom={zoom_level} --processes={processes} --webviewer=none --resampling=average {path_image} {tms_target_dir}'
 
@@ -140,7 +172,7 @@ def _get_all_image_paths_in_directory(base_dir, image_extension):
     return images
 
 
-def calculate_compressed_tms(path_image, tms_path, logger, processes=1, map_scale=25000):
+def calculate_compressed_tms(path_image, tms_path, logger, processes=1):
     """ The following functions creates a compressed version of TMS cache.
 
     :param path_image: Path to target image
@@ -151,13 +183,11 @@ def calculate_compressed_tms(path_image, tms_path, logger, processes=1, map_scal
     :type logger: logging.Logger
     :param processes: Number of processes used by gdal2tiles
     :type processes: int
-    :param map_scale: Scale of the map as a number.
-    :type map_scale: int
     :return:
     """
     try:
         logger.debug('Calculate tms cache ...')
-        tmp_cache_dir = _build_tms_cache(path_image, TMP_DIR, logger, processes, map_scale)
+        tmp_cache_dir = _build_tms_cache(path_image, TMP_DIR, logger, processes)
 
         logger.debug('Compress cache ...')
         _compress_tms_directory(tmp_cache_dir, logger)

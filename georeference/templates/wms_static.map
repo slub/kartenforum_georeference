@@ -43,8 +43,8 @@ MAP
       "wms_title" "Web Map Service for serving $layerName"
       "wms_accessconstraints" "Alle Metadaten stehen unter der CC0-Lizenz zur Verfuegung. Alle ueber die Infrastruktur des Virtuellen Kartenforum angeboten Karten mit einer Datierung vor 1900 stehen unter CC-BY-SA 4.0 zur Verfuegung. Für juengere Karten gilt aus urheberrechtlichen Gruenden Rechte vorbehalten/rights reserved. Naehere Informationen finden sie auch in den Nutzungsbestimmungen auf den Webseiten der SLUB (http://www.deutschefotothek.de)."
       "wms_contactorganization" "Saxon State and University Library Dresden (SLUB)"
-      "wms_contactperson" "Alexander Bigga"
-      "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
+      "wms_contactperson" "Dominik Stoltz"
+      "wms_contactelectronicmailaddress" "dominik.stoltz@slub-dresden.de"
       "wms_abstract" "Web Map Service for serving $layerName"
     END
   END

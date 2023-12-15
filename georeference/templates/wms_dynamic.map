@@ -12,8 +12,8 @@ MAP
         "wms_enable_request" "*"
         "wms_titel" "Temporary Web Map Service for georeference new images."
         "wms_contactorganization" "Saxon State and University Library Dresden (SLUB)"
-        "wms_contactperson" "Alexander Bigga"
-        "wms_contactelectronicmailaddress" "alexander.bigga@slub-dresden.de"
+        "wms_contactperson" "Dominik Stoltz"
+        "wms_contactelectronicmailaddress" "dominik.stoltz@slub-dresden.de"
         "wms_abstract" "$wmsAbstract"
     END
   END

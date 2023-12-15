@@ -10,7 +10,8 @@ import shutil
 from georeference.settings import GLOBAL_TMS_PROCESSES
 from georeference.utils.tms import calculate_compressed_tms
 
-def run_process_tms(path_tms_dir, path_geo_image, logger, map_scale, force = False):
+
+def run_process_tms(path_tms_dir, path_geo_image, logger, force=False):
     """ This actions generate a Tile Map Service (TMS) for a given geo services. It therefore heavily relies on the
         gdal utility tool, gdal2tiles. See also https://gdal.org/programs/gdal2tiles.html
 
@@ -20,8 +21,6 @@ def run_process_tms(path_tms_dir, path_geo_image, logger, map_scale, force = Fal
     :type path_geo_image: str
     :param logger: Logger
     :type logger: logging.Logger
-    :param map_scale: Scale of the map. Is necessary for guessing the correct number of zoom levels supported by the tms.
-    :type map_scale: int
     :param force: Signals if the function should overwrite an already existing tms cache (Default: False)
     :type force: bool
     :result: Path of the tms cache directory
@@ -32,7 +31,8 @@ def run_process_tms(path_tms_dir, path_geo_image, logger, map_scale, force = Fal
         return None
 
     if os.path.exists(path_tms_dir) and force == False:
-        logger.debug('Skip processing of tms for geo image "%s", because of an already existing tms. Use "force" parameter in case you want to overwrite it.' % path_tms_dir)
+        logger.debug(
+            'Skip processing of tms for geo image "%s", because of an already existing tms. Use "force" parameter in case you want to overwrite it.' % path_tms_dir)
         return path_tms_dir
 
     # In case a tms directory exist clean it
@@ -45,7 +45,6 @@ def run_process_tms(path_tms_dir, path_geo_image, logger, map_scale, force = Fal
         path_tms_dir,
         logger,
         GLOBAL_TMS_PROCESSES,
-        map_scale
     )
 
     return path_tms_dir

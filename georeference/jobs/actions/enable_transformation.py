@@ -40,7 +40,7 @@ def run_enable_transformation(transformation_obj, es_index, dbsession, logger):
     metadataObj = Metadata.by_map_id(rawMapObj.id, dbsession)
 
     # In case a georefMapObj does not exist, create a new one
-    if georefMapObj == None:
+    if georefMapObj is None:
         logger.debug('Create new georef map object for original map id %s.' % rawMapObj.id)
         georefMapObj = GeorefMap.from_raw_map_and_transformation(rawMapObj, transformation_obj)
         dbsession.add(georefMapObj)
@@ -67,7 +67,6 @@ def run_enable_transformation(transformation_obj, es_index, dbsession, logger):
         get_tms_directory(rawMapObj),
         pathGeoImage,
         logger=logger,
-        map_scale=rawMapObj.map_scale,
         force=True
     )
 

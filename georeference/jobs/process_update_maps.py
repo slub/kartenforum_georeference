@@ -52,6 +52,7 @@ def run_process_update_maps(es_index, dbsession, logger, job):
     processed_image_path = raw_map_object.get_abs_path()
 
     is_file_updated = 'file' in description and description['file'] is not None
+    logger.debug(f'Update file: {is_file_updated}')
 
     if is_file_updated:
         if not os.path.exists(PATH_IMAGE_ROOT):
@@ -91,11 +92,14 @@ def run_process_update_maps(es_index, dbsession, logger, job):
     dbsession.flush()
 
     # delete transformations and georef map
+    georef_obj = None
     if is_file_updated:
         _reset_georef_state_for_map(map_id, dbsession)
+    else:
+        georef_obj = GeorefMap.by_raw_map_id(map_id, dbsession)
 
     # update index
-    run_update_index(es_index, raw_map_object, None, dbsession, logger)
+    run_update_index(es_index, raw_map_object, georef_obj, dbsession, logger)
 
 
 def generate_thumbnail(base_image_path, map_id, size, logger):

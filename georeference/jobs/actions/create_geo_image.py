@@ -13,6 +13,7 @@ from georeference.utils.georeference import rectify_image_with_clip_and_overview
 from georeference.utils.parser import to_gdal_gcps
 from georeference.utils.proj import transform_to_params_to_target_crs
 
+
 def run_process_geo_image(transformation_obj, path_raw_image, path_geo_image, logger, force=False, clip=None):
     """ This actions generates a persistent geo image for a given transformation object and a raw image.
 
@@ -32,11 +33,13 @@ def run_process_geo_image(transformation_obj, path_raw_image, path_geo_image, lo
     :rtype: str
     """
     if not os.path.exists(path_raw_image):
-        logger.debug('Skip processing of geo image for map "%s", because of missing raw image.' % transformation_obj.raw_map_id)
+        logger.debug(
+            'Skip processing of geo image for map "%s", because of missing raw image.' % transformation_obj.raw_map_id)
         return None
 
     if os.path.exists(path_geo_image) and force == False:
-        logger.debug('Skip processing of geo image for map "%s", because of an already existing geo image. Use "force" parameter in case you want to overwrite it.' % transformation_obj.raw_map_id)
+        logger.debug(
+            'Skip processing of geo image for map "%s", because of an already existing geo image. Use "force" parameter in case you want to overwrite it.' % transformation_obj.raw_map_id)
         return path_geo_image
 
     # Parse georef parameters. Since newer version it is possible that the target crs of the gcps are different from
@@ -45,9 +48,9 @@ def run_process_geo_image(transformation_obj, path_raw_image, path_geo_image, lo
     georef_params = transformation_obj.get_params_as_dict()
     georef_params = transform_to_params_to_target_crs(
         transformation_obj.get_params_as_dict(),
-        transformation_obj.get_target_crs_as_string() if transformation_obj.target_crs is not None else georef_params['target']
+        transformation_obj.get_target_crs_as_string() if transformation_obj.target_crs is not None else georef_params[
+            'target']
     )
-
 
     # Try processing a geo transformation
     rectify_image_with_clip_and_overviews(
