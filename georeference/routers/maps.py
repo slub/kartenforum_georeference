@@ -315,7 +315,7 @@ def _add_job(
     )
 
     session.add(create_job)
-    session.flush()
+    session.commit()
 
 
 def _write_file(file):

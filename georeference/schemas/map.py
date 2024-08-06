@@ -52,4 +52,4 @@ class MapResponse(BaseModel):
     transformation_id: Optional[int] = None
     map_type: Optional[str]
     allow_download: bool
-    map_scale: int
+    map_scale: Optional[int]
