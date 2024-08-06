@@ -3,6 +3,15 @@
 __pycache__
 .pytest_cache
 .idea
+.vscode/
+
+.idea/
+.coverage
+/deprecated
+/georeference/__test_data/data_output
+/georeference/__test_data/data_input
+/tmp
+TODO.md
 
 # testmon files
 .testmondata
@@ -11,4 +20,22 @@ __pycache__
 
 /tmp
 
+# build files
+/georeference.egg-info
+/dist
+*.pyc
+
 georeference/__test_data
+
+# configuration files
+scripts/create_tar.sh
+scripts/uploaded.log
+scripts/uploads
+scripts/*.json
+scripts/*.tif
+scripts/*.tar.gz
+scripts/kartenforum_georeference
+
+# do not track sql dumps and log files
+*.dump
+*.log
