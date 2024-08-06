@@ -13,12 +13,12 @@ from string import Template
 
 
 def parse_geo_tiff_metadata(tiff_path):
-    """ Functions parses the metadata from a geotiff and returns it.
+    """Functions parses the metadata from a geotiff and returns it.
 
     :param tiff_path: str
     :type tiff_path: Path to the tiff file
     :return: Dictionary containing relevant tiff metadata
-    :rtype: dict """
+    :rtype: dict"""
     try:
         dataset = gdal.Open(tiff_path, GA_ReadOnly)
 
@@ -34,19 +34,21 @@ def parse_geo_tiff_metadata(tiff_path):
         ymin = ymax + height * ypixel
 
         return {
-            'layerUnit': 'dd' if srs.GetAttrValue('UNIT', 0) == 'degree' else 'meters',
-            'layerProjection': srs.GetAttrValue('AUTHORITY', 0) + ':' + srs.GetAttrValue('AUTHORITY', 1),
-            'layerExtent': '%s %s %s %s' % (xmin, ymin, xmax, ymax),
-            'layerBands': dataset.RasterCount,
-            'layerSize': '%s %s' % (width, height),
-            'layerResolution': '%s %s' % (xpixel, ypixel)
+            "layerUnit": "dd" if srs.GetAttrValue("UNIT", 0) == "degree" else "meters",
+            "layerProjection": srs.GetAttrValue("AUTHORITY", 0)
+            + ":"
+            + srs.GetAttrValue("AUTHORITY", 1),
+            "layerExtent": "%s %s %s %s" % (xmin, ymin, xmax, ymax),
+            "layerBands": dataset.RasterCount,
+            "layerSize": "%s %s" % (width, height),
+            "layerResolution": "%s %s" % (xpixel, ypixel),
         }
     finally:
         del dataset
 
 
 def write_mapfile(target_path, template_path, template_values):
-    """ Functions writes a mapfile. It replaces the template with the given params dict.
+    """Functions writes a mapfile. It replaces the template with the given params dict.
 
     :param target_path: Path of the target file
     :type target_path: str
@@ -59,15 +61,12 @@ def write_mapfile(target_path, template_path, template_values):
     """
 
     # Create new template string
-    try:
-        content = None
-        with open(template_path, 'r') as f:
-            src = Template(f.read())
-            content = src.substitute(template_values)
+    content = None
+    with open(template_path, "r") as f:
+        src = Template(f.read())
+        content = src.substitute(template_values)
 
-        if content is not None:
-            with open(target_path, 'w') as f:
-                f.write(content)
-        return os.path.abspath(target_path)
-    finally:
-        f.close()
+    if content is not None:
+        with open(target_path, "w") as f:
+            f.write(content)
+    return os.path.abspath(target_path)

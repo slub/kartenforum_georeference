@@ -1,33 +1,14 @@
 # local developing files
-.vscode/
-.idea/
-.coverage
-/deprecated
-/georeference/__test_data/data_output
-!/georeference/__test_data/data_output/.placeholder
-/georeference/__test_data/data_input
-!/georeference/__test_data/data_input/.placeholder
+.venv
+__pycache__
+.pytest_cache
+.idea
+
+# testmon files
+.testmondata
+.testmondata-shm
+.testmondata-wal
+
 /tmp
-!/tmp/.placeholder
-TODO.md
 
-# custom installations files
-/python_env
-
-# build files
-/georeference.egg-info
-/dist
-*.pyc
-
-# configuration files
-scripts/create_tar.sh
-scripts/uploaded.log
-scripts/uploads
-scripts/*.json
-scripts/*.tif
-scripts/*.tar.gz
-scripts/kartenforum_georeference
-
-# do not track sql dumps and log files
-*.dump
-*.log
+georeference/__test_data

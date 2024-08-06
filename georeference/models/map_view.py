@@ -1,37 +1,47 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Created by nicolas.looschen@pikobytes.de on 18.01.22
+# Created by nicolas.looschen@pikobytes.de on 12.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-from sqlalchemy import Column, Integer, Text, DateTime, desc
-from .meta import Base
+
+from datetime import datetime
+from typing import Optional
+
+from pydantic import NaiveDatetime
+from sqlmodel import SQLModel, Field, Session, select, col, desc
+
+from georeference.models import datetime_without_timezone
 
 
-class MapView(Base):
-    __tablename__ = 'map_view'
-    __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True)
-    public_id = Column(Text())
-    map_view_json = Column(Text())
-    submitted = Column(DateTime(timezone=False))
-    request_count = Column(Integer)
-    last_request = Column(DateTime(timezone=False))
-    user_id = Column(Integer)
+class MapView(SQLModel, table=True):
+    __tablename__ = "map_view"
+    id: int = Field(primary_key=True, default=None)
+    public_id: str
+    map_view_json: str
+    submitted: NaiveDatetime = datetime_without_timezone
+    request_count: int
+    last_request: Optional[NaiveDatetime] = datetime_without_timezone
+    user_id: str
+
+    def update_last_access(self, session: Session):
+        self.request_count += 1
+        self.last_request = datetime.now()
+        session.add(self)
+        session.commit()
+        session.refresh(self)
 
     @classmethod
-    def by_id(cls, id, dbsession):
-        return dbsession.query(MapView).filter(MapView.id == id).first()
+    def by_id(cls, id: int, session: Session):
+        return session.exec(select(MapView).where(col(MapView.id) == id)).first()
 
     @classmethod
-    def by_public_id(cls, public_id, dbsession):
-        return cls.query_by_public_id(public_id, dbsession).first()
+    def by_public_id(cls, public_id: str, session: Session):
+        return session.exec(
+            select(MapView).where(col(MapView.public_id) == public_id)
+        ).first()
 
     @classmethod
-    def query_by_public_id(cls, public_id, dbsession):
-        return dbsession.query(MapView).filter(MapView.public_id == public_id)
-
-    @classmethod
-    def all(cls, dbsession):
-        return dbsession.query(MapView).order_by(desc(MapView.id))
+    def all(cls, session: Session):
+        return session.exec(select(MapView).order_by(desc(MapView.id))).all()

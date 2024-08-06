@@ -10,30 +10,30 @@ import os.path
 import shutil
 import traceback
 
-from georeference.models import RawMap, Metadata, Transformation
-from georeference.models.georef_maps import GeorefMap
-from georeference.settings import ES_INDEX_NAME
+from loguru import logger
+
+from georeference.config.settings import get_settings
+from georeference.models.georef_map import GeorefMap
+from georeference.models.raw_map import RawMap
 from georeference.utils.parser import to_public_map_id
 from georeference.utils.utils import get_thumbnail_path, get_zoomify_path
 
 
-def run_process_delete_maps(es_index, dbsession, logger, job):
-    """ Runs jobs of type "maps_delete"
+def run_process_delete_maps(es_index, dbsession, job):
+    """Runs jobs of type "maps_delete"
 
     :param es_index: Elasticsearch client
     :type es_index: elasticsearch.Elasticsearch
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
     :param job: Job which will be processed
     :type job: georeference.models.jobs.Job
     """
-    message = 'The delete failed before the map has been delete from the database.'
+    message = "The delete failed before the map has been delete from the database."
     try:
-        logger.debug(f'Start processing delete_map job with id {job.id}')
+        logger.debug(f"Start processing delete_map job with id {job.id}")
         description = json.loads(job.description)
-        map_id = description['map_id']
+        map_id = description["map_id"]
 
         # 1. Make sure to preserve the current georef map path
         georef_map = GeorefMap.by_raw_map_id(map_id, dbsession)
@@ -50,26 +50,29 @@ def run_process_delete_maps(es_index, dbsession, logger, job):
 
         # already commit this changes here, so the db session does not get rolled back if something
         # happens when deleting the files
-        logger.debug(f'Successfully deleted information from db for Map {map_id}')
+        logger.debug(f"Successfully deleted information from db for Map {map_id}")
         dbsession.commit()
 
-        message = 'The delete has been written to the database, but the filesystem is not in sync.'
+        message = "The delete has been written to the database, but the filesystem is not in sync."
 
         # 3. Delete document from index
-        es_index.delete(index=ES_INDEX_NAME, doc_type=None, id=to_public_map_id(map_id))
+        settings = get_settings()
+        es_index.delete(
+            index=settings.ES_INDEX_NAME, doc_type=None, id=to_public_map_id(map_id)
+        )
 
         # 4. Delete files
         # 4 a) delete thumbnails
-        path_thumb_small = get_thumbnail_path(f'{map_id}_120x120.jpg')
+        path_thumb_small = get_thumbnail_path(f"{map_id}_120x120.jpg")
         if os.path.exists(path_thumb_small):
             os.remove(path_thumb_small)
 
-        path_thumb_mid = get_thumbnail_path(f'{map_id}_400x400.jpg')
+        path_thumb_mid = get_thumbnail_path(f"{map_id}_400x400.jpg")
         if os.path.exists(path_thumb_mid):
             os.remove(path_thumb_mid)
 
         # 4 b) delete zoomify
-        path_zoomify = get_zoomify_path(f'{map_id}')
+        path_zoomify = get_zoomify_path(f"{map_id}")
         if os.path.exists(path_zoomify):
             shutil.rmtree(path_zoomify)
 
@@ -84,7 +87,7 @@ def run_process_delete_maps(es_index, dbsession, logger, job):
         logger.debug("Finished processing delete_map job.")
 
     except Exception as e:
-        logger.error('Error while running the daemon')
+        logger.error("Error while running the daemon")
         logger.error(e)
         logger.error(traceback.format_exc())
         raise Exception(message)

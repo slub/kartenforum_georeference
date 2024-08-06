@@ -7,21 +7,28 @@ services:
   db:
     container_name: pg_container
     image: postgis/postgis:13-master
+    restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
-      - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+      - ./entrypoints/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   mapserver:
     container_name: mapserver
     image: camptocamp/mapserver
+    restart: unless-stopped
     volumes:
       - ../tmp/tmp/:/etc/mapserver/
       - ../tmp/tmp/:/mapdata/
     ports:
-      - 8080:80
+      - "8080:80"
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
     container_name: elasticsearch
@@ -38,6 +45,27 @@ services:
     cap_add:
       - IPC_LOCK
     ports:
-      - 9200:9200
-      - 9300:9300
-
+      - "9200:9200"
+      - "9300:9300"
+  georeference:
+    build:
+      context: ../
+      dockerfile: georeference/Dockerfile
+      args:
+        - USERNAME=${USER}
+        - UID=${UID}
+    container_name: kartenforum_georeference
+    restart: always
+    environment:
+      - USER=${USER}
+      - UID=${UID}
+    depends_on:
+      - db
+    volumes:
+      - ../tmp/:/opt/kartenforum_georeference/data
+      - ../:/code
+      - ./entrypoints/run-fastapi.sh:/entrypoints/run-fastapi.sh
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    entrypoint: /entrypoints/run-fastapi.sh

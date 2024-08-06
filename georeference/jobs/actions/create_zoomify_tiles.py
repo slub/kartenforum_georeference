@@ -9,8 +9,11 @@ import os
 import shutil
 import subprocess
 
-def run_process_zoomify_tiles(path_src_raw_img, path_zoomify_tiles, logger, force=False):
-    """ This actions creates zoomify tiles for a given input image. For producing the zoomify tiles it uses the
+from loguru import logger
+
+
+def run_process_zoomify_tiles(path_src_raw_img, path_zoomify_tiles, force=False):
+    """This actions creates zoomify tiles for a given input image. For producing the zoomify tiles it uses the
         libvips tools. See also https://www.libvips.org/API/current/Making-image-pyramids.md.html.
 
     :param path_src_raw_img: Path to the source image.
@@ -28,8 +31,11 @@ def run_process_zoomify_tiles(path_src_raw_img, path_zoomify_tiles, logger, forc
         logger.debug('Could not find source raw image "%s".' % path_src_raw_img)
         return None
 
-    if os.path.exists(path_zoomify_tiles) and force == False:
-        logger.debug('Skip processing of zoomify tiles for raw image "%s", because of an already existing tiles. Use "force" parameter in case you want to overwrite it.' % path_zoomify_tiles)
+    if os.path.exists(path_zoomify_tiles) and force is False:
+        logger.debug(
+            'Skip processing of zoomify tiles for raw image "%s", because of an already existing tiles. Use "force" parameter in case you want to overwrite it.'
+            % path_zoomify_tiles
+        )
         return path_zoomify_tiles
     elif os.path.exists(path_zoomify_tiles) and force:
         shutil.rmtree(path_zoomify_tiles)
@@ -42,16 +48,12 @@ def run_process_zoomify_tiles(path_src_raw_img, path_zoomify_tiles, logger, forc
 
     try:
         logger.debug(command)
-        subprocess.check_output(
-            command,
-            shell=True,
-            stderr=subprocess.STDOUT
-        )
+        subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         logger.error(e.output)
         raise
 
     if not os.path.exists(path_zoomify_tiles):
-        raise Exception('Something went wrong while trying to process zoomify tiles.')
+        raise Exception("Something went wrong while trying to process zoomify tiles.")
 
     return path_zoomify_tiles

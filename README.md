@@ -1,88 +1,94 @@
 # kartenforum_georeference
 
-The repository contains the python code for the georeference service and jobs runner of the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/). 
+The repository contains the python code for the georeference service of
+the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/).
 
-## Purpose
+## Get started
 
-While the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/) is a spatial data infrastructure for searching, visualizing, using and georeferencing rectified historic maps, this repository contains only the backend code for georeferencing historic maps and generate the corresponding backend service. 
+### With docker
 
-Beside that the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/) also includes own basemap and placesearch services as well as a [TYPO3](https://typo3.org/) based web application.
+1. `cd docker/`
+2. docker-compose up
+3. In your IDE make sure to use the correct python interpreter. The one in the `.venv` folder, which should have
+   been automatically added by the docker container.
+4. The server should be available under `http://localhost:8000/`
 
-For a deeper dive into this components, have a look at the following repositories:
+### Without Docker
 
-* [ddev-kartenforum](https://github.com/slub/ddev-kartenforum)
-* [slub_web_kartenforum](https://github.com/slub/slub_web_kartenforum)
-* [kartenforum_ansible](https://github.com/slub/kartenforum_ansible)
+1. Setup poetry according to https://python-poetry.org/docs/
+2. Install the required dependencies
+    1. `poetry install`
+    2. If you experience any issues with python-gdal, make sure the version matches your local gdal version.
+3. Set up the pre-commit hooks
+    1. `poetry run pre-commit install`
 
-## Documentation
+Linting and Formatting
 
-More information regarding this repository can be found within the [docs section](./docs/README.md)
+This project uses [ruff](https://docs.astral.sh/ruff/) for formatting and linting.
+It is automatically setup via the pyproject.toml file.
+Please configure your IDE to use the ruff formatter and linter.
+Additionally, they will be run as precommit hooks.
 
-## Install
+### Running tests
 
-> Make sure to properly configure the `georeference/settings.py` and the `production.ini`.
->
+The tests can be run with the following command:
+
 ```
-# The application needs this system wide dependencies. 
-apt-get install python3 python3-virtualenv libpq-dev gdal-bin libgdal-dev gcc uwsgi libvips-tools
-
-# It is recommended to use a virtualenv for developing
-virtualenv python_env
-python_env/bin/python setup.py develop
-./python_env/bin/pip install -e ".[testing]" --no-cache
-
-# Spawns a georeference service
-./python_env/bin/pserve production.ini
-
-# Starts the job runner
-python_env/bin/python georeference/daemon/runner.py
+poetry run python -m pytest
 ```
 
-## Development
+Hint: Make sure to have docker running, as the testcontainers library will start a postgres container for the tests.
+Hint: Make sure to have `DEV_MODE` enabled. Else ssl verification, if requesting the typo3 application, might fail.
 
->#### Prerequisite
->
-> For local development and testing of the project a few further steps have to be executed. First download the `test_data.tar.xz` unpack it and place the image within the directory `./tmp/org_new/`. The password for the SFTP-Service is `8C2Kdpxc2lpUoYBX`.
->
->```
-># Download images for running the proper tests
->scp u279620-sub2@u279620-sub2.your-storagebox.de:/test_data_flat.tar.xz ./
->tar -xf test_data_flat.tar.xz -C ./georeference/__test_data/data_input
->```
+## Postgresql Database
 
-Because the Georeference Service as well as the Jobs Runner expect different service to interact with, docker can be used to setup a development infrastructure (PostgreSQL Database, Mapserver, Elasticsearch):
+docker can be used to set up a development infrastructure
 
-``` 
+```
 cd docker/
 docker-compose up
-
-# To check if the local development environment is setup properly run the following command
-./python_env/bin/pytest --cov --cov-report=term-missing
-
-# Starts the test service. Before make sure to properly configure the `georeference/settings.py`
-./python_env/bin/pserve development.ini
 ```
-	
-## Troubleshooting
 
-* If the execution of the command `./python_env/bin/python setup.py develop` fails, make sure that the system wide gdal version, matches the GDAL version within the `setup.py`. 
+## start
 
-* If the execution of the command `./python_env/bin/python setup.py develop` fails with "Unknown distribution option: 'use_2to3_fixers'", install an older version of the setup tools in your virtualenv (<58).
-
-## Test requests
-
-Following some curl commands for testing the maps endpoint:
-
-``` 
-# Creates a new map
-curl 'http://localhost:6543/maps/?user_id=test_user' \
-  -s \
-  -F 'file=@/home/someuser/test.tif' \
-  -F 'metadata={"allow_download":false,"description":"Test","license":"CC-BY-SA 4.0","map_type":"ak","map_scale":25000,"time_of_publication":"1846-01-01T00:00:00","title":"Der volle Titel der PIKOMAP","title_short":"PIKOMAP"}
-  
-# Updates a map 
-curl 'http://localhost:6543/maps/{map_id}?user_id=test_user' \
-  -s \
-  -F 'file=@/home/someuser/test.tif' \
-  -F 'metadata={"allow_download":false,"description":"Noch ein test","license":"CC-BY-SA 4.0","map_type":"ak","map_scale":25000,"time_of_publication":"1846-01-01T00:00:00","title":"Der volle Titel der PIKOMAP","title_short":"PIKOMAP"}'
 ```
+uvicorn app.api.server:app --reload
+```
+
+## Testing with Postgres-TestContainer and Pytest
+
+In the project's testing process, we use pytest along with
+the [postgres-test-container](https://github.com/testcontainers/testcontainers-python) library. Here's how it works:
+
+- **Container Setup:** For each test, we create a temporary Docker container that runs a PostgreSQL database named "
+  vkdb" This container sets up the necessary database schema when it's created.
+
+- **Data Initialization:** Before running each test, we make sure to clear any existing datas in tables and
+  relationships in the
+  database. Then, we populate these tables with initial data to ensure a consistent starting point for testing.
+
+- **Data Cleanup:** After each test, we clean up the data in the tables to maintain a clean slate for the next test.
+
+- **Automatic Cleanup:** Once all tests are completed, the Docker container is automatically stopped and deleted to keep
+  your
+  environment tidy.
+
+## Run the code with your debugger
+
+Because you are running the Uvicorn server directly from your code, you can call your Python program (your FastAPI
+application) directly from the debugger.
+
+If you use Pycharm, you can:
+
+Open the "Run" menu.
+in Edit/Run/Debug Configurations' dialog top right select edit configuration.
+
+![Screenshot from 2023-09-04 14-24-33](https://github.com/pikobytes/slub_kartenforum_georeference_fastapi/assets/129738734/43b7464d-ca4f-48f9-8c60-46bbb21c7f31)
+
+Select and add the new configuration (in this case fastAPI and pytest for testing )
+Select the file to debug (in this case tests folder for testing and select server.py in app/api/server.py for run server
+with uvicorn).
+It will then start all the tests, stop at your breakpoints, etc.
+
+if you get an error then try to write the absolute path.
+
