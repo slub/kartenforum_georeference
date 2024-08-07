@@ -49,10 +49,11 @@ def _add_overviews(dst_file, overview_levels):
     except subprocess.CalledProcessError as e:
         logger.error(e.output)
         raise
-    except Exception:
-        logger.error(
+    except Exception as e:
+        logger.warning(
             f"{sys.stderr} - Unexpected error while trying add overviews to the raster: {sys.exc_info()[0]} - with command - {command}"
         )
+        logger.error(e)
         raise
 
 
@@ -312,7 +313,7 @@ def rectify_image_with_clip_and_overviews(
 
         return dst_file
     except Exception as e:
-        logger.error(
+        logger.warning(
             "Something went wrong while trying to generate a permanent georeference result"
         )
         logger.error(e)

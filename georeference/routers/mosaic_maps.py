@@ -42,7 +42,7 @@ def get_mosaic_maps(session: Annotated[Session, Depends(get_session)]):
         return response_objs
 
     except Exception as e:
-        logger.error("Error while trying to return a GET mosaic_maps request.")
+        logger.warning("Error while trying to return a GET mosaic_maps request.")
         logger.error(e)
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
@@ -54,13 +54,14 @@ def get_mosaic_map(
     try:
         mosaic_map = MosaicMap.by_public_id(public_mosaic_map_id, session)
         if mosaic_map is None:
+            logger.warning(f"Mosaic map with id {public_mosaic_map_id} not found.")
             raise HTTPException(status_code=404, detail="Mosaic map not found")
 
         return MosaicMapResponse.from_model(mosaic_map)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
+        logger.warning(
             f"Error while trying to return a GET mosaic_map request for id {public_mosaic_map_id}."
         )
         logger.error(e)
@@ -76,6 +77,7 @@ def delete_mosaic_map(
     try:
         mosaic_map = MosaicMap.by_public_id(public_mosaic_map_id, session)
         if mosaic_map is None:
+            logger.warning(f"Mosaic map with id {public_mosaic_map_id} not found.")
             raise HTTPException(status_code=404, detail="Mosaic map not found")
 
         _add_job(
@@ -97,11 +99,10 @@ def delete_mosaic_map(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
+        logger.warning(
             f"Error while trying to delete a mosaic_map with id {public_mosaic_map_id}."
         )
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
 
@@ -136,9 +137,8 @@ def create_mosaic_map(
         return MosaicMapResponse.from_model(mosaic_map)
 
     except Exception as e:
-        logger.error("Error while trying to post a mosaic_map.")
+        logger.warning("Error while trying to post a mosaic_map.")
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
 
@@ -182,11 +182,10 @@ def update_mosaic_map(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
+        logger.warning(
             f"Error while trying to update a mosaic_map with id {mosaic_map_update.id}."
         )
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
 
@@ -199,6 +198,7 @@ def refresh_mosaic_map(
     try:
         mosaic_map = MosaicMap.by_public_id(public_mosaic_map_id, session)
         if mosaic_map is None:
+            logger.warning(f"Mosaic map with id {public_mosaic_map_id} not found.")
             raise HTTPException(status_code=404, detail="Mosaic map not found")
 
         _add_job(
@@ -211,11 +211,10 @@ def refresh_mosaic_map(
         }
 
     except Exception as e:
-        logger.error(
+        logger.warning(
             f"Error while trying to refresh a mosaic_map with id {public_mosaic_map_id}."
         )
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
 

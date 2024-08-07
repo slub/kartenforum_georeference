@@ -52,7 +52,7 @@ def get_jobs(
         return [JobResponse.from_sqlmodel(job) for job in jobs]
 
     except Exception as e:
-        logger.error("Error while trying to return a GET jobs request.")
+        logger.warning("Error while trying to return a GET jobs request.")
         logger.error(e)
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
@@ -72,7 +72,7 @@ def post_job(
     ).first()
 
     if transformation is None:
-        logger.error(f"Transformation with id {transformation_id} does not exist.")
+        logger.warning(f"Transformation with id {transformation_id} does not exist.")
         raise HTTPException(
             detail="Referenced transformation does not exist.", status_code=400
         )
@@ -88,6 +88,6 @@ def post_job(
         logger.debug(f"Job with id {job.id} was added to the database.")
         return {"job_id": job.id}
     except Exception as e:
-        logger.error("Error while trying to return a POST jobs request.")
+        logger.info("Error while trying to return a POST jobs request.")
         logger.error(e)
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)

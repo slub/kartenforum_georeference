@@ -120,11 +120,10 @@ def run_initialize_data(dbsession):
                     body=document,
                 )
             except Exception as e:
-                logger.error(
+                logger.info(
                     "Error while trying to write single sheet document to index"
                 )
                 logger.error(e)
-                logger.error(traceback.format_exc())
         logger.info("Finish initializing single sheet maps.")
 
         logger.info("Start processing all mosaic maps ...")
@@ -140,14 +139,12 @@ def run_initialize_data(dbsession):
                     trg_mosaic_dataset=trg_mosaic_dataset,
                 )
             except Exception as e:
-                logger.error("Error while trying to mosaic document to index")
+                logger.info("Error while trying to mosaic document to index")
                 logger.error(e)
-                logger.error(traceback.format_exc())
         logger.info("Finish initializing mosaic maps.")
 
         logger.info("Finish initialization job.")
         return True
     except Exception as e:
-        logger.error("Error while trying to process initialisation job.")
+        logger.info("Error while trying to process initialisation job.")
         logger.error(e)
-        logger.error(traceback.format_exc())

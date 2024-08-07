@@ -5,13 +5,12 @@ This file is subject to the terms and conditions defined in
 file 'LICENSE.txt', which is part of this source code package.
 """
 
-import logging
 import os
+from functools import lru_cache
 from typing import Annotated, Optional
 
 from pydantic import AfterValidator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from functools import lru_cache
 from urllib3.util import parse_url
 
 from georeference.config.paths import BASE_PATH
@@ -69,8 +68,6 @@ class Settings(BaseSettings):
     # HAS TO BE HTTPS!
     TYPO3_URL: TYPO3_URL_TYPE = "https://ddev-kartenforum.ddev.site"
 
-    model_config = SettingsConfigDict(env_file=os.path.join(BASE_PATH, "../", ".env"))
-
     # Gdal settings
     # GDAL_CACHEMAX - This setting can influence the georeference speed. For more information see https://gdal.org/user/configoptions.html
     GDAL_CACHEMAX: int = 1500
@@ -83,6 +80,25 @@ class Settings(BaseSettings):
 
     # TMS configuration
     GLOBAL_TMS_PROCESSES: int = 2
+
+    # Sentry configuration
+    SENTRY_DSN: Optional[str] = None
+
+    model_config = SettingsConfigDict(
+        env_file=[
+            os.path.join(BASE_PATH, "../", ".env"),
+            os.path.join(BASE_PATH, "../", ".env.production"),
+        ]
+    )
+
+    # Daemon setting
+    DAEMON_PIDFILE_PATH: str = os.path.join(BASE_PATH, "../tmp/daemon.pid")
+    DAEMON_PIDFILE_TIMEOUT: int = 5
+    DAEMON_SLEEP_TIME: int = 10
+    DAEMON_WAIT_ON_STARTUP: int = 1
+    DAEMON_LOGFILE_PATH: str = os.path.join(BASE_PATH, "../tmp/daemon.log")
+    DAEMON_LOG_LEVEL: str = "DEBUG"
+    DAEMON_LOOP_HEARTBEAT_COUNT: int = 10
 
 
 # For usage of the settings as dependency
@@ -101,16 +117,4 @@ DAEMON_SETTINGS = {
     "stdin": os.path.join(BASE_PATH, "../tmp/null"),
     "stdout": os.path.join(BASE_PATH, "../tmp/tty"),
     "stderr": os.path.join(BASE_PATH, "../tmp/tty"),
-    "pidfile_path": os.path.join(BASE_PATH, "../tmp/daemon.pid"),
-    "pidfile_timeout": 5,
-    "sleep_time": 10,
-    "wait_on_startup": 1,
-}
-
-# Settings for logger of the georeference persistent
-DAEMON_LOGGER_SETTINGS = {
-    "name": "geoereference-daemon",
-    "file": os.path.join(BASE_PATH, "../tmp/daemon.log"),
-    "level": logging.DEBUG,
-    "formatter": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 }

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import traceback
 # Created by nicolas.looschen@pikobytes.de on 10.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select, desc, col
 from loguru import logger
+from sqlmodel import Session, select, desc, col
 
 from georeference.config.constants import GENERAL_ERROR_MESSAGE
 from georeference.config.db import get_session
@@ -87,9 +87,8 @@ async def get_user_history(
         return {"georef_profile": georef_profile, "points": points}
 
     except Exception as e:
-        logger.error(
-            "Error while trying to request georeference history information: {}",
-            e,
+        logger.warning(
+            "Error while trying to request georeference history information."
         )
-        logger.error(traceback.format_exc())
+        logger.error(e)
         raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)

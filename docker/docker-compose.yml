@@ -4,7 +4,7 @@
 # "LICENSE.md", which is part of this source code package
 version: '3'
 services:
-  db:
+  georeference-db:
     container_name: pg_container
     image: postgis/postgis:13-master
     restart: always

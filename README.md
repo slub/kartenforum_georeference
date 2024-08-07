@@ -22,7 +22,22 @@ the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/).
 3. Set up the pre-commit hooks
     1. `poetry run pre-commit install`
 
-Linting and Formatting
+### Configuration
+
+The configuration is done via environment variables.
+Environment variables can be set either:
+
+1) Directly in the environment, these will take precedence over everything else
+2) In a `.env.production` file in the root of the project. This file will be automatically loaded by `pydantic-settings`
+   and will take precedence over the default values defined in `.env`. It does not need to be exhaustive, only the
+   variables that should be overwritten are required.
+3) In a `.env` file in the root of the project. This file will be automatically loaded by `pydantic-settings`.
+4) In the `/georeference/config/settings.py` file. It is responsible for the loading of the environment variables and
+   setting the default values. All configurable values and their respective types can be found in this file.
+
+Also see https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support for more information.
+
+### Linting and Formatting
 
 This project uses [ruff](https://docs.astral.sh/ruff/) for formatting and linting.
 It is automatically setup via the pyproject.toml file.

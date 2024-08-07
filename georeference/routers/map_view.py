@@ -31,7 +31,7 @@ def get_map_view(public_map_view_id: str, session: Session = Depends(get_session
     logger.debug(f"Start fetching map view with public_id: {public_map_view_id}")
     map_view = MapView.by_public_id(public_map_view_id, session)
     if map_view is None:
-        logger.error(f"Map view with id {public_map_view_id} not found.")
+        logger.warning(f"Map view with id {public_map_view_id} not found.")
         raise HTTPException(status_code=404, detail="Map view not found")
 
     logger.debug(

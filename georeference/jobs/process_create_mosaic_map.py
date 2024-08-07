@@ -110,9 +110,8 @@ def run_process_create_mosaic_map(es_index, dbsession, job):
         dbsession.flush()
 
     except Exception as e:
-        logger.error("Error while running the daemon")
+        logger.info("Error while running the daemon")
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise
     finally:
         if os.path.exists(tmp_dir):

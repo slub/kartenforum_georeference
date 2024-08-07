@@ -45,8 +45,8 @@ def _create_temporary_georeference_image(
         os.path.join(PATH_TMP_TRANSFORMATION_ROOT, trg_file_name)
     )
 
-    if os.path.exists(src_file) == False:
-        logger.error("Could not found source file %s ..." % src_file)
+    if os.path.exists(src_file) is False:
+        logger.error("Could not find source file %s ..." % src_file)
         raise
 
     logger.debug("Start processing source file %s ..." % src_file)

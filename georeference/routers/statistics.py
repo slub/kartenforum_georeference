@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import traceback
 
 # Created by nicolas.looschen@pikobytes.de on 11.07.2024
 #
@@ -109,7 +108,7 @@ def get_statistics(session: Session = Depends(get_session)):
             "not_georeference_map_count": missing_georeference_map_count,
         }
     except Exception as e:
-        logger.error("Error while trying to get statistics: {}", e)
-        logger.error(traceback.format_exc())
+        logger.warning("Error while trying to get statistics: {}", e)
+        logger.error(e)
 
         raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)

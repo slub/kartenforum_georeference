@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-
-from georeference.config.paths import create_data_directories
-from georeference.config.logging_config import configure_logging
 from fastapi.middleware.cors import CORSMiddleware
 
+from georeference.config.logging_config import configure_logging
+from georeference.config.paths import create_data_directories
+from georeference.config.sentry import setup_sentry
 from georeference.config.settings import get_settings
 from georeference.routers import (
     user,
@@ -17,6 +17,7 @@ from georeference.routers import (
 
 # Initialization
 configure_logging()
+setup_sentry()
 create_data_directories()
 
 app = FastAPI()

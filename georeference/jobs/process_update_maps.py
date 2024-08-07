@@ -67,7 +67,7 @@ def run_process_update_maps(es_index, dbsession, job):
 
     if is_file_updated:
         if not os.path.exists(PATH_IMAGE_ROOT):
-            logger.error(
+            logger.warning(
                 f"Configured PATH_IMAGE_ROOT ({PATH_IMAGE_ROOT}) does not exists."
             )
 

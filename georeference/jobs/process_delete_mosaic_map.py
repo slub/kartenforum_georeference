@@ -82,7 +82,6 @@ def run_process_delete_mosaic_map(es_index, dbsession, job):
             shutil.rmtree(os.path.dirname(trg_mosaic_dataset))
 
     except Exception as e:
-        logger.error("Error while running the daemon")
+        logger.info("Error while running the daemon")
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise

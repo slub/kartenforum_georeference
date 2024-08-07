@@ -1,24 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
 
 # Created by jacob.mendt@pikobytes.de on 09.12.21
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import os
-import logging
+import sys
 import time
 import traceback
-import sys
-
-from logging.handlers import TimedRotatingFileHandler
 
 from loguru import logger
 
 from georeference.config.db import get_session
 from georeference.config.logging_config import parse_log_level
 from georeference.config.paths import create_data_directories
-from georeference.config.settings import DAEMON_LOGGER_SETTINGS
+from georeference.config.sentry import setup_sentry
+from georeference.config.settings import get_settings
 from georeference.jobs.initialize_data import run_initialize_data
 from georeference.jobs.process_create_map import run_process_create_map
 from georeference.jobs.process_create_mosaic_map import run_process_create_mosaic_map
@@ -48,6 +47,8 @@ job_run_handlers = {
     EnumJobType.MOSAIC_MAP_DELETE.value: run_process_delete_mosaic_map,
 }
 
+settings = get_settings()
+
 
 def _reset_logging(logger):
     list(map(logger.removeHandler, logger.handlers))
@@ -56,27 +57,23 @@ def _reset_logging(logger):
 
 
 def _initialize_logger():
-    """Function loads and create the logger for the daemon
+    """Function loads and create the logger for the daemon"""
 
-    :result: Logger
-    :rtype: `logging.Logger`
-    """
-    # Check if the file exists and if not create it
-    if not os.path.exists(DAEMON_LOGGER_SETTINGS["file"]):
-        open(DAEMON_LOGGER_SETTINGS["file"], "a").close()
-
-    handler = TimedRotatingFileHandler(
-        DAEMON_LOGGER_SETTINGS["file"], when="d", interval=1, backupCount=14
-    )
-
-    # Configure the handler as a TimeRotatingFileHander
-    handler.setFormatter(logging.Formatter(DAEMON_LOGGER_SETTINGS["formatter"]))
-
+    # # Configure the handler as a TimeRotatingFileHander
     logger.remove()
+    log_level = parse_log_level(settings.DAEMON_LOG_LEVEL)
 
-    log_level = parse_log_level(DAEMON_LOGGER_SETTINGS["level"])
-    logger.add(handler, level=log_level)
-    logger.add(sys.stderr, level=log_level)
+    logger.add(
+        settings.DAEMON_LOGFILE_PATH,
+        level=log_level,
+        rotation="daily",
+        retention="14 days",
+    )
+    logger.add(sys.stderr, level=log_level, colorize=True)
+
+    # Setup sentry sdk
+    setup_sentry()
+    logger.debug("Logger initialized")
 
 
 def loop(dbsession, handlers, es_index):
@@ -86,6 +83,8 @@ def loop(dbsession, handlers, es_index):
     :type dbsession: sqlalchemy.orm.session.Session
     :param handlers: Map job names to a handler
     :type handlers: dict<EnumJobName, function>
+    :param es_index: Elasticsearch index object
+    :type es_index: elasticsearch.client.IndicesClient
     """
     try:
         logger.info("Looking for pending jobs ...")
@@ -104,11 +103,13 @@ def loop(dbsession, handlers, es_index):
                 logger.info(f"Job of type {job.type} was finished successful")
                 job.state = EnumJobState.COMPLETED.value
             except Exception as e:
-                logger.error(
+                logger.info(
                     f'Error while trying to process job {job_id} of type "{job.type}".'
                 )
+
+                if settings.DEV_MODE:
+                    logger.error(traceback.format_exc())
                 logger.error(e)
-                logger.error(traceback.format_exc())
 
                 # Rollback previous changes, as the job could not be completed successfully
                 dbsession.rollback()
@@ -140,9 +141,11 @@ def loop(dbsession, handlers, es_index):
 
         logger.info("Processed all pending jobs.")
     except Exception as e:
-        logger.error("Error while running the daemon")
+        logger.info("Error while running the daemon")
+
+        if settings.DEV_MODE:
+            logger.error(traceback.format_exc())
         logger.error(e)
-        logger.error(traceback.format_exc())
 
 
 def on_start(dbsession=None):
@@ -164,9 +167,8 @@ def on_start(dbsession=None):
         dbsession.close()
         logger.info("Initialization of the daemon has finished. Waiting for changes...")
     except Exception as e:
-        logger.error("Error while starting the daemon")
+        logger.info("Error while starting the daemon")
         logger.error(e)
-        logger.error(traceback.format_exc())
 
 
 def main(wait_on_start=1, wait_on_loop=1):
@@ -177,48 +179,68 @@ def main(wait_on_start=1, wait_on_loop=1):
     :param wait_on_loop: Seconds to wait after each loop
     :type wait_on_loop: int
     """
-    es_index = None
     try:
+        run_count = 0
         _initialize_logger()
         logger.info("Start logger but waiting for %s seconds ..." % wait_on_start)
         time.sleep(wait_on_start)
 
-        session = get_session()
+        # Handle start
+        session = next(get_session())
         if session is None:
             logger.error(
                 "Could not initialize database because of missing configuration file"
             )
             raise
-
-        es_index = get_es_index_from_settings(False)
-        if es_index is None:
-            logger.error("Could not initialize elasticsearch index")
-            raise
-
         on_start(dbsession=session)
+        session.close()
 
         while True:
+            if run_count % settings.DAEMON_LOOP_HEARTBEAT_COUNT == 0:
+                # send heartbeat to sentry
+                logger.error("Daemon is still running ...")
+                run_count = 0
+
             # To prevent the daemon from having to long lasting logger handles or database session we reinitialize / reset
             # both before each loop
             logger.info("################################")
+            logger.info("Starting new loop ...")
+
             logger.debug("Initialize database")
+            # get the database session
+            session = next(get_session())
+            if session is None:
+                logger.error(
+                    "Could not initialize database because of missing configuration file"
+                )
+                raise
+
+            logger.debug("Initialize search index")
+            # get the elasticsearch index
+            es_index = get_es_index_from_settings(False)
+            if es_index is None:
+                logger.error("Could not initialize elasticsearch index")
+                raise
+
             loop(session, job_run_handlers, es_index)
-            logger.info("Sleep for %s seconds." % wait_on_loop)
+            logger.info(f"Sleep for {wait_on_loop} seconds.")
+
+            session.close()
+            es_index.close()
+
             time.sleep(wait_on_loop)
+            run_count += 1
     except Exception as e:
-        logger.error("Error while running the daemon")
+        logger.info("Error while running the daemon")
         logger.error(e)
-        logger.error(traceback.format_exc())
     finally:
-        es_index.close()
         logger.info("Clean up")
         logging.shutdown()
 
 
 if __name__ == "__main__":
-    ini_file = os.path.join(BASE_PATH, "../../development.ini")
     logger.info("################################")
     logger.debug("Initialize database")
-    session = get_session()
+    session = next(get_session())
     es_index = get_es_index_from_settings(False)
     loop(session, job_run_handlers, es_index)

@@ -8,7 +8,6 @@
 from datetime import datetime
 
 import pytest
-
 from sqlmodel import Session, select, asc
 
 from georeference.daemon.runner_lifecycle import main, on_start, loop

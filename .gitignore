@@ -5,6 +5,8 @@ __pycache__
 .idea
 .vscode/
 
+.env.production
+
 .idea/
 .coverage
 /deprecated

@@ -87,7 +87,6 @@ def run_process_delete_maps(es_index, dbsession, job):
         logger.debug("Finished processing delete_map job.")
 
     except Exception as e:
-        logger.error("Error while running the daemon")
+        logger.info("Error while running the daemon")
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise Exception(message)

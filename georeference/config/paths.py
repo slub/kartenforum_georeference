@@ -20,7 +20,7 @@ BASE_PATH = os.path.normpath(
     os.path.join(os.path.dirname(os.path.realpath(__file__)), "../")
 )
 
-logger.info(f"Resolved base path to: {BASE_PATH}")
+logger.debug(f"Resolved base path to: {BASE_PATH}")
 
 # Path to the image root directory
 PATH_IMAGE_ROOT = os.path.join(BASE_PATH, "./__test_data/data_input")

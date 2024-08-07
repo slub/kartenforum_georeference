@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
+
 # Created by jacob.mendt@pikobytes.de on 17.09.21
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import os
-import traceback
-import json
+
 from elasticsearch import Elasticsearch
 from loguru import logger
 
@@ -238,11 +239,10 @@ def generate_es_original_map_document(
             "type": "single_sheet",
         }
     except Exception as e:
-        logger.error(
+        logger.warning(
             "Failed creating a es document for georef map %s." % raw_map_obj.id
         )
         logger.error(e)
-        logger.error(traceback.format_exc())
 
 
 def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
@@ -282,11 +282,10 @@ def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
             "type": "mosaic",
         }
     except Exception as e:
-        logger.error(
+        logger.warning(
             "Failed creating a es document for mosaic map %s." % mosaic_map_obj.id
         )
         logger.error(e)
-        logger.error(traceback.format_exc())
 
 
 def get_es_index(es_config, index_name, force_recreation):
@@ -334,9 +333,8 @@ def get_es_index(es_config, index_name, force_recreation):
             )
         return es
     except Exception as e:
-        logger.error("Failed to get index reference for index %s." % index_name)
+        logger.info("Failed to get index reference for index %s." % index_name)
         logger.error(e)
-        logger.error(traceback.format_exc())
 
 
 def get_es_index_from_settings(force_recreation: bool):

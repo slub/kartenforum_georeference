@@ -114,7 +114,7 @@ def get_transformations(
         )
 
     except Exception as e:
-        logger.error("Error while trying to return a GET transformations request.")
+        logger.warning("Error while trying to return a GET transformations request.")
         logger.error(e)
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
@@ -142,17 +142,16 @@ def create_transformation(
             if transformation_obj is not None
             else to_int(from_public_map_id((transformation.map_id)))
         )
-        logger.error(map_obj_id)
 
         map_obj = RawMap.by_id(map_obj_id, session)
-        logger.error(map_obj)
+
         if map_obj is None:
+            logger.warning(f"Map with id {transformation.map_id} not found.")
             raise HTTPException(
                 detail="Referenced map does not exist.", status_code=400
             )
 
         if transformation_obj is not None:
-            logger.error("Transformation object is not None")
             if dry_run:
                 return _handle_transformation_dry_run(
                     map_obj,
@@ -168,14 +167,13 @@ def create_transformation(
                     status_code=400,
                 )
         else:
-            logger.error("Transformation object is None")
             return _handle_request_with_transformation_payload(
                 transformation, map_obj, dry_run, user.username, session
             )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Error while trying to return a POST transformations request.")
+        logger.warning("Error while trying to return a POST transformations request.")
         logger.error(e)
         raise HTTPException(detail=GENERAL_ERROR_MESSAGE, status_code=500)
 
@@ -344,9 +342,10 @@ def _handle_transformation_write(
 
     # If overwrites == 0, we check if there is already a valid transformation registered for the original map id.
     has_transformation = Transformation.has_transformation(raw_map_obj.id, dbsession)
-    logger.error(has_transformation)
-    logger.error(raw_map_obj.id)
+
     if overwrites == 0 and has_transformation:
+        logger.warning(f"Transformation already exists for map with id {raw_map_obj.id}.")
+
         raise HTTPException(
             detail="It is forbidden to register a new transformation for an original map, which already has a transformation registered.",
             status_code=400,

@@ -58,11 +58,11 @@ def get_map_for_mapid(map_id: str, session: Session = Depends(get_session)):
         try:
             raw_map_obj, metadata_obj, georef_map_obj = session.exec(statement).one()
         except sqlalchemy.exc.NoResultFound:
-            logger.error(f"Map with id {parsed_map_id} not found.")
+            logger.warning(f"Map with id {parsed_map_id} not found.")
             raise HTTPException(status_code=404, detail="Map not found")
         except sqlalchemy.exc.MultipleResultsFound:
             # This case should not be possible, but still catch it
-            logger.error(f"Multiple results found for map with id {parsed_map_id}.")
+            logger.warning(f"Multiple results found for map with id {parsed_map_id}.")
             raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)
 
         logger.debug(f"Create MapResponse object for map_id: {parsed_map_id}")
@@ -79,9 +79,8 @@ def get_map_for_mapid(map_id: str, session: Session = Depends(get_session)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Error while trying to return a GET map request.")
+        logger.info("Error while trying to return a GET map request.")
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)
 
 
@@ -101,7 +100,7 @@ def delete_map_for_mapid(
 
         logger.debug(f"Check if map with id {parsed_map_id} exists")
         if not _exists_map_id(session, parsed_map_id):
-            logger.error(f"Map with id {parsed_map_id} not found.")
+            logger.warning(f"Map with id {parsed_map_id} not found.")
             raise HTTPException(status_code=404, detail="Map not found")
 
         delete_job = Job(
@@ -120,9 +119,8 @@ def delete_map_for_mapid(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Error while trying to handle a DELETE map request.")
+        logger.info("Error while trying to handle a DELETE map request.")
         logger.error(e)
-        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)
 
 
@@ -136,7 +134,7 @@ def post_update_map(
 ):
     try:
         if metadata is None and file is None:
-            logger.error("No metadata or file was provided.")
+            logger.warning("No metadata or file was provided.")
             raise HTTPException(
                 status_code=400, detail="No metadata or file was provided."
             )
@@ -144,7 +142,7 @@ def post_update_map(
         parsed_map_id = _parse_map_id(map_id)
         exists_map, raw_map = _exists_map_id(session, parsed_map_id)
         if not exists_map:
-            logger.error(f"Map with id {map_id} not found.")
+            logger.warning(f"Map with id {map_id} not found.")
             raise HTTPException(status_code=404, detail="Map not found")
 
         metadata_update = None
@@ -155,7 +153,7 @@ def post_update_map(
                 metadata = json.loads(metadata)
                 MetadataPayload.model_validate(metadata)
             except ValueError:
-                logger.error("Invalid metadata provided.")
+                logger.warning("Invalid metadata provided.")
                 raise HTTPException(
                     status_code=400, detail="Invalid metadata provided."
                 )
@@ -194,7 +192,7 @@ def post_update_map(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error while trying to update map with id {map_id}")
+        logger.info(f"Error while trying to update map with id {map_id}")
         logger.error(e)
         raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)
 
@@ -208,13 +206,13 @@ def post_create_map(
 ):
     try:
         if metadata is None:
-            logger.error("No metadata was provided on map create.")
+            logger.warning("No metadata was provided on map create.")
             raise HTTPException(
                 status_code=400, detail="The metadata form field is required."
             )
 
         if file is None:
-            logger.error("No file was provided on map create.")
+            logger.warning("No file was provided on map create.")
             raise HTTPException(
                 status_code=400, detail="The file form field is required."
             )
@@ -223,7 +221,7 @@ def post_create_map(
             metadata = json.loads(metadata)
             MetadataPayload.model_validate(metadata)
         except ValueError:
-            logger.error("Invalid metadata provided.")
+            logger.warning("Invalid metadata provided.")
             raise HTTPException(status_code=400, detail="Invalid metadata provided.")
 
         file_path = _write_file(file.file)
@@ -253,7 +251,7 @@ def post_create_map(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Error while trying to create map.")
+        logger.warning("Error while trying to create map.")
         logger.error(e)
         raise HTTPException(status_code=500, detail=GENERAL_ERROR_MESSAGE)
 
@@ -271,7 +269,7 @@ def _parse_map_id(map_id: str):
     try:
         return to_int(from_public_map_id(map_id))
     except Exception as e:
-        logger.error(f"Error while parsing map_id {map_id}")
+        logger.warning(f"Error while parsing map_id {map_id}")
         logger.error(e)
         raise HTTPException(status_code=400, detail="Invalid map_id")
 
@@ -352,13 +350,11 @@ def _validate_file(path_to_file):
         gtif = gdal.Open(path_to_file)
         driver_name = None if gtif is None else gtif.GetDriver().ShortName
         if driver_name != "GTiff":
-            logger.error("Invalid file format.")
+            logger.warning("Invalid file format.")
             raise RuntimeError()
     except RuntimeError as e:
         err_message = "Invalid file object at POST request."
-        logger.error(err_message)
-        logger.error(e)
-        logger.error(traceback.format_exc())
+        logger.warning(err_message)
         raise HTTPException(status_code=400, detail=err_message)
 
 
