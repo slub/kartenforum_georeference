@@ -7,11 +7,17 @@ the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/).
 
 ### With docker
 
-1. `cd docker/`
-2. docker-compose up
-3. In your IDE make sure to use the correct python interpreter. The one in the `.venv` folder, which should have
+1. Set up environment for the docker build
+    1. There are two environment variables required for the docker build: `USERNAME` and `UID`
+    2. `USER=$(whoami)`
+    3. `UID=$(id -u)`
+    4. Also see this script https://github.com/pikobytes/slub_ddev_kartenforum/blob/main/generate-env.sh for more
+       information.
+2. `cd docker/`
+3. docker-compose up
+4. In your IDE make sure to use the correct python interpreter. The one in the `.venv` folder, which should have
    been automatically added by the docker container.
-4. The server should be available under `http://localhost:8000/`
+5. The server should be available under `http://localhost:8000/`
 
 ### Without Docker
 
