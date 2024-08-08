@@ -64,6 +64,27 @@ cd docker/
 docker-compose up
 ```
 
+### Migrations
+
+In order to modify the database schema, the `alembic` library is used.
+It allows for versioned migrations.
+The database connection url is read via the `settings.py` file, which reads the `.env` file.
+
+To create a new migration, run the following command:
+
+```
+poetry run alembic revision -m "your message"
+```
+
+This will create a new migration file in the `alembic/versions` folder.
+After you have made your changes, run the following command to apply the migration:
+
+```
+poetry run alembic upgrade head
+```
+
+For more information also check the [alembic documentation](https://alembic.sqlalchemy.org/en/latest/index.html).
+
 ## start
 
 ```

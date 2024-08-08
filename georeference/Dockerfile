@@ -28,6 +28,7 @@ COPY pyproject.toml poetry.lock /code/
 # Install dependencies
 RUN poetry config virtualenvs.create true \
     && poetry config virtualenvs.in-project true \
+    && poetry config virtualenvs.options.always-copy true \
     && poetry install --no-interaction --no-ansi
 
 COPY georeference /code/georeferencer

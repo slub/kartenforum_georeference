@@ -24,6 +24,37 @@ from georeference.schemas.user import User
 from georeference.utils.auth import get_user_from_session
 from georeference.utils.es_index import get_es_index
 
+init_scripts = [
+    {"host": "vkdb-schema.sql", "container": "20_vkdb-schema.sql"},
+    {"host": "test-data.sql", "container": "30_test-data.sql"},
+    {"host": "update-sequences.sql", "container": "40_update-sequences.sql"},
+]
+
+
+def set_up_postgres_container():
+    settings = get_settings()
+
+    postgres_container = PostgresContainer(
+        image="postgis/postgis:13-master",
+        username=settings.POSTGRES_USER,
+        port=settings.POSTGRES_PORT,
+        password=settings.POSTGRES_PASSWORD,
+        dbname=settings.POSTGRES_DB,
+    )
+
+    for init_script in init_scripts:
+        path_as_string = str(
+            Path(PYTHON_ROOT_DIR).parent / "database" / init_script["host"]
+        )
+        postgres_container.with_volume_mapping(
+            host=path_as_string,
+            container=f"/docker-entrypoint-initdb.d/{init_script['container']}",
+        )
+
+    postgres_container.start()
+
+    return postgres_container
+
 
 @pytest.fixture(scope="function")
 def db_container(request) -> (PostgresContainer, Callable[[], Engine]):
@@ -32,27 +63,8 @@ def db_container(request) -> (PostgresContainer, Callable[[], Engine]):
 
     It will be recreated for each test function and thus can be modified without affecting other tests.
     """
-    settings = get_settings()
 
-    postgres_container = PostgresContainer(
-        image="postgis/postgis:13-master",
-        username=settings.POSTGRES_USER,
-        port=settings.POSTGRES_PORT,
-        password=settings.POSTGRES_PASSWORD,
-    )
-
-    # Setup initialization script
-    init_script = Path(PYTHON_ROOT_DIR).parent / "docker" / "entrypoints" / "init-db.sh"
-    path_as_string = str(init_script.absolute())
-
-    postgres_container.with_volume_mapping(
-        host=path_as_string, container=f"/docker-entrypoint-initdb.d/{init_script.name}"
-    )
-
-    # Start container and update host in settings
-
-    postgres_container.start()
-    postgres_container.dbname = "vkdb"
+    postgres_container = set_up_postgres_container()
 
     db_engine = create_engine(
         postgres_container.get_connection_url(),
@@ -78,27 +90,9 @@ def readonly_db_container(request) -> (PostgresContainer, Callable[[], Engine]):
     It does not need to be recreated for each test, so it is scoped to the session.
     """
     settings = get_settings()
+    postgres_container = set_up_postgres_container()
 
-    postgres_container = PostgresContainer(
-        image="postgis/postgis:13-master",
-        username=settings.POSTGRES_USER,
-        port=settings.POSTGRES_PORT,
-        password=settings.POSTGRES_PASSWORD,
-    )
-
-    # Setup initialization script
-    init_script = Path(PYTHON_ROOT_DIR).parent / "docker" / "entrypoints" / "init-db.sh"
-    path_as_string = str(init_script.absolute())
-
-    postgres_container.with_volume_mapping(
-        host=path_as_string, container=f"/docker-entrypoint-initdb.d/{init_script.name}"
-    )
-
-    # Start container and update host in settings
     container_ip = postgres_container.get_container_host_ip()
-
-    postgres_container.start()
-    postgres_container.dbname = "vkdb"
 
     # Set default transactions to read only
     postgres_container.exec(

@@ -11,10 +11,13 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vkdb
     ports:
       - "5432:5432"
     volumes:
-      - ./entrypoints/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ../database/vkdb-schema.sql:/docker-entrypoint-initdb.d/20_vkdb-schema.sql
+      - ../database/test-data.sql:/docker-entrypoint-initdb.d/30_test-data.sql
+      - ../database/update-sequences.sql:/docker-entrypoint-initdb.d/40_update-sequences.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
       interval: 10s
@@ -60,7 +63,7 @@ services:
       - USER=${USER}
       - UID=${UID}
     depends_on:
-      - db
+      - georeference-db
     volumes:
       - ../tmp/:/opt/kartenforum_georeference/data
       - ../:/code
