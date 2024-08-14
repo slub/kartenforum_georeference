@@ -1,5 +1,5 @@
 [tool.poetry]
-packages = [{ include = "georeference"}]
+packages = [{ include = "georeference" }]
 name = "Virtuelles Kartenforum"
 version = "0.1.0"
 description = ""
@@ -25,13 +25,13 @@ geojson-pydantic = "^1.1.0"
 lockfile = "^0.12.2"
 elasticsearch = "7.14.1"
 numpy = "<2"
-sentry-sdk = {extras = ["loguru"], version = "^2.12.0"}
-python-daemon = "^3.0.1"
+sentry-sdk = { extras = ["loguru"], version = "^2.12.0" }
+python-daemon = "2.3.0"
 
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.2.2"
-testcontainers = {extras = ["postgres"], version = "^4.7.1"}
+testcontainers = { extras = ["postgres"], version = "^4.7.1" }
 pytest-testmon = "^2.1.1"
 pytest-xdist = "^3.6.1"
 
@@ -41,6 +41,12 @@ ruff = "^0.5.0"
 pre-commit = "^3.7.1"
 debugpy = "^1.8.2"
 alembic = "^1.13.2"
+
+
+[tool.poetry.scripts]
+start-daemon = "georeference.daemon.runner:runner"
+kill-daemon = "georeference.daemon.runner:kill"
+start-job-loop = "georeference.daemon.runner_lifecycle:run_without_daemon"
 
 [build-system]
 requires = ["poetry-core"]

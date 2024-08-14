@@ -333,6 +333,7 @@ def get_es_index(es_config, index_name, force_recreation):
             )
         return es
     except Exception as e:
+        logger.debug(es_config)
         logger.info("Failed to get index reference for index %s." % index_name)
         logger.error(e)
 

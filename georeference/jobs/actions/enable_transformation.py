@@ -10,10 +10,11 @@ import json
 from loguru import logger
 
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
-from georeference.jobs.actions.create_tms import run_process_tms
 from georeference.jobs.actions.create_geo_services import run_process_geo_services
+from georeference.jobs.actions.create_tms import run_process_tms
 from georeference.jobs.actions.update_index import run_update_index
 from georeference.models.georef_map import GeorefMap
+from georeference.models.metadata import Metadata
 from georeference.models.raw_map import RawMap
 from georeference.models.transformation import Transformation
 from georeference.utils.utils import (
@@ -22,7 +23,6 @@ from georeference.utils.utils import (
     get_mapfile_path,
     get_tms_directory,
 )
-from georeference.models.metadata import Metadata
 
 
 def run_enable_transformation(transformation_obj, es_index, dbsession):
@@ -39,6 +39,9 @@ def run_enable_transformation(transformation_obj, es_index, dbsession):
     :result: Transformation
     :rtype: georeference.models.transformations.Transformation
     """
+    if transformation_obj is None:
+        raise ValueError("Transformation object is None!")
+
     logger.debug("Enable transformation %s ..." % transformation_obj.id)
     # Query original and georef  map obj
     raw_map_obj = RawMap.by_id(transformation_obj.raw_map_id, dbsession)

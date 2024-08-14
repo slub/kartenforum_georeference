@@ -8,6 +8,7 @@
 # "LICENSE", which is part of this source code package
 import os
 import signal
+import subprocess
 import sys
 
 import daemon
@@ -36,6 +37,9 @@ def runner():
     logger.debug(f"PID file: {pid_file}")
     context = daemon.DaemonContext(
         pidfile=pid_file,
+        working_directory=BASE_PATH,
+        stderr=sys.stderr,
+        stdout=sys.stdout,
     )
 
     # Define shutdown behavior
@@ -64,6 +68,10 @@ def runner():
     finally:
         logger.debug("Releasing pid ...")
         pid_file.release()
+
+
+def kill():
+    subprocess.run(os.path.join(BASE_PATH, "./kill-daemon.sh"), shell=True)
 
 
 if __name__ == "__main__":

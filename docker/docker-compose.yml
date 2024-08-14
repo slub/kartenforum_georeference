@@ -2,13 +2,13 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE.md", which is part of this source code package
-version: '3'
 services:
   georeference-db:
     container_name: pg_container
     image: postgis/postgis:13-master
     restart: always
     environment:
+      - ES_HOST=elasticsearch
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=vkdb
@@ -38,6 +38,7 @@ services:
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1024m -Xmx1024m
     ulimits:
       memlock:
         soft: -1
@@ -45,6 +46,7 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    mem_limit: 2g
     cap_add:
       - IPC_LOCK
     ports:
@@ -72,3 +74,23 @@ services:
       - "8000:8000"
       - "5678:5678"
     entrypoint: /entrypoints/run-fastapi.sh
+
+  georeference-daemon:
+    build:
+      context: ../
+      dockerfile: georeference/Dockerfile
+      args:
+        - USERNAME=${USER}
+        - UID=${UID}
+    container_name: kartenforum_georeference-daemon
+    restart: always
+    environment:
+      - USER=${USER}
+      - UID=${UID}
+    depends_on:
+      - georeference-db
+    volumes:
+      - ../tmp/:/opt/kartenforum_georeference/data
+      - ../:/code
+      - ./entrypoints/run-job-loop.sh:/entrypoints/run-job-loop.sh
+    entrypoint: /entrypoints/run-job-loop.sh

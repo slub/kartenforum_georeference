@@ -1501,22 +1501,21 @@ testing = ["filelock"]
 
 [[package]]
 name = "python-daemon"
-version = "3.0.1"
+version = "2.3.0"
 description = "Library to implement a well-behaved Unix daemon process."
 optional = false
-python-versions = ">=3"
+python-versions = "*"
 files = [
-    {file = "python-daemon-3.0.1.tar.gz", hash = "sha256:6c57452372f7eaff40934a1c03ad1826bf5e793558e87fef49131e6464b4dae5"},
-    {file = "python_daemon-3.0.1-py3-none-any.whl", hash = "sha256:42bb848a3260a027fa71ad47ecd959e471327cb34da5965962edd5926229f341"},
+    {file = "python-daemon-2.3.0.tar.gz", hash = "sha256:bda993f1623b1197699716d68d983bb580043cf2b8a66a01274d9b8297b0aeaf"},
+    {file = "python_daemon-2.3.0-py2.py3-none-any.whl", hash = "sha256:191c7b67b8f7aac58849abf54e19fe1957ef7290c914210455673028ad454989"},
 ]
 
 [package.dependencies]
 docutils = "*"
 lockfile = ">=0.10"
-setuptools = ">=62.4.0"
+setuptools = "*"
 
 [package.extras]
-devel = ["coverage", "docutils", "isort", "testscenarios (>=0.4)", "testtools", "twine"]
 test = ["coverage", "docutils", "testscenarios (>=0.4)", "testtools"]
 
 [[package]]
@@ -2505,4 +2504,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "e003bbc2e00482a73e5e3d5c2e916cb31e570d7d193351abfd8d89044a406b71"
+content-hash = "9678f9bab707723a9d117a6e03d10425c7ca78651ad6ef41a4384a5bb68a546f"

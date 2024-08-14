@@ -63,12 +63,13 @@ def _initialize_logger():
     logger.remove()
     log_level = parse_log_level(settings.DAEMON_LOG_LEVEL)
 
-    logger.add(
-        settings.DAEMON_LOGFILE_PATH,
-        level=log_level,
-        rotation="daily",
-        retention="14 days",
-    )
+    if settings.DAEMON_LOGFILE_PATH is not None:
+        logger.add(
+            settings.DAEMON_LOGFILE_PATH,
+            level=log_level,
+            rotation="daily",
+            retention="14 days",
+        )
     logger.add(sys.stderr, level=log_level, colorize=True)
 
     # Setup sentry sdk
@@ -182,7 +183,7 @@ def main(wait_on_start=1, wait_on_loop=1):
     try:
         run_count = 0
         _initialize_logger()
-        logger.info("Start logger but waiting for %s seconds ..." % wait_on_start)
+        logger.info(f"Start logger but waiting for {wait_on_start} seconds ...")
         time.sleep(wait_on_start)
 
         # Handle start
@@ -236,6 +237,13 @@ def main(wait_on_start=1, wait_on_loop=1):
     finally:
         logger.info("Clean up")
         logging.shutdown()
+
+
+def run_without_daemon():
+    main(
+        wait_on_start=settings.DAEMON_WAIT_ON_STARTUP,
+        wait_on_loop=settings.DAEMON_SLEEP_TIME,
+    )
 
 
 if __name__ == "__main__":

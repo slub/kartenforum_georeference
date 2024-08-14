@@ -96,7 +96,7 @@ class Settings(BaseSettings):
     DAEMON_PIDFILE_TIMEOUT: int = 5
     DAEMON_SLEEP_TIME: int = 10
     DAEMON_WAIT_ON_STARTUP: int = 1
-    DAEMON_LOGFILE_PATH: str = os.path.join(BASE_PATH, "../tmp/daemon.log")
+    DAEMON_LOGFILE_PATH: Optional[str] = os.path.join(BASE_PATH, "../tmp/daemon.log")
     DAEMON_LOG_LEVEL: str = "DEBUG"
     DAEMON_LOOP_HEARTBEAT_COUNT: int = 10
 
@@ -104,7 +104,7 @@ class Settings(BaseSettings):
 # For usage of the settings as dependency
 @lru_cache
 def get_settings():
-    return Settings()
+    return Settings(_env_parse_none_str="null")
 
 
 #
