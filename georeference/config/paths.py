@@ -32,7 +32,6 @@ PATH_GEOREF_ROOT = os.path.join(BASE_PATH, "../tmp/geo")
 PATH_MOSAIC_ROOT = os.path.join(BASE_PATH, "../tmp/mosaic")
 
 # Path to the template directory
-PATH_MAPFILE_TEMPLATES = os.path.join(BASE_PATH, "./templates")
 
 # Path to the mapfile directory
 PATH_MAPFILE_ROOT = os.path.join(BASE_PATH, "../tmp/mapfiles")
@@ -64,32 +63,6 @@ PATH_TEST_INPUT_BASE = os.path.join(BASE_PATH, "__test_data/data_input")
 # Path to the zoomify files directory
 PATH_ZOOMIFY_ROOT = os.path.join(BASE_PATH, "../tmp/zoomify")
 
-# Georeference TMS Cache url
-TEMPLATE_TMS_URLS = ["http://vk2-cdn.slub-dresden.de/tms2/{}"]
-
-# Template for the public thumbnail images
-TEMPLATE_PUBLIC_THUMBNAIL_URL = "https://thumbnail-slub.pikobytes.de/zoomify/{}"
-
-# Template for the public wms service
-TEMPLATE_PUBLIC_WMS_URL = "https://wms-slub.pikobytes.de/map/{}"
-
-# Template for the public wms service
-TEMPLATE_PUBLIC_WCS_URL = "https://wcs-slub.pikobytes.de/map/{}"
-
-# Template for the public zoomify tiles
-TEMPLATE_PUBLIC_ZOOMIFY_URL = (
-    "https://zoomify-slub.pikobytes.de/zoomify/{}/ImageProperties.xml"
-)
-
-# WMS Service default url template
-TEMPLATE_TRANSFORMATION_WMS_URL = "http://localhost:8080/?map=/etc/mapserver/{}"
-
-# Template string for the public id of a single georefence map
-TEMPLATE_PUBLIC_MAP_ID = "oai:de:slub-dresden:vk:id-{}"
-
-# Template string for the public id of a mosaic map
-TEMPLATE_PUBLIC_MOSAIC_MAP_ID = "oai:de:slub-dresden:vk:mosaic:id-{}"
-
 
 def create_data_directories():
     """This function makes sure, that all data directories used by the job function are existing."""
@@ -113,3 +86,6 @@ def create_path_if_not_exists(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+TMP_DIR = "/tmp"

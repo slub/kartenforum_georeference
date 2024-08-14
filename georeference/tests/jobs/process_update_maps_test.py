@@ -15,9 +15,11 @@ from sqlmodel import Session
 from georeference.config.paths import (
     BASE_PATH,
     PATH_IMAGE_ROOT,
+    PATH_TEST_INPUT_BASE,
+)
+from georeference.config.templates import (
     TEMPLATE_PUBLIC_THUMBNAIL_URL,
     TEMPLATE_PUBLIC_ZOOMIFY_URL,
-    PATH_TEST_INPUT_BASE,
 )
 from georeference.jobs.process_update_maps import run_process_update_maps
 from georeference.models.enums import EnumJobType, EnumJobState

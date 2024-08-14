@@ -15,6 +15,8 @@ from georeference.config.constants import raw_map_keys
 from georeference.config.paths import (
     PATH_IMAGE_ROOT,
     create_path_if_not_exists,
+)
+from georeference.config.templates import (
     TEMPLATE_PUBLIC_THUMBNAIL_URL,
     TEMPLATE_PUBLIC_ZOOMIFY_URL,
 )

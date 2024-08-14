@@ -35,8 +35,7 @@ def run_process_geo_image(
     """
     if not os.path.exists(path_raw_image):
         logger.debug(
-            'Skip processing of geo image for map "%s", because of missing raw image.'
-            % transformation_obj.raw_map_id
+            f'Skip processing of geo image for map "{transformation_obj.raw_map_id}", because of missing raw image ({path_raw_image}).'
         )
         return None
 

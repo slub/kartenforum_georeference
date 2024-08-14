@@ -13,12 +13,12 @@ from elasticsearch import Elasticsearch
 from loguru import logger
 
 from georeference.config.constants import GLOBAL_PERMALINK_RESOLVER
-from georeference.config.paths import (
+from georeference.config.settings import get_settings
+from georeference.config.templates import (
+    TEMPLATE_TMS_URLS,
     TEMPLATE_PUBLIC_WMS_URL,
     TEMPLATE_PUBLIC_WCS_URL,
-    TEMPLATE_TMS_URLS,
 )
-from georeference.config.settings import get_settings
 from georeference.utils.georeference import get_image_size
 from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id
 

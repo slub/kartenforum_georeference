@@ -18,3 +18,6 @@ regex_alphanumeric_string = "^[a-z0-9]+(?:_[a-z0-9]+)*$"
 
 # Keys which will be stored in the raw_map model
 raw_map_keys = ["allow_download", "default_crs", "map_scale", "map_type"]
+
+# Default bounding box for EPSG:4314, according to https://epsg.io/4314
+EPSG_4314_BOUNDS = [5.86, 47.27, 15.04, 55.09]

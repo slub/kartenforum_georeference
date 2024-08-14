@@ -4,11 +4,6 @@ import json
 import os
 import shutil
 
-# Created by nicolas.looschen@pikobytes.de on 24.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
-
 from osgeo import gdal, osr
 from osgeo.gdalconst import GA_ReadOnly
 from shapely.geometry import shape, mapping
@@ -22,6 +17,12 @@ from georeference.config.paths import (
 from georeference.models.georef_map import GeorefMap
 from georeference.models.transformation import Transformation
 from georeference.utils.georeference import _get_extent_from_dataset
+
+
+# Created by nicolas.looschen@pikobytes.de on 24.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 
 
 def _same_coordinate(c1, c2):
@@ -48,7 +49,7 @@ def fix_polygon_geometry(geometry):
         return {"type": "Polygon", "coordinates": [corrected_coordinates]}
     elif geometry["type"] == "MultiPolygon":
         shapely_geom = shape(geometry)
-        largest_polygon = max(shapely_geom, key=lambda a: a.area)
+        largest_polygon = max(shapely_geom.geoms, key=lambda a: a.area)
         return json.loads(json.dumps(mapping(largest_polygon)))
     else:
         return geometry
@@ -232,3 +233,33 @@ def without_keys(d, keys):
     :param: keys - keys which will be omitted
     """
     return {k: v for k, v in d.items() if k not in keys}
+
+
+def bbox_position(bbox, container_bbox):
+    xmin, ymin, xmax, ymax = bbox
+    cxmin, cymin, cxmax, cymax = container_bbox
+
+    # Prioritize the X-axis directions first
+    if xmax < cxmin:
+        return False, "west"  # Bounding box is to the west
+    elif xmin < cxmin:
+        return False, "west"  # Bounding box is partially to the west
+
+    if xmin > cxmax:
+        return False, "east"  # Bounding box is to the east
+    elif xmax > cxmax:
+        return False, "east"  # Bounding box is partially to the east
+
+    # Now check the Y-axis directions
+    if ymax < cymin:
+        return False, "south"  # Bounding box is to the south
+    elif ymin < cymin:
+        return False, "south"  # Bounding box is partially to the south
+
+    if ymin > cymax:
+        return False, "north"  # Bounding box is to the north
+    elif ymax > cymax:
+        return False, "north"  # Bounding box is partially to the north
+
+    # If none of the above, it's fully contained
+    return True, None

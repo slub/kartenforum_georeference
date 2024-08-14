@@ -8,7 +8,10 @@
 import os
 
 from georeference.config.paths import PATH_TEST_INPUT_BASE, PATH_TEST_OUTPUT_BASE
-from georeference.jobs.actions.create_raw_image import run_process_raw_image
+from georeference.jobs.actions.create_raw_image import (
+    run_process_raw_image,
+    _get_pixel_data_type,
+)
 
 
 def test_run_process_raw_image_success_image_1():
@@ -25,6 +28,8 @@ def test_run_process_raw_image_success_image_1():
         subject = run_process_raw_image(src_path, trg_path, force=True)
 
         assert os.path.exists(subject)
+        assert _get_pixel_data_type(subject) == "Byte"
+
     finally:
         if os.path.exists(subject):
             os.remove(subject)

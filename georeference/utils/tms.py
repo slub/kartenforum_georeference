@@ -8,21 +8,21 @@
 import argparse
 import logging
 import math
-
-from loguru import logger
-from osgeo import gdal
 import os
 import shutil
 import subprocess
 import sys
+
 from PIL import Image
+from loguru import logger
+from osgeo import gdal
+
+from georeference.config.paths import TMP_DIR
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 BASE_PATH_PARENT = os.path.abspath(os.path.join(BASE_PATH, "../../"))
 sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
-
-TMP_DIR = "/tmp"
 
 
 def _add_base_tile(target_dir):

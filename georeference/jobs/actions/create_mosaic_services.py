@@ -9,9 +9,12 @@ import os
 
 from loguru import logger
 
-from georeference.config.paths import TEMPLATE_PUBLIC_WMS_URL, PATH_MAPFILE_TEMPLATES
-from georeference.utils.mapfile import write_mapfile
+from georeference.config.templates import (
+    PATH_MAPFILE_TEMPLATES,
+    TEMPLATE_PUBLIC_WMS_URL,
+)
 from georeference.utils.mapfile import parse_geo_tiff_metadata
+from georeference.utils.mapfile import write_mapfile
 
 
 def run_process_mosaic_services(

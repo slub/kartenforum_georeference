@@ -81,6 +81,12 @@ def db_container(request) -> (PostgresContainer, Callable[[], Engine]):
     return (postgres_container, db_engine)
 
 
+@pytest.fixture(scope="function")
+def db_session(db_container):
+    with Session(db_container[1]) as session:
+        yield session
+
+
 @pytest.fixture(scope="session")
 def readonly_db_container(request) -> (PostgresContainer, Callable[[], Engine]):
     """
@@ -111,6 +117,12 @@ def readonly_db_container(request) -> (PostgresContainer, Callable[[], Engine]):
     request.addfinalizer(remove_container)
 
     return (postgres_container, db_engine)
+
+
+@pytest.fixture(scope="session")
+def readonly_db_session(readonly_db_container):
+    with Session(readonly_db_container[1]) as session:
+        yield session
 
 
 @pytest.fixture(scope="function")

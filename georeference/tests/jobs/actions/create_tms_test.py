@@ -85,3 +85,26 @@ def test_run_process_tms_force_success():
             os.remove(path_geo_image)
         if os.path.exists(subject):
             shutil.rmtree(subject)
+
+
+def test_run_process_tms_epsg_4314_bit_raster():
+    try:
+        test_data = create_test_data(
+            "test_run_process_tms_epsg_4314_bit_raster", "df_dk_0010001_3077"
+        )
+        test_tms_dir = os.path.join(
+            PATH_TEST_OUTPUT_BASE,
+            "test_runProcessTMS_success.tif",
+        )
+        path_geo_image = test_data["srcPath"]
+
+        tms_dir = run_process_tms(
+            test_tms_dir,
+            path_geo_image,
+        )
+
+        assert os.path.exists(path_geo_image)
+        assert os.path.exists(tms_dir)
+    finally:
+        if os.path.exists(tms_dir):
+            shutil.rmtree(tms_dir)

@@ -5,17 +5,18 @@ import os
 from datetime import datetime
 
 from pydantic import NaiveDatetime
-# Created by nicolas.looschen@pikobytes.de on 10.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
-
-from sqlalchemy import func, Column
+from sqlalchemy import func, Column, text, bindparam
 from sqlalchemy.sql.type_api import UserDefinedType
 from sqlmodel import SQLModel, Field, Session, desc, select
 
 from georeference.config.paths import PATH_GEOREF_ROOT
 from georeference.models import varchar_255, datetime_without_timezone
+
+
+# Created by nicolas.looschen@pikobytes.de on 10.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 
 
 class ExtentType(UserDefinedType):
@@ -105,8 +106,11 @@ class GeorefMap(SQLModel, table=True):
         :result: GeoJSON  in EPSG:4326
         :rtype: GeoJSON
         """
-        query = f"SELECT st_asgeojson(st_envelope(st_transform(extent, 4326))) FROM georef_maps WHERE raw_map_id = {map_id}"
-        response = dbsession.execute(query).fetchone()
+        query = text(
+            "SELECT st_asgeojson(st_envelope(st_transform(extent, 4326))) FROM georef_maps WHERE raw_map_id = :map_id"
+        )
+        query = query.bindparams(bindparam("map_id"))
+        response = dbsession.execute(query, {"map_id": map_id}).fetchone()
         if response is not None:
             return json.loads(response[0])
         return None

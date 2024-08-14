@@ -14,7 +14,11 @@ from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.models.transformation import Transformation, EnumValidationValue
 
 
-def create_test_data(test_name):
+def create_test_data(
+    test_name: str,
+    file_name: str = "df_dk_0010001_5154_1892",
+    target_epsg: str = "EPSG:4314",
+):
     return {
         "transformationObj": Transformation(
             id=10000001,
@@ -23,7 +27,7 @@ def create_test_data(test_name):
             params=json.dumps(
                 {
                     "source": "pixel",
-                    "target": "EPSG:4314",
+                    "target": target_epsg,
                     "algorithm": "affine",
                     "gcps": [
                         {
@@ -125,11 +129,10 @@ def create_test_data(test_name):
         ),
         "srcPath": os.path.join(
             BASE_PATH,
-            "__test_data/data_input/df_dk_0010001_5154_1892.tif",
+            f"__test_data/data_input/{file_name}.tif",
         ),
         "trgPath": os.path.join(
-            BASE_PATH,
-            "__test_data/data_output/test_%s.tif" % test_name,
+            BASE_PATH, f"__test_data/data_output/test_{test_name}.tif"
         ),
     }
 

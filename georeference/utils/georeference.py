@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
+import os
+import subprocess
+import sys
+
 # Created by jacob.mendt@pikobytes.de on 06.09.21
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 import uuid
-import os
-import subprocess
-import json
-import sys
+
 import pyproj
 from loguru import logger
 from osgeo import gdal
@@ -316,5 +318,34 @@ def rectify_image_with_clip_and_overviews(
         logger.warning(
             "Something went wrong while trying to generate a permanent georeference result"
         )
+        logger.error(e)
+        raise
+
+
+def reproject_image_from_4314_15869_to_3857(src_file, dst_file):
+    """Function reprojects a given image from EPSG:4314 to EPSG:3857 using this transformation description: https://epsg.io/4314-15869
+
+    It is used in case the bounds of the image are not contained in the EPSG:4314 bounds.
+    This might cause issues with gdal and with that the tms generation, because the grid is only defined within those bounds.
+    For a better explanation and more information see:
+    https://github.com/OSGeo/gdal/issues/10510#issuecomment-2254250801
+
+    :param src_file: Source image path
+    :type src_file: str
+    :param dst_file: Target image path
+    :type dst_file: str
+    :result: Path to the target image
+    :rtype: str
+    """
+    try:
+        warp_command = f"gdalwarp -r near -wm {settings.GDAL_WARP_MEMORY} -s_srs '+proj=longlat +ellps=bessel +towgs84=612.4,77,440.2,-0.054,0.057,-2.797,2.55 +no_defs +type=crs' -t_srs EPSG:3857 {src_file} {dst_file}"
+        # run the command
+        logger.debug(warp_command)
+        subprocess.check_output(warp_command, shell=True, stderr=subprocess.STDOUT)
+        return dst_file
+    except subprocess.CalledProcessError as e:
+        logger.error(e.output)
+        raise
+    except Exception as e:
         logger.error(e)
         raise

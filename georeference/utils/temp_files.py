@@ -8,9 +8,11 @@ from loguru import logger
 from georeference.config.paths import (
     PATH_TMP_TRANSFORMATION_ROOT,
     PATH_TMP_ROOT,
-    TEMPLATE_TRANSFORMATION_WMS_URL,
-    PATH_MAPFILE_TEMPLATES,
     PATH_TMP_TRANSFORMATION_DATA_ROOT,
+)
+from georeference.config.templates import (
+    PATH_MAPFILE_TEMPLATES,
+    TEMPLATE_TRANSFORMATION_WMS_URL,
 )
 from georeference.utils.georeference import rectify_image
 from georeference.utils.mapfile import write_mapfile
