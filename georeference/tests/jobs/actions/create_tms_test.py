@@ -90,7 +90,7 @@ def test_run_process_tms_force_success():
 def test_run_process_tms_epsg_4314_bit_raster():
     try:
         test_data = create_test_data(
-            "test_run_process_tms_epsg_4314_bit_raster", "df_dk_0010001_3077"
+            "test_run_process_tms_epsg_4314_bit_raster", "../data_input_georef/df_dk_0010001_3077"
         )
         test_tms_dir = os.path.join(
             PATH_TEST_OUTPUT_BASE,

@@ -52,14 +52,29 @@ Additionally, they will be run as precommit hooks.
 
 ### Running tests
 
-The tests can be run with the following command:
+First make sure to download the test data. This can be done by running the following scripts (make sure you
+have `sshpass` installed):
 
+```bash
+scripts/download_testdata.sh
 ```
+
+Please be aware, that currently the whole test data is up to 3GB in size. If you want to run all tests, you can use the
+following command:
+
+```bash
 poetry run python -m pytest
+```
+
+To run just the test from a specific file, you can use a command with this structure:
+
+```bash
+poetry run python -m pytest -rP georeference/tests/utils/proj_test.py::test_get_crs_from_request_params_use_passed_crs
 ```
 
 Hint: Make sure to have docker running, as the testcontainers library will start a postgres container for the tests.
 Hint: Make sure to have `DEV_MODE` enabled. Else ssl verification, if requesting the typo3 application, might fail.
+Hint: Make sure to have a local environment properly setup.
 
 ## Postgresql Database
 

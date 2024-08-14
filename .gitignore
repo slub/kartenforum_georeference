@@ -39,3 +39,7 @@ scripts/kartenforum_georeference
 # do not track sql dumps and log files
 *.dump
 *.log
+
+# Local development files
+.local
+LOCAL.md
