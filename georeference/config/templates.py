@@ -23,7 +23,7 @@ if "{}" not in TEMPLATE_PUBLIC_MOSAIC_MAP_ID:
 PATH_MAPFILE_TEMPLATES = os.path.join(BASE_PATH, "./templates")
 
 # Georeference TMS Cache url
-TEMPLATE_TMS_URLS = ["http://vk2-cdn.slub-dresden.de/tms2/{}"]
+TEMPLATE_TMS_URLS = ["https://tms.ddev.site/{}"]
 
 # Template for the public thumbnail images
 TEMPLATE_PUBLIC_THUMBNAIL_URL = "https://thumbnail-slub.pikobytes.de/zoomify/{}"

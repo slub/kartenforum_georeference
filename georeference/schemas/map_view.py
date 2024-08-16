@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 # Created by nicolas.looschen@pikobytes.de on 22.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-from pydantic import BaseModel
-
-from geojson_pydantic import FeatureCollection
 from enum import Enum, EnumMeta
 from typing import List, Optional, Union, Literal
+
+from geojson_pydantic import FeatureCollection
+from pydantic import BaseModel, conlist
 
 
 class MapViewResponse(BaseModel):
@@ -42,7 +41,7 @@ class GeoJsonLayer(OperationalLayerBase):
 
 class HistoricMapLayer(OperationalLayerBase):
     type: Literal[EnumOperationalLayerType.HISTORIC_MAP.value]
-    coordinates: List[float]
+    coordinates: List[List[conlist(float, min_length=2, max_length=2)]]
 
 
 class ThreeDimensionalPoint(BaseModel):
@@ -72,16 +71,20 @@ class TwoDimensionalMapView(BaseModel):
 
 class MapViewJsonBase(BaseModel):
     activeBasemapId: str
-    customBasemaps: List[CustomBasemap]
+    customBasemaps: Optional[List[CustomBasemap]] = []
     operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
 
 
 class TwoDimensionalMapViewJson(MapViewJsonBase):
     mapView: TwoDimensionalMapView
-    is3dEnabled: Literal[False]
+    is3dEnabled: Optional[Literal[False]] = False
     searchOptions: Optional[str] = None
 
 
 class ThreeDimensionalMapViewJson(MapViewJsonBase):
     mapView: ThreeDimensionalMapView
     is3dEnabled: Literal[True]
+
+
+class MapViewPayload(BaseModel):
+    map_view_json: Union[TwoDimensionalMapViewJson, ThreeDimensionalMapViewJson]

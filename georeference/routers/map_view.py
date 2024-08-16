@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import uuid
-from datetime import datetime
-from typing import Union, Annotated
+
 
 # Created by nicolas.looschen@pikobytes.de on 22.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+
+import uuid
+from datetime import datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
@@ -17,8 +19,7 @@ from georeference.config.db import get_session
 from georeference.models.map_view import MapView
 from georeference.schemas.map_view import (
     MapViewResponse,
-    TwoDimensionalMapViewJson,
-    ThreeDimensionalMapViewJson,
+    MapViewPayload,
 )
 from georeference.schemas.user import User
 from georeference.utils.auth import require_authenticated_user
@@ -47,7 +48,7 @@ def get_map_view(public_map_view_id: str, session: Session = Depends(get_session
 
 @router.post("/", tags=["map_view"])
 def post_map_view(
-    new_map_view: Union[TwoDimensionalMapViewJson, ThreeDimensionalMapViewJson],
+    new_map_view: MapViewPayload,
     user: Annotated[User, Depends(require_authenticated_user)],
     session: Session = Depends(get_session),
 ):
@@ -60,7 +61,7 @@ def post_map_view(
         public_id = str(uuid.uuid4())
 
     new_map_view = MapView(
-        map_view_json=new_map_view.model_dump_json(),
+        map_view_json=new_map_view.map_view_json.model_dump_json(exclude_none=True),
         last_request=None,
         request_count=0,
         submitted=submitted,

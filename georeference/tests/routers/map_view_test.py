@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from datetime import datetime
 
-import pytest
 # Created by nicolas.looschen@pikobytes.de on 22.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 
+from datetime import datetime
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -60,16 +61,18 @@ class TestMapView:
         override_get_user_from_session,
     ):
         minimal_working_example = {
-            "activeBasemapId": "slub-osm",
-            "customBasemaps": [],
-            "is3dEnabled": False,
-            "operationalLayers": [],
-            "mapView": {
-                "center": [1039475.3400097956, 6695196.931201956],
-                "resolution": 1.194328566789627,
-                "rotation": 0,
-                "zoom": 11,
-            },
+            "map_view_json": {
+                "activeBasemapId": "slub-osm",
+                "customBasemaps": [],
+                "is3dEnabled": False,
+                "operationalLayers": [],
+                "mapView": {
+                    "center": [1039475.3400097956, 6695196.931201956],
+                    "resolution": 1.194328566789627,
+                    "rotation": 0,
+                    "zoom": 11,
+                },
+            }
         }
         # Build test request
         res = test_client.post("/map_view/", json=minimal_working_example)
@@ -85,16 +88,18 @@ class TestMapView:
         override_get_user_from_session,
     ):
         minimal_working_example = {
-            "activeBasemapId": "slub-osm",
-            "customBasemaps": [],
-            "is3dEnabled": True,
-            "operationalLayers": [],
-            "mapView": {
-                "direction": {"x": 0, "y": 0, "z": 0},
-                "position": {"x": 0, "y": 0, "z": 0},
-                "up": {"x": 0, "y": 0, "z": 0},
-                "right": {"x": 0, "y": 0, "z": 0},
-            },
+            "map_view_json": {
+                "activeBasemapId": "slub-osm",
+                "customBasemaps": [],
+                "is3dEnabled": True,
+                "operationalLayers": [],
+                "mapView": {
+                    "direction": {"x": 0, "y": 0, "z": 0},
+                    "position": {"x": 0, "y": 0, "z": 0},
+                    "up": {"x": 0, "y": 0, "z": 0},
+                    "right": {"x": 0, "y": 0, "z": 0},
+                },
+            }
         }
         # Build test request
         res = test_client.post("/map_view/", json=minimal_working_example)
