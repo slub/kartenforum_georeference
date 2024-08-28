@@ -9,7 +9,7 @@ import json
 import os
 from datetime import datetime
 
-from georeference.config.paths import BASE_PATH
+from georeference.config.paths import PATH_IMAGE_ROOT, PATH_TMP_ROOT
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.models.transformation import Transformation, EnumValidationValue
 
@@ -127,13 +127,8 @@ def create_test_data(
                 }
             ),
         ),
-        "srcPath": os.path.join(
-            BASE_PATH,
-            f"__test_data/data_input/{file_name}.tif",
-        ),
-        "trgPath": os.path.join(
-            BASE_PATH, f"__test_data/data_output/test_{test_name}.tif"
-        ),
+        "srcPath": os.path.abspath(os.path.join(PATH_IMAGE_ROOT, f"./{file_name}.tif")),
+        "trgPath": os.path.abspath(os.path.join(PATH_TMP_ROOT, f"./test_{test_name}.tif")),
     }
 
 
@@ -142,6 +137,7 @@ def test_run_process_geo_image_success():
     try:
         # Perform the test
         test_data = create_test_data("test_runProcessGeoImage_success")
+        print(test_data)
         subject = run_process_geo_image(
             test_data["transformationObj"],
             test_data["srcPath"],

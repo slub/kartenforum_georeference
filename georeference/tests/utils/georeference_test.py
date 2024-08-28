@@ -9,7 +9,7 @@ import os
 import shutil
 import time
 
-from georeference.config.paths import PATH_TEST_INPUT_BASE, PATH_TEST_OUTPUT_BASE
+from georeference.config.paths import PATH_IMAGE_ROOT, PATH_TMP_ROOT
 from georeference.tests.utils.__testcases_georeference import GEOREFERENCE_TESTCASES
 from georeference.utils.georeference import rectify_image_with_clip_and_overviews
 from georeference.utils.georeference import rectify_image
@@ -29,7 +29,7 @@ GEOREFERENCE_TESTS = [
             {"source": [7020, 6807], "target": [13.53735995082988, 50.802610870942374]},
             {"source": [7812, 5913], "target": [13.667546305614797, 50.89755275702876]},
         ],
-        "srcFile": os.path.join(PATH_TEST_INPUT_BASE, "test-ak.jpg"),
+        "srcFile": os.path.join(PATH_IMAGE_ROOT, "test-ak.jpg"),
         "srs": "EPSG:4314",
     },
     {
@@ -73,12 +73,12 @@ GEOREFERENCE_TESTS = [
             {"source": [788, 781], "target": [14.663646845572, 50.899831454076]},
             {"source": [7486, 818], "target": [14.829132122927, 50.900185560843]},
         ],
-        "srcFile": os.path.join(PATH_TEST_INPUT_BASE, "df_dk_0010001_5154_1892.tif"),
+        "srcFile": os.path.join(PATH_IMAGE_ROOT, "df_dk_0010001_5154_1892.tif"),
         "srs": "EPSG:4314",
     },
 ]
 
-TMP_DIR = os.path.join(PATH_TEST_OUTPUT_BASE, "georeference-test")
+TMP_DIR = os.path.join(PATH_TMP_ROOT, "georeference-test")
 
 
 # @pytest.mark.skip(reason="Needs to long")

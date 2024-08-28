@@ -25,8 +25,6 @@ TODO.md
 /dist
 *.pyc
 
-georeference/__test_data
-
 # configuration files
 scripts/create_tar.sh
 scripts/uploaded.log
@@ -43,3 +41,10 @@ scripts/kartenforum_georeference
 # Local development files
 .local
 LOCAL.md
+
+# do not track files within data directory
+# Ignore all directories within the specified directory
+data/*/
+
+# Allow tracking of the parent directory itself
+!data/

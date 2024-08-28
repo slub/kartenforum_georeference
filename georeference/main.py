@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,15 +17,22 @@ from georeference.routers import (
 )
 
 # Initialization
-configure_logging()
+logger = configure_logging()
 setup_sentry()
+
+logger.debug("Initialize settings")
+settings = get_settings()
+logger.debug(json.dumps(settings.model_dump(), indent=2))
+
+logger.debug("Create data directories")
 create_data_directories()
 
+logger.debug("Initialize FastAPI...")
 app = FastAPI()
 
-settings = get_settings()
-allowed_origins = settings.CORS_ALLOWED_ORIGINS
 # Setup CORS
+logger.debug("Setup CORS settings ...")
+allowed_origins = settings.CORS_ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -34,6 +42,7 @@ app.add_middleware(
 )
 
 # Register routers
+logger.debug("Initialize routes ...")
 app.include_router(user.router, prefix="/user")
 app.include_router(statistics.router, prefix="/statistics")
 app.include_router(jobs.router, prefix="/jobs")
@@ -41,3 +50,5 @@ app.include_router(map_view.router, prefix="/map_view")
 app.include_router(maps.router, prefix="/maps")
 app.include_router(mosaic_maps.router, prefix="/mosaic_maps")
 app.include_router(transformations.router, prefix="/transformations")
+
+logger.debug("Initialization done.")

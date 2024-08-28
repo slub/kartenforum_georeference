@@ -8,7 +8,7 @@
 import os
 import shutil
 
-from georeference.config.paths import PATH_TEST_OUTPUT_BASE
+from georeference.config.paths import PATH_TMP_ROOT, PATH_IMAGE_ROOT
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.jobs.actions.create_tms import run_process_tms
 from georeference.tests.jobs.actions.create_geo_image_test import create_test_data
@@ -20,7 +20,7 @@ def test_run_process_tms_success():
         # Perform the test
         test_data = create_test_data("test_runProcessTMS_success")
         test_tms_dir = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "test_runProcessTMS_success.tif",
         )
         path_geo_image = run_process_geo_image(
@@ -49,7 +49,7 @@ def test_run_process_tms_force_success():
         # Initial create the process
         test_data = create_test_data("test_runProcessTMS_force_success")
         test_tms_dir = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "test_runProcessTMS_force_success.tif",
         )
 
@@ -89,14 +89,11 @@ def test_run_process_tms_force_success():
 
 def test_run_process_tms_epsg_4314_bit_raster():
     try:
-        test_data = create_test_data(
-            "test_run_process_tms_epsg_4314_bit_raster", "../data_input_georef/df_dk_0010001_3077"
-        )
         test_tms_dir = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
-            "test_runProcessTMS_success.tif",
+            PATH_TMP_ROOT,
+            "test_run_process_tms_epsg_4314_bit_raster",
         )
-        path_geo_image = test_data["srcPath"]
+        path_geo_image = os.path.join(PATH_TMP_ROOT, "./df_dk_0010001_3077.tif")
 
         tms_dir = run_process_tms(
             test_tms_dir,

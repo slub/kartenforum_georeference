@@ -34,3 +34,4 @@ def configure_logging():
     # Add new handler with min log level defined in the settings
     logger.add(sys.stderr, level=numeric_level, colorize=True)
     logger.debug(f"Logging configured with level {log_level}")
+    return logger

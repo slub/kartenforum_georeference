@@ -13,7 +13,7 @@ from datetime import datetime
 
 from sqlmodel import Session
 
-from georeference.config.paths import BASE_PATH, PATH_IMAGE_ROOT, PATH_TEST_INPUT_BASE
+from georeference.config.paths import PATH_IMAGE_ROOT
 from georeference.config.settings import get_settings
 from georeference.jobs.process_create_map import run_process_create_map
 from georeference.models.enums import EnumJobType, EnumJobState
@@ -44,7 +44,7 @@ test_metadata = json.loads("""{
 
 def insert_test_map_using_job(dbsession_only, es_index, map_id):
     file_path = os.path.join(
-        PATH_TEST_INPUT_BASE,
+        PATH_IMAGE_ROOT,
         "dd_stad_0000007_0015.tif",
     )
 
@@ -87,7 +87,6 @@ def test_run_process_create_maps_success(db_container, es_index):
             thumbnail_path_mid = get_thumbnail_path(f"{map_id}_400x400.jpg")
             zoomify_path = get_zoomify_path(f"{map_id}")
             image_path = os.path.join(
-                BASE_PATH,
                 PATH_IMAGE_ROOT,
                 f'{test_metadata["metadata"]["map_type"]}',
                 f"{map_id}.tif",

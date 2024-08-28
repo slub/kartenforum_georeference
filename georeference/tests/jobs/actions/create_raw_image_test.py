@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import os
 
-from georeference.config.paths import PATH_TEST_INPUT_BASE, PATH_TEST_OUTPUT_BASE
+from georeference.config.paths import PATH_IMAGE_ROOT, PATH_TMP_ROOT
 from georeference.jobs.actions.create_raw_image import (
     run_process_raw_image,
     _get_pixel_data_type,
@@ -18,11 +18,11 @@ def test_run_process_raw_image_success_image_1():
     """The proper working of the action for processing raw images."""
     try:
         src_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "df_dk_0000680.tif",
         )
         trg_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "df_dk_0000680.tif",
         )
         subject = run_process_raw_image(src_path, trg_path, force=True)
@@ -39,11 +39,11 @@ def test_run_process_raw_image_success_image_2():
     """The proper working of the action for processing raw images."""
     try:
         src_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "dd_stad_0000007_0015.tif",
         )
         trg_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "dd_stad_0000007_0015.tif",
         )
         subject = run_process_raw_image(src_path, trg_path, force=True)

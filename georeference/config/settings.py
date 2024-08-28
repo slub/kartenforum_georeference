@@ -13,7 +13,15 @@ from pydantic import AfterValidator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from urllib3.util import parse_url
 
-from georeference.config.paths import BASE_PATH
+# For correct resolving of the paths we use derive the base_path of the file
+# the base path is the application root, resolved in the following way:
+#
+# __file__ -> /georeference/config/paths.py
+# os.path.dirname(os.path.realpath(__file__)) -> /georeference/config
+# os.path.join(os.path.dirname(os.path.realpath(__file__)), "../") -> /georeference/
+BASE_PATH = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), "../")
+)
 
 
 def is_https(value: str):
@@ -86,20 +94,32 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=[
-            os.path.join(BASE_PATH, "../", ".env"),
-            os.path.join(BASE_PATH, "../", ".env.production"),
+            os.path.abspath(os.path.join(BASE_PATH, "../", ".env")),
+            os.path.abspath(os.path.join(BASE_PATH, "../", ".env.production")),
         ]
     )
 
     # Daemon setting
-    DAEMON_PIDFILE_PATH: str = os.path.join(BASE_PATH, "../tmp/daemon.pid")
+    DAEMON_PIDFILE_PATH: str = os.path.abspath(os.path.join(BASE_PATH, "../tmp/daemon.pid"))
     DAEMON_PIDFILE_TIMEOUT: int = 5
     DAEMON_SLEEP_TIME: int = 10
     DAEMON_WAIT_ON_STARTUP: int = 1
-    DAEMON_LOGFILE_PATH: Optional[str] = os.path.join(BASE_PATH, "../tmp/daemon.log")
+    DAEMON_LOGFILE_PATH: Optional[str] = os.path.abspath(os.path.join(BASE_PATH, "../tmp/daemon.log"))
     DAEMON_LOG_LEVEL: str = "DEBUG"
     DAEMON_LOOP_HEARTBEAT_COUNT: int = 10
 
+    # Configuration of the data root directory
+    PATH_BASE_ROOT: str = BASE_PATH
+    PATH_DATA_ROOT: str = os.path.abspath(os.path.join(BASE_PATH, "../data"))
+
+    # Configuration of link and id schemas
+    GLOBAL_PERMALINK_RESOLVER: str = "http://digital.slub-dresden.de/" # Permalink resolver
+    TEMPLATE_TMS_URLS: list[str] = ["https://tms.ddev.site/{}"]
+    TEMPLATE_WMS_URL: str = "https://wms-slub.pikobytes.de/map/{}"
+    TEMPLATE_WMS_TRANSFORM_URL: str = "http://localhost:8080/?map=/etc/mapserver/{}"
+    TEMPLATE_WCS_URL: str = "https://wcs-slub.pikobytes.de/map/{}"
+    TEMPLATE_ZOOMIFY_URL: str = "https://zoomify-slub.pikobytes.de/zoomify/{}/ImageProperties.xml"
+    TEMPLATE_THUMBNAIL_URL: str = "https://thumbnail-slub.pikobytes.de/zoomify/{}"
 
 # For usage of the settings as dependency
 @lru_cache

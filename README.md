@@ -52,8 +52,9 @@ Additionally, they will be run as precommit hooks.
 
 ### Running tests
 
-First make sure to download the test data. This can be done by running the following scripts (make sure you
-have `sshpass` installed):
+> If you want to run all tests make sure to have [ddev-kartenforum](https://github.com/slub/ddev-kartenforum) locally setup and running. Also make sure to have `sshpass and `libvips-tools` installed.
+
+For running all tests you need to download the test data. This can be done by running the following scripts:
 
 ```bash
 scripts/download_testdata.sh

@@ -8,7 +8,7 @@
 import os
 import shutil
 
-from georeference.config.paths import PATH_TEST_INPUT_BASE, PATH_TEST_OUTPUT_BASE
+from georeference.config.paths import PATH_TMP_ROOT, PATH_IMAGE_ROOT
 from georeference.jobs.actions.create_zoomify_tiles import run_process_zoomify_tiles
 
 
@@ -16,11 +16,11 @@ def test_run_process_zoomify_tiles_success():
     """The proper working of the action for processing zoomify-tiles raw images."""
     try:
         src_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "dd_stad_0000007_0015.tif",
         )
         trg_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "dd_stad_0000007_0015",
         )
         subject = run_process_zoomify_tiles(src_path, trg_path, force=True)

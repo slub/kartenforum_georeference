@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import os
 
-from georeference.config.paths import PATH_TEST_OUTPUT_BASE
+from georeference.config.paths import PATH_TMP_ROOT
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.jobs.actions.create_geo_services import run_process_geo_services
 from .create_geo_image_test import create_test_data
@@ -19,7 +19,7 @@ def test_run_process_geo_services_success():
         # Perform the test
         test_data = create_test_data("test_runProcessGeoServices_success")
         test_mapfile = os.path.join(
-            PATH_TEST_OUTPUT_BASE, "test_runProcessGeoServices_success.map"
+            PATH_TMP_ROOT, "test_runProcessGeoServices_success.map"
         )
         path_geo_image = run_process_geo_image(
             test_data["transformationObj"],

@@ -13,9 +13,7 @@ from datetime import datetime
 from sqlmodel import Session
 
 from georeference.config.paths import (
-    BASE_PATH,
     PATH_IMAGE_ROOT,
-    PATH_TEST_INPUT_BASE,
 )
 from georeference.config.templates import (
     TEMPLATE_PUBLIC_THUMBNAIL_URL,
@@ -95,7 +93,7 @@ def test_run_process_update_maps_file_only(db_container, es_index):
         map_object = RawMap.by_id(map_id, session)
         metadata_object = Metadata.by_map_id(map_id, session)
         existing_path = os.path.join(
-            BASE_PATH, PATH_IMAGE_ROOT, f"{map_object.file_name}.tif"
+            PATH_IMAGE_ROOT, f"{map_object.file_name}.tif"
         )
         expected_link_thumb_small = metadata_object.link_thumb_small
         expected_link_thumb_mid = metadata_object.link_thumb_mid
@@ -173,7 +171,7 @@ def _run_update_maps_file_and_metadata(dbsession_only, update_metadata, es_index
     map_object = RawMap.by_id(map_id, dbsession_only)
     metadata_object = Metadata.by_map_id(map_id, dbsession_only)
     existing_path = os.path.join(
-        BASE_PATH, PATH_IMAGE_ROOT, f"{map_object.file_name}.tif"
+        PATH_IMAGE_ROOT, f"{map_object.file_name}.tif"
     )
     expected_mtime = os.path.getmtime(existing_path)
     expected_filename = map_object.file_name
@@ -189,7 +187,7 @@ def _run_update_maps_file_and_metadata(dbsession_only, update_metadata, es_index
 
     try:
         input_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "dd_stad_0000007_0015.tif",
         )
 

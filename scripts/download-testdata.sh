@@ -13,9 +13,13 @@
 # Define variables
 REMOTE_FILE_ONE="test_data_flat.tar.xz"
 REMOTE_FILE_TWO="maps_epsg_4314.zip"
-TARGET_DIR_ONE="./georeference/__test_data/data_input"
-TARGET_DIR_TWO="./georeference/__test_data/data_input_georef"
+TARGET_DIR_ONE="./data/original"
+TARGET_DIR_TWO="./data/tmp"
 PASSWORD="8C2Kdpxc2lpUoYBX"
+
+echo "Make sure target directories exists"
+mkdir $TARGET_DIR_ONE
+mkdir $TARGET_DIR_TWO
 
 echo "Start downloading test data from remote source. Please make sure you have sshpass installed."
 

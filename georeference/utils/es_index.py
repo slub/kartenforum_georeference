@@ -12,7 +12,6 @@ import os
 from elasticsearch import Elasticsearch
 from loguru import logger
 
-from georeference.config.constants import GLOBAL_PERMALINK_RESOLVER
 from georeference.config.settings import get_settings
 from georeference.config.templates import (
     TEMPLATE_TMS_URLS,
@@ -83,7 +82,7 @@ def _get_online_resource_permalink_oai(oai):
     :result: A online resource which describes a vk20 permalink
     :rtype: dict
     """
-    return {"url": GLOBAL_PERMALINK_RESOLVER + oai, "type": "Permalink"}
+    return {"url": get_settings().GLOBAL_PERMALINK_RESOLVER + oai, "type": "Permalink"}
 
 
 def _get_online_resource_wms(service_name):

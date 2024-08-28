@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 import os
 
-from georeference.config.paths import PATH_TEST_OUTPUT_BASE, PATH_TEST_INPUT_BASE
+from georeference.config.paths import PATH_IMAGE_ROOT, PATH_TMP_ROOT
 from georeference.jobs.actions.create_raw_image import run_process_raw_image
 from georeference.jobs.actions.create_thumbnail import run_process_thumbnail
 
@@ -19,11 +19,11 @@ def test_run_create_process_thumbnail_success_image_1():
     """The proper working of the action for processing a thumbnail with the size 400x400"""
     try:
         src_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "test-ak.jpg",
         )
         trg_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "test-ak_400x400.jpg",
         )
         subject = run_process_thumbnail(
@@ -40,11 +40,11 @@ def test_run_create_process_thumbnail_success_image_2():
     """The proper working of the action for processing a thumbnail with the size 120x120"""
     try:
         src_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "dd_stad_0000007_0015.tif",
         )
         trg_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "dd_stad_0000007_0015_120x120.jpg",
         )
         subject = run_process_thumbnail(
@@ -63,15 +63,15 @@ def test_run_create_process_thumbnail_success_image_3():
     subject_2 = ""
     try:
         src_path = os.path.join(
-            PATH_TEST_INPUT_BASE,
+            PATH_IMAGE_ROOT,
             "dd_stad_0000007_0015.tif",
         )
         tmp_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "dd_stad_0000007_0015.tif",
         )
         trg_path = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "dd_stad_0000007_0015_120x120.jpg",
         )
 

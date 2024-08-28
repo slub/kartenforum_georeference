@@ -13,7 +13,7 @@ from datetime import datetime
 
 from sqlmodel import Session
 
-from georeference.config.paths import BASE_PATH, PATH_IMAGE_ROOT
+from georeference.config.paths import PATH_IMAGE_ROOT
 from georeference.config.settings import get_settings
 from georeference.jobs.process_delete_map import run_process_delete_maps
 from georeference.models.enums import EnumJobType, EnumJobState
@@ -46,7 +46,6 @@ def test_run_process_delete_maps_success(db_container, es_index):
             thumbnail_path_mid = get_thumbnail_path(f"{map_id}_400x400.jpg")
             zoomify_path = get_zoomify_path(f"{map_id}")
             image_path = os.path.join(
-                BASE_PATH,
                 PATH_IMAGE_ROOT,
                 f'{test_metadata["metadata"]["map_type"]}',
                 f"{map_id}.tif",

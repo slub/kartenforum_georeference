@@ -8,7 +8,7 @@
 import os
 import shutil
 
-from georeference.config.paths import PATH_TEST_OUTPUT_BASE
+from georeference.config.paths import PATH_TMP_ROOT
 from georeference.tests.utils.mosaics_test import _create_test_data
 from georeference.utils.mosaics import create_mosaic_dataset
 from georeference.jobs.actions.create_mosaic_services import run_process_mosaic_services
@@ -17,7 +17,7 @@ from georeference.jobs.actions.create_mosaic_services import run_process_mosaic_
 def test_run_process_mosaic_services_success():
     try:
         tmp_dir = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "test_run_process_mosaic_services_success",
         )
         geo_dataset = _create_test_mosaic(tmp_dir)

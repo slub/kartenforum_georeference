@@ -12,7 +12,7 @@ from datetime import datetime
 
 from loguru import logger
 
-from georeference.config.paths import PATH_TEST_OUTPUT_BASE, BASE_PATH
+from georeference.config.paths import PATH_TMP_ROOT, PATH_IMAGE_ROOT
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.models.transformation import Transformation, EnumValidationValue
 from georeference.utils.mosaics import create_mosaic_dataset, create_mosaic_overviews
@@ -22,7 +22,7 @@ def test_create_mosaic_dataset():
     try:
         # Setup the test data. This also contains the process of creating test georeference images.
         tmp_dir = os.path.join(
-            PATH_TEST_OUTPUT_BASE,
+            PATH_TMP_ROOT,
             "test_create_mosaic_dataset",
         )
         test_data_georef_images = _create_test_data(tmp_dir)
@@ -260,10 +260,7 @@ def _create_test_data(tmp_dir):
                     comment=None,
                     clip=json.dumps(d["clip"]),
                 ),
-                os.path.join(
-                    BASE_PATH,
-                    f"__test_data/data_input/{f}.tif",
-                ),
+                os.path.abspath(os.path.join(PATH_IMAGE_ROOT, f"./{f}.tif")),
                 os.path.join(tmp_dir, f"{f}_mosaics_tests.tif"),
             )
         )

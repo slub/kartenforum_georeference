@@ -183,7 +183,7 @@ def es_index(request):
     settings = get_settings()
     index_name = settings.ES_INDEX_NAME
 
-    es_container = ElasticSearchContainer(image="elasticsearch:7.14.1")
+    es_container = ElasticSearchContainer(image="elasticsearch:7.14.1", mem_limit="2G")
     es_container.start()
 
     es_index = get_es_index(
