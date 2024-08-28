@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+# Created by nicolas.looschen@pikobytes.de on 24.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 import json
 import os
 import shutil
-import traceback
 import uuid
 from datetime import datetime
 from typing import Optional
 
 import sqlalchemy.exc
-# Created by nicolas.looschen@pikobytes.de on 24.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
-
-
 from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
 from loguru import logger
 from osgeo import gdal
@@ -33,7 +31,7 @@ from georeference.models.raw_map import RawMap
 from georeference.schemas.map import MapResponse, MetadataPayload
 from georeference.schemas.user import User
 from georeference.utils.auth import require_user_role
-from georeference.utils.parser import to_int, from_public_map_id
+from georeference.utils.parser import to_public_map_id, parse_public_map_id
 
 router = APIRouter()
 settings = get_settings()
@@ -44,7 +42,7 @@ settings = get_settings()
 def get_map_for_mapid(map_id: str, session: Session = Depends(get_session)):
     try:
         logger.debug(f"Start fetching map with public map_id: {map_id}")
-        parsed_map_id = _parse_map_id(map_id)
+        parsed_map_id = parse_public_map_id(map_id)
         logger.debug(f"Parsed map id {parsed_map_id} from public map id {map_id}")
 
         logger.debug(f"Load RawMap, Metadata and GeorefMap for map_id: {parsed_map_id}")
@@ -92,7 +90,7 @@ def delete_map_for_mapid(
 ):
     try:
         logger.debug(f"Start deleting map with public map_id: {map_id}")
-        parsed_map_id = _parse_map_id(map_id)
+        parsed_map_id = parse_public_map_id(map_id)
         logger.debug(f"Parsed map id {parsed_map_id} from public map id {map_id}")
 
         user_id = user.username
@@ -139,7 +137,7 @@ def post_update_map(
                 status_code=400, detail="No metadata or file was provided."
             )
 
-        parsed_map_id = _parse_map_id(map_id)
+        parsed_map_id = parse_public_map_id(map_id)
         exists_map, raw_map = _exists_map_id(session, parsed_map_id)
         if not exists_map:
             logger.warning(f"Map with id {map_id} not found.")
@@ -183,7 +181,7 @@ def post_update_map(
             metadata_update,
             file_path,
             None if file_path is None else file.filename,
-            map_id,
+            raw_map.id,
             user.username,
             is_update=True,
         )
@@ -246,7 +244,10 @@ def post_create_map(
             is_update=False,
         )
 
-        return {"message": "Scheduled creation process for map.", "map_id": map_id}
+        return {
+            "message": "Scheduled creation process for map.",
+            "map_id": to_public_map_id(map_id),
+        }
 
     except HTTPException:
         raise
@@ -263,15 +264,6 @@ def _exists_map_id(session: Session, map_id: int):
             return True, raw_map
     except sqlalchemy.exc.NoResultFound:
         return False, None
-
-
-def _parse_map_id(map_id: str):
-    try:
-        return to_int(from_public_map_id(map_id))
-    except Exception as e:
-        logger.warning(f"Error while parsing map_id {map_id}")
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="Invalid map_id")
 
 
 def _add_job(
@@ -352,7 +344,7 @@ def _validate_file(path_to_file):
         if driver_name != "GTiff":
             logger.warning("Invalid file format.")
             raise RuntimeError()
-    except RuntimeError as e:
+    except RuntimeError:
         err_message = "Invalid file object at POST request."
         logger.warning(err_message)
         raise HTTPException(status_code=400, detail=err_message)

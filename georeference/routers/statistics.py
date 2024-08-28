@@ -9,7 +9,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from loguru import logger
 from sqlalchemy import func, case
-from sqlmodel import select, and_, Session, col
+from sqlmodel import select, and_, Session, col, desc
 
 from georeference.config.constants import GENERAL_ERROR_MESSAGE
 from georeference.config.db import get_session
@@ -68,7 +68,7 @@ def get_statistics(session: Session = Depends(get_session)):
                 ),
             )
             .group_by(Transformation.user_id)
-            .order_by("occurrence")
+            .order_by(desc("occurrence"))
             .limit(20)
         )
 

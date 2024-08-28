@@ -12,7 +12,7 @@ RUN usermod -u 1001 -m -d /home/ubuntu ubuntu \
 
 
 RUN apt-get update && \
-    apt-get install --no-install-suggests --no-install-recommends --yes pipx build-essential python3-dev
+    apt-get install --no-install-suggests --no-install-recommends --yes pipx build-essential python3-dev libvips libvips-tools rsync
 
 USER $USERNAME
 

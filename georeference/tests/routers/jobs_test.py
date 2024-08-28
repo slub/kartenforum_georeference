@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import pytest
-# Created by nicolas.looschen@pikobytes.de on 22.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
-
 from fastapi.testclient import TestClient
 from sqlmodel import select, Session
 
@@ -13,9 +8,20 @@ from georeference.models.enums import EnumJobState, EnumJobType
 from georeference.models.job import Job
 
 
+# Created by nicolas.looschen@pikobytes.de on 22.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
+
+
 class TestJobs:
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
     def test_get_jobs_success(
-        self, override_get_session_read_only, test_client: TestClient
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
     ):
         response = test_client.get("/jobs")
         data = response.json()
@@ -23,8 +29,13 @@ class TestJobs:
         assert response.status_code == 200
         assert len(data) == 13
 
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
     def test_get_jobs_success_pending(
-        self, override_get_session_read_only, test_client: TestClient
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
     ):
         response = test_client.get("/jobs?pending=true")
         data = response.json()
@@ -33,8 +44,13 @@ class TestJobs:
         # All jobs are pending in the test db
         assert len(data) == 13
 
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
     def test_get_jobs_success_completed_empty(
-        self, override_get_session_read_only, test_client: TestClient
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
     ):
         response = test_client.get("/jobs?pending=false")
         data = response.json()
@@ -43,11 +59,14 @@ class TestJobs:
         # No jobs are completed in the test db
         assert len(data) == 0
 
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
     def test_get_jobs_success_completed(
         self,
         db_container,
         override_get_session,
         test_client: TestClient,
+        override_get_user_from_session,
     ):
         with Session(db_container[1]) as session:
             job = session.exec(select(Job).limit(1)).one()
@@ -62,8 +81,13 @@ class TestJobs:
         # All jobs are completed in the test db
         assert len(data) == 1
 
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
     def test_get_jobs_success_limit(
-        self, override_get_session_read_only, test_client: TestClient
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
     ):
         response = test_client.get("/jobs?limit=5")
         data = response.json()

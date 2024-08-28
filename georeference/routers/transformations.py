@@ -5,11 +5,6 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-# Created by nicolas.looschen@pikobytes.de on 26.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
-
 from fastapi import APIRouter, Depends, Query, HTTPException
 from loguru import logger
 from sqlmodel import Session, select, desc
@@ -32,7 +27,10 @@ from georeference.schemas.transformation import (
 from georeference.schemas.user import User
 from georeference.utils.auth import require_authenticated_user
 from georeference.utils.georeference import get_image_extent
-from georeference.utils.parser import from_public_map_id, to_public_map_id, to_int
+from georeference.utils.parser import (
+    to_public_map_id,
+    parse_public_map_id,
+)
 from georeference.utils.proj import (
     transform_to_params_to_target_crs,
     get_crs_for_transformation_params,
@@ -41,6 +39,11 @@ from georeference.utils.temp_files import (
     _create_temporary_georeference_image,
     _create_temporary_mapfile,
 )
+
+# Created by nicolas.looschen@pikobytes.de on 26.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 
 router = APIRouter()
 settings = get_settings()
@@ -76,7 +79,7 @@ def get_transformations(
             statement = statement.where(Transformation.user_id == user_id)
         if map_id is not None:
             statement = statement.where(
-                Transformation.raw_map_id == from_public_map_id(map_id)
+                Transformation.raw_map_id == parse_public_map_id(map_id)
             )
         if validation is not None:
             statement = statement.where(Transformation.validation == validation.value)
@@ -112,7 +115,8 @@ def get_transformations(
             transformations=responses,
             additional_properties=response_additional_properties,
         )
-
+    except HTTPException:
+        raise
     except Exception as e:
         logger.warning("Error while trying to return a GET transformations request.")
         logger.error(e)
@@ -140,7 +144,7 @@ def create_transformation(
         map_obj_id = (
             transformation_obj.raw_map_id
             if transformation_obj is not None
-            else to_int(from_public_map_id((transformation.map_id)))
+            else parse_public_map_id(transformation.map_id)
         )
 
         map_obj = RawMap.by_id(map_obj_id, session)
@@ -344,7 +348,9 @@ def _handle_transformation_write(
     has_transformation = Transformation.has_transformation(raw_map_obj.id, dbsession)
 
     if overwrites == 0 and has_transformation:
-        logger.warning(f"Transformation already exists for map with id {raw_map_obj.id}.")
+        logger.warning(
+            f"Transformation already exists for map with id {raw_map_obj.id}."
+        )
 
         raise HTTPException(
             detail="It is forbidden to register a new transformation for an original map, which already has a transformation registered.",

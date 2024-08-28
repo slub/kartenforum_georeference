@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from typing import Annotated
 
 # Created by nicolas.looschen@pikobytes.de on 12.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+from typing import Annotated
 
 from fastapi import APIRouter, Query, Depends, HTTPException
 from loguru import logger
@@ -13,13 +13,14 @@ from sqlmodel import select, desc, Session
 
 from georeference.config.constants import GENERAL_ERROR_MESSAGE
 from georeference.config.db import get_session
-from georeference.models.job import Job
+from georeference.config.settings import get_settings
 from georeference.models.enums import EnumJobState
+from georeference.models.job import Job
 from georeference.models.transformation import Transformation
 from georeference.schemas.job import JobsResponse, JobResponse
 from georeference.schemas.job_payload import JobPayload
 from georeference.schemas.user import User
-from georeference.utils.auth import require_authenticated_user
+from georeference.utils.auth import require_authenticated_user, require_user_role
 
 router = APIRouter()
 
@@ -33,8 +34,12 @@ def get_filter_state(pending: bool | None):
         return EnumJobState.COMPLETED.value
 
 
+settings = get_settings()
+
+
 @router.get("/", response_model=JobsResponse, tags=["jobs"])
 def get_jobs(
+    user: Annotated[User, Depends(require_user_role(settings.ADMIN_ROLE))],
     pending: bool | None = Query(None),
     limit: int = Query(100),
     session: Session = Depends(get_session),

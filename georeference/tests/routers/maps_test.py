@@ -4,12 +4,12 @@ import os
 
 import pytest
 
+from georeference.utils.parser import to_public_map_id
+
 # Created by nicolas.looschen@pikobytes.de on 24.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-
-from georeference.utils.parser import to_public_map_id
 
 test_metadata = """{
   "description": "Test",
@@ -321,3 +321,4 @@ class TestMapCreate:
         assert res.status_code == 200
         result = res.json()
         assert "map_id" in result
+        assert result["map_id"].startswith("oai:de:slub-dresden:vk:id-")
