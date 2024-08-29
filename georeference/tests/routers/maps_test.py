@@ -145,7 +145,12 @@ class TestMapsUpdate:
 
         data = {"metadata": test_metadata}
 
-        res = test_client.post(f"/maps/{map_id}", data=data)
+        res = test_client.post(
+            f"/maps/{map_id}",
+            data=data,
+            # This makes fastapi treat this as multipart form data, our endpoints just ignores the file
+            files={"test": (os.path.basename(__file__), b"test", "image/tiff")},
+        )
 
         assert res.status_code == 200
         result = res.json()
@@ -160,7 +165,7 @@ class TestMapsUpdate:
         override_get_user_from_session,
     ):
         map_id = to_public_map_id(10003265)
-        data = {}
+        data = {"test": (os.path.basename(__file__), b"test", "image/tiff")}
 
         res = test_client.post(f"/maps/{map_id}", files=data)
 
@@ -258,7 +263,11 @@ class TestMapCreate:
     ):
         data = {"metadata": "{}"}
 
-        res = test_client.post("/maps/", data=data)
+        res = test_client.post(
+            "/maps/",
+            data=data,
+            files={"test": (os.path.basename(__file__), b"test", "image/tiff")},
+        )
 
         assert res.status_code == 400
         result = res.json()

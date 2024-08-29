@@ -7,17 +7,21 @@
 # "LICENSE", which is part of this source code package
 import json
 import os
-import shutil
 import uuid
 from datetime import datetime
-from typing import Optional
 
 import sqlalchemy.exc
-from fastapi import APIRouter, Depends, HTTPException, Form, File, UploadFile
+import streaming_form_data
+from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from osgeo import gdal
 from sqlalchemy import text
 from sqlmodel import Session, select
+from starlette import status
+from starlette.requests import Request, ClientDisconnect
+from streaming_form_data import StreamingFormDataParser
+from streaming_form_data.targets import FileTarget, ValueTarget
+from streaming_form_data.validators import MaxSizeValidator
 
 from georeference.config.constants import GENERAL_ERROR_MESSAGE
 from georeference.config.db import get_session
@@ -31,6 +35,12 @@ from georeference.models.raw_map import RawMap
 from georeference.schemas.map import MapResponse, MetadataPayload
 from georeference.schemas.user import User
 from georeference.utils.auth import require_user_role
+from georeference.utils.max_body_size_validator import (
+    MAX_REQUEST_BODY_SIZE,
+    MaxBodySizeValidator,
+    MaxBodySizeException,
+    MAX_FILE_SIZE,
+)
 from georeference.utils.parser import to_public_map_id, parse_public_map_id
 
 router = APIRouter()
@@ -123,19 +133,14 @@ def delete_map_for_mapid(
 
 
 @router.post("/{map_id}", tags=["maps"])
-def post_update_map(
-    metadata: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
+async def post_update_map(
+    request: Request,
     session: Session = Depends(get_session),
     user: User = Depends(require_user_role(settings.ADMIN_ROLE)),
     map_id: str = None,
 ):
     try:
-        if metadata is None and file is None:
-            logger.warning("No metadata or file was provided.")
-            raise HTTPException(
-                status_code=400, detail="No metadata or file was provided."
-            )
+        file_, data, filepath = await register_streaming_form_data(request)
 
         parsed_map_id = parse_public_map_id(map_id)
         exists_map, raw_map = _exists_map_id(session, parsed_map_id)
@@ -144,9 +149,17 @@ def post_update_map(
             raise HTTPException(status_code=404, detail="Map not found")
 
         metadata_update = None
-        file_path = None
+        metadata = data.value.decode()
+        exists_file = file_.multipart_filename is not None
+        exists_metadata = metadata is not None and metadata != ""
 
-        if metadata is not None and metadata != "":
+        if not exists_file and not exists_metadata:
+            logger.warning("No metadata or file was provided.")
+            raise HTTPException(
+                status_code=400, detail="No metadata or file was provided."
+            )
+
+        if exists_metadata:
             try:
                 metadata = json.loads(metadata)
                 MetadataPayload.model_validate(metadata)
@@ -168,25 +181,35 @@ def post_update_map(
                 else metadata_obj.time_of_publication.isoformat(),
             }
 
-        if file is not None:
-            file_path = _write_file(file.file)
+        if exists_file:
             try:
-                _validate_file(file_path)
+                _validate_file(filepath)
             except Exception as e:
-                os.remove(file_path)
+                os.remove(filepath)
                 raise e
 
         _add_job(
             session,
             metadata_update,
-            file_path,
-            None if file_path is None else file.filename,
+            filepath if file_.multipart_filename is not None else None,
+            file_.multipart_filename,
             raw_map.id,
             user.username,
             is_update=True,
         )
         return {"message": "Scheduled update for map.", "map_id": map_id}
-
+    except ClientDisconnect:
+        logger.warning("Client disconnected while trying to update map.")
+    except MaxBodySizeException as e:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Maximum request body size limit ({MAX_REQUEST_BODY_SIZE} bytes) exceeded ({e.body_len} bytes read)",
+        )
+    except streaming_form_data.validators.ValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Maximum file size limit ({MAX_FILE_SIZE} bytes) exceeded",
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -196,20 +219,22 @@ def post_update_map(
 
 
 @router.post("/", tags=["maps"])
-def post_create_map(
-    metadata: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
+async def post_create_map(
+    request: Request,
     session: Session = Depends(get_session),
     user: User = Depends(require_user_role(settings.ADMIN_ROLE)),
 ):
     try:
-        if metadata is None:
+        file_, data, filepath = await register_streaming_form_data(request)
+
+        metadata = data.value.decode()
+        if metadata is None or metadata == "":
             logger.warning("No metadata was provided on map create.")
             raise HTTPException(
                 status_code=400, detail="The metadata form field is required."
             )
 
-        if file is None:
+        if not file_.multipart_filename:
             logger.warning("No file was provided on map create.")
             raise HTTPException(
                 status_code=400, detail="The file form field is required."
@@ -222,11 +247,10 @@ def post_create_map(
             logger.warning("Invalid metadata provided.")
             raise HTTPException(status_code=400, detail="Invalid metadata provided.")
 
-        file_path = _write_file(file.file)
         try:
-            _validate_file(file_path)
+            _validate_file(filepath)
         except Exception as e:
-            os.remove(file_path)
+            os.remove(filepath)
             raise e
 
         # Get map id from sequence
@@ -237,8 +261,8 @@ def post_create_map(
         _add_job(
             session,
             metadata,
-            file_path,
-            file.filename,
+            filepath,
+            file_.multipart_filename,
             map_id,
             user.username,
             is_update=False,
@@ -308,28 +332,27 @@ def _add_job(
     session.commit()
 
 
-def _write_file(file):
-    """
-    Writes an input file to a configurable directory with a generated unique name.
-
-    Expects a valid tif file.
-
-    :param: file - a binary file uploaded by the user (tif)
-    """
+def generate_tmp_file_name():
     unique_id = str(uuid.uuid4())
 
-    # move file to directory (https://docs.pylonsproject.org/projects/pyramid-cookbook/en/latest/forms/file_uploads.html)
-    file_path = os.path.join(PATH_TMP_NEW_MAP_ROOT, f"{unique_id}.tif")
+    return os.path.join(PATH_TMP_NEW_MAP_ROOT, f"{unique_id}.tif")
 
-    # use tmp file to prevent access to incomplete files
-    tmp_file_path = file_path + "~"
 
-    file.seek(0)
-    with open(tmp_file_path, "wb") as output_file:
-        shutil.copyfileobj(file, output_file)
+async def register_streaming_form_data(request: Request):
+    body_validator = MaxBodySizeValidator(MAX_REQUEST_BODY_SIZE)
 
-    os.rename(tmp_file_path, file_path)
-    return file_path
+    filepath = generate_tmp_file_name()
+    file_ = FileTarget(filepath, validator=MaxSizeValidator(MAX_FILE_SIZE))
+    data = ValueTarget()
+    parser = StreamingFormDataParser(headers=request.headers)
+    parser.register("file", file_)
+    parser.register("metadata", data)
+
+    async for chunk in request.stream():
+        body_validator(chunk)
+        parser.data_received(chunk)
+
+    return file_, data, filepath
 
 
 def _validate_file(path_to_file):
