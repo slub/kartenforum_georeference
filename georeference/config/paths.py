@@ -44,13 +44,14 @@ PATH_TMP_TRANSFORMATION_ROOT = os.path.join(PATH_DATA_ROOT, "./map_services_tmp"
 
 # The data root is used by the mapfile an can be accessed from the PATH_TMP_TRANSFORMATION_ROOT. This is
 # necessary for proper working with the docker setup
-PATH_TMP_TRANSFORMATION_DATA_ROOT = "/%s/{}" % PATH_TMP_TRANSFORMATION_ROOT
+PATH_TMP_TRANSFORMATION_DATA_ROOT = "/mapdata/{}"
 
 # Path to the tms root directoy
 PATH_TMS_ROOT = os.path.join(PATH_DATA_ROOT, "./tms")
 
 # Path to the zoomify files directory
 PATH_ZOOMIFY_ROOT = os.path.join(PATH_DATA_ROOT, "./zoomify")
+
 
 def create_data_directories():
     """This function makes sure, that all data directories used by the job function are existing."""
