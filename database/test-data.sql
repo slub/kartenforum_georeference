@@ -263,9 +263,9 @@ VALUES (10001556, 'Äquidistantenkarte 107 : Section Zittau, 1892', 'Section Zit
         'Section Zittau. - 1:25000. - Leipzig: Giesecke & Devrient, 1892. - 1 Kt.', '48 x 45 cm', 'Druckgraphik',
         'Lithografie & Umdruck', 'ppn33592090X',
         'https://www.deutschefotothek.de/documents/obj/71055990/df_dk_0010001_5154_1892', '', 'Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0010000/df_dk_0010001_5154_1892/ImageProperties.xml',
-        '1892-01-01 00:00:00', 'https://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_5154_1892.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0010000/df_dk_0010001_5154_1892.jpg');
+        '//zoomify.ddev.site/df_dk_0010001_5154_1892/ImageProperties.xml',
+        '1892-01-01 00:00:00', '//thumbnails.ddev.site/df_dk_0010001_5154_1892_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0010001_5154_1892_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -273,9 +273,9 @@ VALUES (10007521, '6: Bischofswerda bis Görlitz, 1:120 000, 1846', 'Bischofswer
         'VI : Bautzen, Görlitz. - Bearb. u. lith. 1832 u. 1833. - [Ca. 1:120 000]. - Dresden : Williard , [1846]. - 1 Kt. : flächenkolor. , 52 x 45 cm. Kopftitel. - Verzeichnis der Höhenbestimmungen rechts u. Farberklärung links neben Kartenbild. - Mit je 2 Profilen über bzw. unter Kartenbild',
         NULL, 'Druckgrafik', '', 'ppn323661904', 'https://digital.slub-dresden.de/id323661904', 'CC-BY-SA',
         'SLUB / Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0010000/df_dk_0010002_0004/ImageProperties.xml',
-        '1846-01-01 00:00:00', 'https://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010002_0004.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0010000/df_dk_0010002_0004.jpg');
+        '//zoomify.ddev.site/df_dk_0010002_0004/ImageProperties.xml',
+        '1846-01-01 00:00:00', '//thumbnails.ddev.site/df_dk_0010002_0004_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0010002_0004_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -286,9 +286,9 @@ VALUES (10009405,
         '57 x 57 cm', 'Zeichenkunst
                     ', '', '', 'https://www.deutschefotothek.de/documents/obj/70301497/df_dk_0002357', 'RV-FZ-PA',
         'SLUB / Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0002000/df_dk_0002357/ImageProperties.xml', '1805-01-01 00:00:00',
-        'https://fotothek.slub-dresden.de/thumbs/df/dk/0002000/df_dk_0002357.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0002000/df_dk_0002357.jpg');
+        '//zoomify.ddev.site/df_dk_0002357/ImageProperties.xml', '1805-01-01 00:00:00',
+        '//thumbnails.ddev.site/df_dk_0002357_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0002357_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -300,9 +300,9 @@ VALUES (10009482,
                     ', '', 'ppn118692585',
         'https://www.deutschefotothek.de/documents/obj/70400171/dd_stad_0000007_0015', 'RV-FZ-PA',
         'Stadtarchiv Dresden',
-        'https://fotothek.slub-dresden.de/zooms/dd/stad/0000000/dd_stad_0000007_0015/ImageProperties.xml',
-        '1946-01-01 00:00:00', 'https://fotothek.slub-dresden.de/thumbs/dd/stad/0000000/dd_stad_0000007_0015.jpg',
-        'https://fotothek.slub-dresden.de/mids/dd/stad/0000000/dd_stad_0000007_0015.jpg');
+        '//zoomify.ddev.site/dd_stad_0000007_0015/ImageProperties.xml',
+        '1946-01-01 00:00:00', '//thumbnails.ddev.site/dd_stad_0000007_0015_120x120.jpg',
+        '//thumbnails.ddev.site/dd_stad_0000007_0015_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -311,9 +311,9 @@ VALUES (10001963, 'Meßtischblatt 66 : Dresden, 1925', 'Dresden',
         'Dresden. - Umdr.-Ausg., aufgen. 1908/09, hrsg. 1910, Nachtr. 1925. - 1:25000. - Leipzig, 1925. - 1 Kt.',
         '48 x 45 cm', 'Druckgraphik', 'Lithografie & Umdruck', 'ppn335918751',
         'https://www.deutschefotothek.de/documents/obj/71055581/df_dk_0010001_4948_1925', '', 'Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0010000/df_dk_0010001_4948_1925/ImageProperties.xml',
-        '1925-01-01 00:00:00', 'https://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_4948_1925.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0010000/df_dk_0010001_4948_1925.jpg');
+        '//zoomify.ddev.site/df_dk_0010001_4948_1925/ImageProperties.xml',
+        '1925-01-01 00:00:00', '//thumbnails.ddev.site/df_dk_0010001_4948_1925_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0010001_4948_1925_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -321,9 +321,9 @@ VALUES (10007354, 'Section Dresden', 'Dresden', '',
         'Section Dresden aus: Topographische Karte (Äquidistantenkarte) Sachsen', '46 x 44 cm', 'Druckgrafik', '',
         'ppn11781931X', 'https://www.deutschefotothek.de/documents/obj/70302464/df_dk_0000310', 'CC-BY-SA',
         'SLUB / Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0000000/df_dk_0000310/ImageProperties.xml', '1887-01-01 00:00:00',
-        'https://fotothek.slub-dresden.de/thumbs/df/dk/0000000/df_dk_0000310.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0000000/df_dk_0000310.jpg');
+        '//zoomify.ddev.site/df_dk_0000310/ImageProperties.xml', '1887-01-01 00:00:00',
+        '//thumbnails.ddev.site/df_dk_0000310_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0000310_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -332,9 +332,9 @@ VALUES (10009466, 'Sect. 09: Dresden', 'Dresden', '',
         '63 x 61 cm', 'Druckgrafik
                     ', '', 'ppn118294873', 'https://www.deutschefotothek.de/documents/obj/70400017/df_dk_00000063',
         'CC-BY-SA', 'SLUB / Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0000000/df_dk_0000006/ImageProperties.xml', '1855-01-01 00:00:00',
-        'https://fotothek.slub-dresden.de/thumbs/df/dk/0000000/df_dk_0000006.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0000000/df_dk_0000006.jpg');
+        '//zoomify.ddev.site/df_dk_0000006/ImageProperties.xml', '1855-01-01 00:00:00',
+        '//thumbnails.ddev.site/df_dk_0000006_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0000006_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -344,9 +344,9 @@ VALUES (10010367, 'Plan von der Chur=Fürstl: Sæchs: Residenz Festung Alt und N
         '62,4 x 72,5 cm', 'Zeichenkunst
                     ', '', '', 'https://www.deutschefotothek.de/documents/obj/70300003/df_dz_0000636', 'CC-BY-SA & PuD',
         'SLUB / Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dz/0000000/df_dz_0000636/ImageProperties.xml', '1732-01-01 00:00:00',
-        'https://fotothek.slub-dresden.de/thumbs/df/dz/0000000/df_dz_0000636.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dz/0000000/df_dz_0000636.jpg');
+        '//zoomify.ddev.site/df_dz_0000636/ImageProperties.xml', '1732-01-01 00:00:00',
+        '//thumbnails.ddev.site/df_dz_0000636_400x400.jpg',
+        '//thumbnails.ddev.site/df_dz_0000636_400x400.jpg');
 INSERT INTO public.metadata (raw_map_id, title, title_short, title_serie, description, measures, type, technic, ppn,
                              permalink, license, owner, link_zoomify, time_of_publication, link_thumb_small,
                              link_thumb_mid)
@@ -354,9 +354,9 @@ VALUES (10003265, 'Meßtischblatt 2340 : Lissa, 1919', 'Lissa', 'Topographische 
         'Lissa. - Aufn. 1890, hrsg. 1891, Nachtr. 1919. - 1:25000. - [Berlin]: Reichsamt für Landesaufnahme, 1919. - 1 Kt.',
         '48 x 45 cm', 'Druckgraphik', 'Lithografie & Umdruck', 'ppn335948715',
         'https://digital.slub-dresden.de/id335948715', '', 'Deutsche Fotothek',
-        'https://fotothek.slub-dresden.de/zooms/df/dk/0010000/df_dk_0010001_4165/ImageProperties.xml',
-        '1919-01-01 00:00:00', 'https://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_4165.jpg',
-        'https://fotothek.slub-dresden.de/mids/df/dk/0010000/df_dk_0010001_4165.jpg');
+        '//zoomify.ddev.site/df_dk_0010001_4165/ImageProperties.xml',
+        '1919-01-01 00:00:00', '//thumbnails.ddev.site/df_dk_0010001_4165_120x120.jpg',
+        '//thumbnails.ddev.site/df_dk_0010001_4165_400x400.jpg');
 
 
 
