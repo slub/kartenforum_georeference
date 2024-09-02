@@ -8,7 +8,7 @@
 import json
 from datetime import datetime
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from georeference.config.settings import get_settings
 from georeference.jobs.process_transformation import run_process_new_transformation
@@ -46,19 +46,19 @@ def test_run_process_jobs_success(db_container, es_index):
                         "algorithm": "affine",
                         "gcps": [
                             {
-                                "source": [592, 964],
+                                "source": [55.4411, 90.2791],
                                 "target": [16.499998092651, 51.900001525879],
                             },
                             {
-                                "source": [588, 7459],
+                                "source": [55.0665, 698.5391],
                                 "target": [16.499998092651, 51.79999923706],
                             },
                             {
-                                "source": [7291, 7459],
+                                "source": [682.8058, 698.5391],
                                 "target": [16.666667938232, 51.79999923706],
                             },
                             {
-                                "source": [7289, 972],
+                                "source": [682.6185, 91.0283],
                                 "target": [16.666667938232, 51.900001525879],
                             },
                         ],
@@ -100,11 +100,10 @@ def test_run_process_jobs_success(db_container, es_index):
         run_process_new_transformation(es_index, session, new_job)
 
         # Check if the database changes are correct
-        g = (
-            session.query(GeorefMap)
-            .filter(GeorefMap.transformation_id == 10000001)
-            .first()
-        )
+        g = session.exec(
+            select(GeorefMap).where(GeorefMap.transformation_id == 10000001)
+        ).first()
+
         assert g is not None
 
         settings = get_settings()

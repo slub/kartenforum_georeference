@@ -59,7 +59,10 @@ For running all tests you need to download the test data. This can be done by ru
 ```bash
 scripts/download_testdata.sh
 ```
-
+please install libvips package to create thumbnails:
+```shell
+sudo apt install libvips libvips-tools
+```
 Please be aware, that currently the whole test data is up to 3GB in size. If you want to run all tests, you can use the
 following command:
 

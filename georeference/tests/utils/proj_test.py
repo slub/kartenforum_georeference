@@ -25,10 +25,22 @@ def _get_transformation_params():
         "target": "EPSG:4314",
         "algorithm": "tps",
         "gcps": [
-            {"source": [6700, 998], "target": [14.809598142072, 50.897193140898]},
-            {"source": [6656, 944], "target": [14.808447338463, 50.898010359738]},
-            {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]},
-            {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]},
+            {
+                "source": [720.8952, 107.3811],
+                "target": [14.809598142072, 50.897193140898],
+            },
+            {
+                "source": [716.1610, 101.5709],
+                "target": [14.808447338463, 50.898010359738],
+            },
+            {
+                "source": [719.4964, 124.8117],
+                "target": [14.809553411787, 50.894672081543],
+            },
+            {
+                "source": [749.8386, 340.0043],
+                "target": [14.816612768409, 50.863606051111],
+            },
         ],
     }
 
@@ -73,10 +85,22 @@ def test_get_crs_for_params_guess_crs_geographic(readonly_db_session):
         "target": "EPSG:4314",
         "algorithm": "tps",
         "gcps": [
-            {"source": [6700, 998], "target": [12.809598142072, 48.897193140898]},
-            {"source": [6656, 944], "target": [14.808447338463, 50.898010359738]},
-            {"source": [6687, 1160], "target": [14.809553411787, 50.894672081543]},
-            {"source": [6687, 1160], "target": [15.809553411787, 51.894672081543]},
+            {
+                "source": [720.8952, 107.3811],
+                "target": [12.809598142072, 48.897193140898],
+            },
+            {
+                "source": [716.1610, 101.5709],
+                "target": [14.808447338463, 50.898010359738],
+            },
+            {
+                "source": [719.4964, 124.8117],
+                "target": [14.809553411787, 50.894672081543],
+            },
+            {
+                "source": [719.4964, 124.8117],
+                "target": [15.809553411787, 51.894672081543],
+            },
         ],
     }
     subject = get_crs_for_transformation_params(transformation_params, raw_map)
@@ -123,8 +147,14 @@ def test_transform_to_params_to_target_crs_4314_to_4326(readonly_db_session):
         "target": "EPSG:4314",
         "algorithm": "tps",
         "gcps": [
-            {"source": [5549, 5002], "target": [13.740504826908, 51.049994444427]},
-            {"source": [7801, 4766], "target": [13.764599582931, 51.0390818907]},
+            {
+                "source": [597.0519, 538.1967],
+                "target": [13.740504826908, 51.049994444427],
+            },
+            {
+                "source": [839.3587, 512.8040],
+                "target": [13.764599582931, 51.0390818907],
+            },
         ],
     }
     subject = transform_to_params_to_target_crs(params, target_crs)
@@ -139,7 +169,10 @@ def test_transform_to_params_to_target_crs_4326_to_32633(readonly_db_session):
         "target": "EPSG:4326",
         "algorithm": "tps",
         "gcps": [
-            {"source": [5549, 5002], "target": [13.762824893617337, 51.03784991326232]},
+            {
+                "source": [597.0519, 538.1967],
+                "target": [13.762824893617337, 51.03784991326232],
+            },
         ],
     }
     subject = transform_to_params_to_target_crs(params, target_crs)
@@ -161,7 +194,7 @@ def test_get_epsg_and_bbox_for_tif():
         epsg, bbox = get_epsg_and_bbox_for_tif(path_geo_image)
 
         assert epsg == 4314
-        assert bbox == [14.6431112, 50.7671757, 14.8489897, 50.9130298]
+        assert bbox == [14.6431112, 50.7671289, 14.8490236, 50.9130304]
 
     finally:
         if os.path.exists(path_geo_image):
@@ -184,7 +217,7 @@ def test_get_epsg_and_bbox_for_tif_3857():
         epsg, bbox = get_epsg_and_bbox_for_tif(path_geo_image)
 
         assert epsg == 3857
-        assert bbox == [14.6431112, 50.7671757, 14.8489897, 50.9130298]
+        assert bbox == [14.6431112, 50.7671289, 14.8490236, 50.9130304]
 
     finally:
         if os.path.exists(path_geo_image):

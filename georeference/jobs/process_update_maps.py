@@ -10,6 +10,7 @@ import os.path
 from urllib.parse import urlsplit, urlunsplit
 
 from loguru import logger
+from sqlmodel import delete, update
 
 from georeference.config.constants import raw_map_keys
 from georeference.config.paths import (
@@ -126,13 +127,17 @@ def run_process_update_maps(es_index, dbsession, job):
 
     # Write updates to db
     if len(raw_map_updates) > 0:
-        dbsession.query(RawMap).filter(RawMap.id == map_id).update(raw_map_updates)
+        stmt = update(RawMap).where(RawMap.id == map_id).values(**raw_map_updates)
+        dbsession.execute(stmt)
 
     if len(metadata_updates) > 0:
         metadata_updates = without_keys(metadata_updates, raw_map_keys)
-        dbsession.query(Metadata).filter(Metadata.raw_map_id == map_id).update(
-            metadata_updates
+        stmt = (
+            update(Metadata)
+            .where(Metadata.raw_map_id == map_id)
+            .values(**metadata_updates)
         )
+        dbsession.execute(stmt)
 
     dbsession.flush()
 
@@ -254,9 +259,8 @@ def _reset_georef_state_for_map(map_id, dbsession):
         dbsession.delete(georef_map_object)
 
         # Delete all related transformations
-        dbsession.query(Transformation).filter(
-            Transformation.raw_map_id == map_id
-        ).delete()
+        stmt = delete(Transformation).where(Transformation.raw_map_id == map_id)
+        dbsession.execute(stmt)
 
 
 def _should_generate_files(metadata, metadata_updates, key, base_url, is_file_updated):

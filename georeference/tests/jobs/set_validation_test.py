@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 from datetime import datetime
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from georeference.config.settings import get_settings
 from georeference.jobs.set_validation import run_process_new_validation
@@ -52,20 +52,18 @@ def test_run_validation_job_success_with_overwrite(db_container, es_index):
         session.commit()
 
         # Query if the database was changed correctly
-        t = (
-            session.query(Transformation)
-            .filter(Transformation.id == transformation_id)
-            .first()
-        )
+        t = session.exec(
+            select(Transformation).where(Transformation.id == transformation_id)
+        ).first()
+
         assert t is not None
         assert t.validation == EnumValidationValue.INVALID.value
 
         # Check if the database changes are correct
-        g = (
-            session.query(GeorefMap)
-            .filter(GeorefMap.transformation_id == t.overwrites)
-            .first()
-        )
+        g = session.exec(
+            select(GeorefMap).where(GeorefMap.transformation_id == t.overwrites)
+        ).first()
+
         assert g is not None
         assert g.transformation_id == t.overwrites
 
@@ -103,16 +101,17 @@ def test_run_validation_job_success_without_overwrite(db_container, es_index):
         run_process_new_validation(es_index, session, job=new_job)
 
         # Query if the database was changed correctly
-        t = (
-            session.query(Transformation)
-            .filter(Transformation.id == transformation_id)
-            .first()
-        )
+        t = session.exec(
+            select(Transformation).where(Transformation.id == transformation_id)
+        ).first()
+
         assert t is not None
         assert t.validation == EnumValidationValue.INVALID.value
 
         # Check if the database changes are correct
-        g = session.query(GeorefMap).filter(GeorefMap.raw_map_id == map_id).first()
+        g = session.exec(
+            select(GeorefMap).where(GeorefMap.raw_map_id == map_id)
+        ).first()
         assert g is None
 
         # Check if the index was pushed to the es

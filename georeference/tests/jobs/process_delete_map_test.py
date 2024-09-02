@@ -11,7 +11,7 @@ import os
 import time
 from datetime import datetime
 
-from sqlmodel import Session
+from sqlmodel import Session, delete
 
 from georeference.config.paths import PATH_IMAGE_ROOT
 from georeference.config.settings import get_settings
@@ -130,6 +130,10 @@ def test_run_process_delete_maps_success(db_container, es_index):
             for path in paths:
                 remove_if_exists(path)
             # the session is commited in the delete job, thus we have to manually rollback
-            session.query(Job).filter(Job.id == job_id).delete()
-            session.query(Job).filter(Job.id == create_job_id).delete()
+            stmt1 = delete(Job).where(Job.id == job_id)
+            stmt2 = delete(Job).where(Job.id == create_job_id)
+
+            session.execute(stmt1)
+            session.execute(stmt2)
+
             session.commit()
