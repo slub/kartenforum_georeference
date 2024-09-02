@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from enum import Enum
+
 # Created by nicolas.looschen@pikobytes.de on 26.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-
+from enum import Enum
 from typing import List, Any, Dict, Optional, Union
 
 from geojson_pydantic import Polygon
@@ -52,16 +52,20 @@ class TransformationResponse(BaseModel):
 
 
 class TransformationResponseAdditionalProperties(BaseModel):
-    active_transformation_id: int
+    active_transformation_id: Optional[int]
     default_crs: str
-    extent: Polygon
+    extent: Optional[Polygon]
     metadata: TransformationMetadata
     pending_jobs: bool
 
 
-class TransformationsResponse(BaseModel):
-    transformations: List[Any]
-    additional_properties: Optional[TransformationResponseAdditionalProperties]
+class TransformationResponseWithoutAdditionalProperties(BaseModel):
+    transformations: List[TransformationResponse]
+
+
+class TransformationResponseWithAdditionalProperties(BaseModel):
+    transformations: List[TransformationResponse]
+    additional_properties: TransformationResponseAdditionalProperties
 
 
 class TransformationIdOnlyPayload(BaseModel):

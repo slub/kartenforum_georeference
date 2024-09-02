@@ -3,7 +3,7 @@
 import json
 import uuid
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Union
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from loguru import logger
@@ -21,8 +21,9 @@ from georeference.models.transformation import Transformation, EnumValidationVal
 from georeference.schemas.transformation import (
     TransformationResponse,
     TransformationResponseAdditionalProperties,
-    TransformationsResponse,
     TransformationPayload,
+    TransformationResponseWithoutAdditionalProperties,
+    TransformationResponseWithAdditionalProperties,
 )
 from georeference.schemas.user import User
 from georeference.utils.auth import require_authenticated_user
@@ -51,9 +52,11 @@ settings = get_settings()
 
 @router.get(
     "/",
-    response_model=TransformationsResponse,
+    response_model=Union[
+        TransformationResponseWithAdditionalProperties,
+        TransformationResponseWithoutAdditionalProperties,
+    ],
     tags=["transformations"],
-    response_model_exclude_none=True,
 )
 def get_transformations(
     session: Annotated[Session, Depends(get_session)],
@@ -106,15 +109,26 @@ def get_transformations(
 
         response_additional_properties = None
 
-        if additional_properties and len(transformations) > 0:
-            response_additional_properties = _create_additional_properties(
-                transformations[0][1], session
+        if additional_properties and map_id is not None:
+            raw_map_obj = (
+                transformations[0][1]
+                if len(transformations) > 0
+                else RawMap.by_id(parse_public_map_id(map_id), session)
             )
 
-        return TransformationsResponse(
-            transformations=responses,
-            additional_properties=response_additional_properties,
-        )
+            response_additional_properties = _create_additional_properties(
+                raw_map_obj, session
+            )
+
+        if response_additional_properties is None:
+            return TransformationResponseWithoutAdditionalProperties(
+                transformations=responses
+            )
+        else:
+            return TransformationResponseWithAdditionalProperties(
+                transformations=responses,
+                additional_properties=response_additional_properties,
+            )
     except HTTPException:
         raise
     except Exception as e:

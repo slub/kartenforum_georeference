@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+# Created by nicolas.looschen@pikobytes.de on 26.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 import json
 from datetime import datetime
 
@@ -11,12 +16,6 @@ from georeference.models.job import Job
 from georeference.models.raw_map import RawMap
 from georeference.models.transformation import Transformation, EnumValidationValue
 from georeference.utils.parser import to_public_map_id
-
-
-# Created by nicolas.looschen@pikobytes.de on 26.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
 
 
 @pytest.mark.user("test")
