@@ -54,7 +54,7 @@ class TestMapView:
         assert res.status_code == 404
 
     @pytest.mark.user("test")
-    def test_post_map_view_success_two_dimensions(
+    def test_post_map_view_success(
         self,
         override_get_session,
         test_client: TestClient,
@@ -66,38 +66,11 @@ class TestMapView:
                 "customBasemaps": [],
                 "is3dEnabled": False,
                 "operationalLayers": [],
-                "mapView": {
+                "cameraOptions": {
                     "center": [1039475.3400097956, 6695196.931201956],
-                    "resolution": 1.194328566789627,
-                    "rotation": 0,
+                    "bearing": 1.194328566789627,
+                    "pitch": 0,
                     "zoom": 11,
-                },
-            }
-        }
-        # Build test request
-        res = test_client.post("/map_view/", json=minimal_working_example)
-        assert res.status_code == 200
-        response = res.json()
-        assert response["map_view_id"] is not None
-
-    @pytest.mark.user("test")
-    def test_post_map_view_success_three_dimensions(
-        self,
-        override_get_session,
-        test_client: TestClient,
-        override_get_user_from_session,
-    ):
-        minimal_working_example = {
-            "map_view_json": {
-                "activeBasemapId": "slub-osm",
-                "customBasemaps": [],
-                "is3dEnabled": True,
-                "operationalLayers": [],
-                "mapView": {
-                    "direction": {"x": 0, "y": 0, "z": 0},
-                    "position": {"x": 0, "y": 0, "z": 0},
-                    "up": {"x": 0, "y": 0, "z": 0},
-                    "right": {"x": 0, "y": 0, "z": 0},
                 },
             }
         }

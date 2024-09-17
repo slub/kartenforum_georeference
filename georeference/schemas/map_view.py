@@ -7,7 +7,7 @@
 from enum import Enum, EnumMeta
 from typing import List, Optional, Union, Literal
 
-from geojson_pydantic import FeatureCollection
+from geojson_pydantic import FeatureCollection, Polygon
 from pydantic import BaseModel, conlist
 
 
@@ -32,6 +32,7 @@ class OperationalLayerBase(BaseModel):
     isVisible: bool
     opacity: float
     properties: dict
+    geometry: Optional[Polygon] = None
 
 
 class GeoJsonLayer(OperationalLayerBase):
@@ -41,50 +42,60 @@ class GeoJsonLayer(OperationalLayerBase):
 
 class HistoricMapLayer(OperationalLayerBase):
     type: Literal[EnumOperationalLayerType.HISTORIC_MAP.value]
-    coordinates: List[List[conlist(float, min_length=2, max_length=2)]]
 
 
-class ThreeDimensionalPoint(BaseModel):
+class CameraOptions(BaseModel):
+    bearing: float
+    center: conlist(float, min_length=2, max_length=2)
+    pitch: float
+    zoom: float
+
+
+# New Mapview does not have distinction between 2d and 3d view mode in camera options
+class MapViewJsonBase(BaseModel):
+    activeBasemapId: str
+    customBasemaps: Optional[List[CustomBasemap]] = []
+    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
+    is3dEnabled: Optional[bool]
+    cameraOptions: CameraOptions
+
+
+class MapViewPayload(BaseModel):
+    map_view_json: Union[MapViewJsonBase]
+
+
+class LegacyMapViewJsonBase(BaseModel):
+    activeBasemapId: str
+    customBasemaps: Optional[List[CustomBasemap]] = []
+    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
+
+
+# Deprecated, only here for informational purposes
+class LegacyThreeDimensionalPoint(BaseModel):
     x: float
     y: float
     z: float
 
 
-class TwoDimensionalPoint(BaseModel):
-    x: float
-    y: float
+class LegacyThreeDimensionalMapView(BaseModel):
+    direction: LegacyThreeDimensionalPoint
+    position: LegacyThreeDimensionalPoint
+    up: LegacyThreeDimensionalPoint
+    right: LegacyThreeDimensionalPoint
 
 
-class ThreeDimensionalMapView(BaseModel):
-    direction: ThreeDimensionalPoint
-    position: ThreeDimensionalPoint
-    up: ThreeDimensionalPoint
-    right: ThreeDimensionalPoint
-
-
-class TwoDimensionalMapView(BaseModel):
+class LegacyTwoDimensionalMapView(BaseModel):
     center: List[float]
     resolution: float
     rotation: float
     zoom: float
 
 
-class MapViewJsonBase(BaseModel):
-    activeBasemapId: str
-    customBasemaps: Optional[List[CustomBasemap]] = []
-    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
-
-
-class TwoDimensionalMapViewJson(MapViewJsonBase):
-    mapView: TwoDimensionalMapView
+class LegacyTwoDimensionalMapViewJson(LegacyMapViewJsonBase):
+    mapView: LegacyTwoDimensionalMapView
     is3dEnabled: Optional[Literal[False]] = False
-    searchOptions: Optional[str] = None
 
 
-class ThreeDimensionalMapViewJson(MapViewJsonBase):
-    mapView: ThreeDimensionalMapView
+class LegacyThreeDimensionalMapViewJson(LegacyMapViewJsonBase):
+    mapView: LegacyThreeDimensionalMapView
     is3dEnabled: Literal[True]
-
-
-class MapViewPayload(BaseModel):
-    map_view_json: Union[TwoDimensionalMapViewJson, ThreeDimensionalMapViewJson]
