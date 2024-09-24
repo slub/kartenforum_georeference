@@ -263,3 +263,15 @@ def bbox_position(bbox, container_bbox):
 
     # If none of the above, it's fully contained
     return True, None
+
+
+def check_if_file_exists(file_name: str, directory: str) -> bool:
+    """
+    Check if a file exists in the given directory.
+
+    :param file_name: The name of the file to check.
+    :param directory: The directory in which to check for the file.
+    :return: True if the file exists, False otherwise.
+    """
+    file_path = os.path.join(directory, file_name)
+    return os.path.isfile(file_path)

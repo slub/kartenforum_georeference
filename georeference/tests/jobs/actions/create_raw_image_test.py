@@ -18,8 +18,8 @@ def test_run_process_raw_image_success_image_1():
     """The proper working of the action for processing raw images."""
     try:
         src_path = os.path.join(
-            PATH_IMAGE_ROOT,
-            "df_dk_0000680.tif",
+            PATH_TMP_ROOT,
+            "df_dk_0000680_16_byte.tif",
         )
         trg_path = os.path.join(
             PATH_TMP_ROOT,

@@ -21,12 +21,26 @@ the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/).
 
 ### Without Docker
 
-1. Setup poetry according to https://python-poetry.org/docs/
+1. Setup a virtual environment and install [poetry](https://python-poetry.org/docs/)
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install poetry==1.8.3
+```
+
 2. Install the required dependencies
-    1. `poetry install`
-    2. If you experience any issues with python-gdal, make sure the version matches your local gdal version.
+
+```bash
+.venv/bin/poetry install
+```
+
+In case you experience any issues with python-gdal, make sure the version matches your local gdal version. Also if you make any changes to `pyproject.toml`. Also if you make any changes to `pyproject.toml` you need to run `.venv/bin/poetry lock` again.
+
 3. Set up the pre-commit hooks
-    1. `poetry run pre-commit install`
+
+```bash
+.venv/bin/poetry run pre-commit install
+```
 
 ### Configuration
 
@@ -45,39 +59,33 @@ Also see https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env
 
 ### Linting and Formatting
 
-This project uses [ruff](https://docs.astral.sh/ruff/) for formatting and linting.
-It is automatically setup via the pyproject.toml file.
-Please configure your IDE to use the ruff formatter and linter.
-Additionally, they will be run as precommit hooks.
+This project uses [ruff](https://docs.astral.sh/ruff/) for formatting and linting. It is automatically setup via the `pyproject.toml``  file. Please configure your IDE to use the ruff formatter and linter. Additionally, they will be run as precommit hooks.
 
 ### Running tests
 
-> If you want to run all tests make sure to have [ddev-kartenforum](https://github.com/slub/ddev-kartenforum) locally setup and running. Also make sure to have `sshpass and `libvips-tools` installed.
+> If you want to run all tests make sure to have [ddev-kartenforum](https://github.com/slub/ddev-kartenforum) locally setup and running. 
 
-For running all tests you need to download the test data. This can be done by running the following scripts:
-
-```bash
-scripts/download_testdata.sh
-```
-please install libvips package to create thumbnails:
-```shell
-sudo apt install libvips libvips-tools
-```
-Please be aware, that currently the whole test data is up to 3GB in size. If you want to run all tests, you can use the
-following command:
+Install the following packages for local testing and download and setup your test data:
 
 ```bash
-poetry run python -m pytest
+sudo apt install libvips libvips-tools sshpass libvips-tools
+scripts/initialize-testdata.sh
+```
+
+Now the tests can be run with the following command:
+
+```bash
+.venv/bin/poetry run python -m pytest
 ```
 
 To run just the test from a specific file, you can use a command with this structure:
 
 ```bash
-poetry run python -m pytest -rP georeference/tests/utils/proj_test.py::test_get_crs_from_request_params_use_passed_crs
+.venv/bin/poetry run python -m pytest -rP georeference/tests/utils/proj_test.py::test_get_crs_from_request_params_use_passed_crs
 ```
 
-Hint: Make sure to have docker running, as the testcontainers library will start a postgres container for the tests.
-Hint: Make sure to have `DEV_MODE` enabled. Else ssl verification, if requesting the typo3 application, might fail.
+Hint: Make sure to have docker running, as the testcontainers library will start a postgres container for the tests.<br/>
+Hint: Make sure to have `DEV_MODE` enabled. Else ssl verification, if requesting the TYPO3 application, might fail.<br/>
 Hint: Make sure to have a local environment properly setup.
 
 ## Postgresql Database
