@@ -1,95 +1,122 @@
-# kartenforum_georeference
+<h1 align="center">
+	<img width="400" alt="The Lounge" src="docs/_assets/header-logo.svg">
+</h1>
 
-The repository contains the python code for the georeference service of
-the [Virtual Map Forum 2.0](https://kartenforum.slub-dresden.de/).
+<h1 align="center">Kartenforum Georeference Service</h1>
 
-## Get started
+<p align="center">
+    The <strong>Kartenforum Georeference </strong> provides the georeferencing functionality for the <a href="https://kartenforum.slub-dresden.de/">Virtual Map Forum 2.0</a>.
+    This platform allows users to explore and interact with both historical and georeferenced maps. The service is designed to efficiently manage and process georeferenced map data. Using <strong>FastAPI</strong>, it delivers a scalable and high-performance API, while <strong>PostgreSQL</strong> (and PostGIS) manages spatial data storage and queries.
+</p>
+<br></br> 
 
-### With docker
 
-1. Set up environment for the docker build
-    1. There are two environment variables required for the docker build: `USERNAME` and `UID`
-    2. `USER=$(whoami)`
-    3. `UID=$(id -u)`
-    4. Also see this script https://github.com/pikobytes/slub_ddev_kartenforum/blob/main/generate-env.sh for more
-       information.
-2. `cd docker/`
-3. docker-compose up
-4. In your IDE make sure to use the correct python interpreter. The one in the `.venv` folder, which should have
-   been automatically added by the docker container.
-5. The server should be available under `http://localhost:8000/`
+## 📖 Table of Contents
+
+- [Get Started](#get-started)
+  - [With Docker](#with-docker)
+  - [Without Docker](#without-docker)
+- [Configuration](#configuration)
+- [Linting and Formatting](#linting-and-formatting)
+- [Running Tests](#running-tests)
+- [PostgreSQL Database](#postgresql-database)
+  - [Migrations](#migrations)
+- [Testing with Postgres and Testcontainers](#testing-with-postgres-and-testcontainers)
+- [Debugging](#debugging)
+- [License](#-license)
+
+
+
+## Get Started
+
+### With Docker
+1. Set environment variables for the docker build: There are two environment variables required for the docker build, `USERNAME` and `UID`
+    ```shell
+     export USER=$(whoami) 
+     export UID=$(id -u)
+    ```
+    Also see this script https://github.com/pikobytes/slub_ddev_kartenforum/blob/main/generate-env.sh for more
+  information.
+<br></br>
+
+2. Start Docker containers:
+
+    ```shell
+    cd docker/
+    docker-compose up
+    ```
+   
+3. In your IDE make sure to use the correct python interpreter. The one in the `.venv` folder, which should have been 
+automatically added by the docker container.
+<br></br>
+
+4. The server should be available under `http://localhost:8000/`
 
 ### Without Docker
-
-1. Setup a virtual environment and install [poetry](https://python-poetry.org/docs/)
-
-```bash
-python3 -m venv .venv
-.venv/bin/pip install poetry==1.8.3
-```
+1. Set up a virtual environment and install [poetry](https://python-poetry.org/docs/).
+    ```shell
+    python3 -m venv .venv
+    .venv/bin/pip install poetry==1.8.3
+    ```
 
 2. Install the required dependencies
+    ```shell
+    .venv/bin/poetry install
+    ```
+    In case you experience any issues with python-gdal, make sure the version matches your local gdal version. Also if you
+make any changes to `pyproject.toml`. Also, if you make any changes to `pyproject.toml` you need to run `.venv/bin/poetry lock` again.
+<br></br>
+3. Set Up the pre-commit hooks
 
-```bash
-.venv/bin/poetry install
-```
+    ```shell
+    .venv/bin/poetry run pre-commit install
+    ```
+   
+4. Run the server:
+    ```shell
+    uvicorn app.api.server:app --reload
+    ```
 
-In case you experience any issues with python-gdal, make sure the version matches your local gdal version. Also if you make any changes to `pyproject.toml`. Also if you make any changes to `pyproject.toml` you need to run `.venv/bin/poetry lock` again.
-
-3. Set up the pre-commit hooks
-
-```bash
-.venv/bin/poetry run pre-commit install
-```
-
-### Configuration
-
-The configuration is done via environment variables.
-Environment variables can be set either:
-
-1) Directly in the environment, these will take precedence over everything else
-2) In a `.env.production` file in the root of the project. This file will be automatically loaded by `pydantic-settings`
+## Configuration
+Configuration is managed via environment variables. They can be set in the following ways:
+1. Directly in the environment: These take precedence over everything else.
+2. In a `.env.production` file in the root of the project: This file will be automatically loaded by `pydantic-settings`
    and will take precedence over the default values defined in `.env`. It does not need to be exhaustive, only the
    variables that should be overwritten are required.
-3) In a `.env` file in the root of the project. This file will be automatically loaded by `pydantic-settings`.
-4) In the `/georeference/config/settings.py` file. It is responsible for the loading of the environment variables and
-   setting the default values. All configurable values and their respective types can be found in this file.
+3. In a `.env` file: This file is also automatically loaded by `pydantic-settings`.
 
-Also see https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support for more information.
+For more information, check the [Pydantic documentation](https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support).
 
-### Linting and Formatting
 
-This project uses [ruff](https://docs.astral.sh/ruff/) for formatting and linting. It is automatically setup via the `pyproject.toml``  file. Please configure your IDE to use the ruff formatter and linter. Additionally, they will be run as precommit hooks.
+## Linting and Formatting
+This project utilizes [ruff](https://docs.astral.sh/ruff/) for both linting and code formatting, with the configuration 
+specified in the `pyproject.toml` file. To maintain consistency, please ensure that your IDE is configured to use Ruff for code formatting. Additionally, 
+linting and formatting tasks are automatically enforced as pre-commit hooks to help uphold code quality.
 
-### Running tests
 
-> If you want to run all tests make sure to have [ddev-kartenforum](https://github.com/slub/ddev-kartenforum) locally setup and running. 
+## Running Tests
+If you want to run all tests make sure to have [ddev-kartenforum](https://github.com/slub/ddev-kartenforum) locally setup and running.
+1. Please install the following dependencies and download and initialize the test data:
+    
+    ```bash
+    sudo apt install libvips libvips-tools sshpass libvips-tools
+    scripts/initialize-testdata.sh
+    ```
+2. Run all tests:
+    ```shell
+    .venv/bin/poetry run pytest 
+    ```
+3. To run specific tests, use the following command structure:
+    ```shell
+    .venv/bin/poetry run pytest -rP georeference/tests/utils/proj_test.py::test_get_crs_from_request_params_use_passed_crs
+    ```
+💡 **Tips:**
+* Ensure Docker is running, as the `testcontainers` library will spin up a PostgreSQL container for the tests.
+* Make sure `DEV_MODE` is enabled to avoid SSL verification failures when querying the TYPO3 application.
+* Properly set up your local environment for testing.
 
-Install the following packages for local testing and download and setup your test data:
 
-```bash
-sudo apt install libvips libvips-tools sshpass libvips-tools
-scripts/initialize-testdata.sh
-```
-
-Now the tests can be run with the following command:
-
-```bash
-.venv/bin/poetry run python -m pytest
-```
-
-To run just the test from a specific file, you can use a command with this structure:
-
-```bash
-.venv/bin/poetry run python -m pytest -rP georeference/tests/utils/proj_test.py::test_get_crs_from_request_params_use_passed_crs
-```
-
-Hint: Make sure to have docker running, as the testcontainers library will start a postgres container for the tests.<br/>
-Hint: Make sure to have `DEV_MODE` enabled. Else ssl verification, if requesting the TYPO3 application, might fail.<br/>
-Hint: Make sure to have a local environment properly setup.
-
-## Postgresql Database
-
+## PostgreSQL Database
 docker can be used to set up a development infrastructure
 
 ```
@@ -98,66 +125,69 @@ docker-compose up
 ```
 
 ### Migrations
+To modify the database schema, use the alembic library for versioned migrations. The database connection URL is managed 
+in the settings.py file, which reads from the `.env`.
 
-In order to modify the database schema, the `alembic` library is used.
-It allows for versioned migrations.
-The database connection url is read via the `settings.py` file, which reads the `.env` file.
-
+#### Creating a Migration
 To create a new migration, run the following command:
-
+  ```shell
+   poetry run alembic revision -m "your message"
+  ```
+This will generate a new migration file in the `alembic/versions` folder.
+If the versions folder does not exist inside the alembic directory, please create it manually:
+```shell
+sudo mkdir alembic/versions
 ```
-poetry run alembic revision -m "your message"
-```
-
-This will create a new migration file in the `alembic/versions` folder.
-After you have made your changes, run the following command to apply the migration:
-
+#### Applying a Migration
+After making your changes, apply the migration using the command:
 ```
 poetry run alembic upgrade head
 ```
+This updates the database schema to the latest version. For more information also check the [alembic documentation](https://alembic.sqlalchemy.org/en/latest/index.html).
 
-For more information also check the [alembic documentation](https://alembic.sqlalchemy.org/en/latest/index.html).
 
-## start
+## Testing with Postgres and Testcontainers
+The project uses [postgres-test-container](https://github.com/testcontainers/testcontainers-python) library.
 
-```
-uvicorn app.api.server:app --reload
-```
+### How it works:
+- **Container Setup:** <br> 
+    For each test, a temporary Docker container is created, running a PostgreSQL database called `vkdb`.
+    The necessary database schema is automatically set up when the container is initialized.
 
-## Testing with Postgres-TestContainer and Pytest
-
-In the project's testing process, we use pytest along with
-the [postgres-test-container](https://github.com/testcontainers/testcontainers-python) library. Here's how it works:
-
-- **Container Setup:** For each test, we create a temporary Docker container that runs a PostgreSQL database named "
-  vkdb" This container sets up the necessary database schema when it's created.
-
-- **Data Initialization:** Before running each test, we make sure to clear any existing datas in tables and
+- **Data Initialization:** <br> 
+  Before running each test, we make sure to clear any existing datas in tables and
   relationships in the
   database. Then, we populate these tables with initial data to ensure a consistent starting point for testing.
 
-- **Data Cleanup:** After each test, we clean up the data in the tables to maintain a clean slate for the next test.
+- **Data Cleanup:** <br> 
+  After each test, we clean up the data in the tables to maintain a clean slate for the next test.
 
-- **Automatic Cleanup:** Once all tests are completed, the Docker container is automatically stopped and deleted to keep
-  your
-  environment tidy.
+- **Automatic Cleanup:** <br> 
+  Once all tests are completed, the Docker container is automatically stopped and deleted to keep
+  your environment tidy.
 
-## Run the code with your debugger
+## Debugging
 
-Because you are running the Uvicorn server directly from your code, you can call your Python program (your FastAPI
-application) directly from the debugger.
+To facilitate debugging, you can run the application directly through your IDE’s debugger, allowing you to set breakpoints, inspect variables, and step through the code.
 
-If you use Pycharm, you can:
+### Debugging with PyCharm
 
-Open the "Run" menu.
-in Edit/Run/Debug Configurations' dialog top right select edit configuration.
+1. **Open the Run/Debug Configurations:**  
+   In the top-right corner of PyCharm, click on the dropdown next to the run button and select *Edit Configurations*.
 
-![Screenshot from 2023-09-04 14-24-33](https://github.com/pikobytes/slub_kartenforum_georeference_fastapi/assets/129738734/43b7464d-ca4f-48f9-8c60-46bbb21c7f31)
+2. **Add a New Configuration:**  
+   Create a new configuration for FastAPI or Pytest:
+   - For test debugging, select the Pytest option and specify the test files or directories you wish to debug.
 
-Select and add the new configuration (in this case fastAPI and pytest for testing )
-Select the file to debug (in this case tests folder for testing and select server.py in app/api/server.py for run server
-with uvicorn).
-It will then start all the tests, stop at your breakpoints, etc.
+3. **Start Debugging:**  
+   Once set up, you can start the server or run tests in debug mode. The debugger will pause at any breakpoints you've set, allowing for detailed inspection of the execution flow.
 
-if you get an error then try to write the absolute path.
+> 💡**Tip:**  
+> If you encounter issues with relative paths, try using the absolute path to the files in the configuration.
+
+
+## 📜 License
+
+This project is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html) - see the [LICENSE](LICENSE) file for details.
+
 

@@ -33,4 +33,4 @@ RUN poetry config virtualenvs.create true \
 
 COPY georeference /code/georeferencer
 
-ENTRYPOINT ["peotry", "run", "fastapi", "run", "georeference/main.py"]
+ENTRYPOINT ["poetry", "run", "fastapi", "run", "georeference/main.py"]
