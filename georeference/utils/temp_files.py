@@ -8,12 +8,12 @@ from loguru import logger
 from georeference.config.paths import (
     PATH_TMP_TRANSFORMATION_ROOT,
     PATH_TMP_ROOT,
-    PATH_TMP_TRANSFORMATION_DATA_ROOT,
 )
 from georeference.config.templates import (
     PATH_MAPFILE_TEMPLATES,
     TEMPLATE_TRANSFORMATION_WMS_URL,
 )
+from georeference.config.settings import get_settings
 from georeference.utils.georeference import rectify_image
 from georeference.utils.mapfile import write_mapfile
 from georeference.utils.parser import to_gdal_gcps
@@ -65,13 +65,13 @@ def _create_temporary_georeference_image(
     )
 
 
-def _create_temporary_mapfile(raw_map_obj, trg_file_name, transformation_params):
+def _create_temporary_mapfile(raw_map_obj, trg_file, transformation_params):
     """Creates a temporary mapfile.
 
     :param raw_map_obj: RawMap
     :type raw_map_obj: georeference.models.raw_maps.RawMap
-    :param trg_file_name: Name of the target file
-    :type trg_file_name: str
+    :param trg_file: Path to the target file
+    :type trg_file: str
     :param transformation_params: Transformation params
     :type transformation_params: dict
     :result: Link to the wms service
@@ -81,6 +81,14 @@ def _create_temporary_mapfile(raw_map_obj, trg_file_name, transformation_params)
     logger.debug(transformation_params)
     mapfile_name = f'wms_{str(uuid.uuid4()).replace("-", "_")}'
     wms_url = TEMPLATE_TRANSFORMATION_WMS_URL.format(mapfile_name)
+
+    # The path resolution of the trg_file are different in production/staging and local development setup. Therefor we
+    # add here a workaround to adjust this paths by configuration
+    if len(get_settings().OVERWRITE_MAPFILE_TMP_PATH) > 0:
+        trg_file = os.path.join(
+            get_settings().OVERWRITE_MAPFILE_TMP_PATH, os.path.basename(trg_file)
+        )
+
     write_mapfile(
         os.path.join(PATH_TMP_TRANSFORMATION_ROOT, f"{mapfile_name}.map"),
         os.path.join(PATH_MAPFILE_TEMPLATES, "./wms_dynamic.map"),
@@ -88,7 +96,7 @@ def _create_temporary_mapfile(raw_map_obj, trg_file_name, transformation_params)
             "wmsAbstract": f"This wms is a temporary wms for {raw_map_obj.file_name}",
             "wmsUrl": wms_url,
             "layerName": raw_map_obj.file_name,
-            "layerDataPath": PATH_TMP_TRANSFORMATION_DATA_ROOT.format(trg_file_name),
+            "layerDataPath": trg_file,
             "layerProjection": transformation_params["target"].lower(),
         },
     )

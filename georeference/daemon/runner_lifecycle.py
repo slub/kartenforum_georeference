@@ -29,6 +29,7 @@ from georeference.jobs.set_validation import run_process_new_validation
 from georeference.models.enums import EnumJobType, EnumJobState
 from georeference.models.job import Job, JobHistory
 from georeference.utils.es_index import get_es_index_from_settings
+from georeference.utils.init_helper import log_startup_information
 
 # For correct resolving of the paths we use derive the base_path of the file
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -184,6 +185,7 @@ def main(wait_on_start=1, wait_on_loop=1):
         run_count = 0
         _initialize_logger()
         logger.info(f"Start logger but waiting for {wait_on_start} seconds ...")
+        log_startup_information(settings)
         time.sleep(wait_on_start)
 
         # Handle start
@@ -199,7 +201,7 @@ def main(wait_on_start=1, wait_on_loop=1):
         while True:
             if run_count % settings.DAEMON_LOOP_HEARTBEAT_COUNT == 0:
                 # send heartbeat to sentry
-                logger.error("Daemon is still running ...")
+                logger.error("Sentry Heartbeat. Daemon is still running ...")
                 run_count = 0
 
             # To prevent the daemon from having to long lasting logger handles or database session we reinitialize / reset

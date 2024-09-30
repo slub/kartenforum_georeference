@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     USER_ROLE: str = "vk2-user"
 
     # CORS CONFIGURATION
+    CORS_ENABLED: bool = True
     CORS_ALLOWED_ORIGINS: list[str] = [
         "https://ddev-kartenforum.ddev.site",
         "http://localhost:3000",
@@ -121,9 +122,6 @@ class Settings(BaseSettings):
     PATH_DATA_ROOT: str = os.path.abspath(os.path.join(BASE_PATH, "../data"))
 
     # Configuration of link and id schemas
-    GLOBAL_PERMALINK_RESOLVER: str = (
-        "http://digital.slub-dresden.de/"  # Permalink resolver
-    )
     TEMPLATE_TMS_URLS: list[str] = ["https://tms.ddev.site/{}"]
     TEMPLATE_WMS_URL: str = "https://wms-slub.pikobytes.de/map/{}"
     TEMPLATE_WMS_TRANSFORM_URL: str = "http://localhost:8080/?map=/etc/mapserver/{}"
@@ -132,6 +130,9 @@ class Settings(BaseSettings):
         "https://zoomify-slub.pikobytes.de/zoomify/{}/ImageProperties.xml"
     )
     TEMPLATE_THUMBNAIL_URL: str = "https://thumbnail-slub.pikobytes.de/zoomify/{}"
+
+    # Overwrites are used within the local development setup. In production, they should be set to null
+    OVERWRITE_MAPFILE_TMP_PATH: str = ""
 
 
 # For usage of the settings as dependency

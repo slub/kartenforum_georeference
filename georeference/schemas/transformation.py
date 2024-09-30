@@ -41,7 +41,7 @@ class TransformationPolygon(Polygon):
 class TransformationResponse(BaseModel):
     is_active: bool
     transformation_id: int
-    clip: TransformationPolygon
+    clip: Optional[TransformationPolygon]
     params: Dict
     submitted: NaiveDatetime
     overwrites: Optional[int]

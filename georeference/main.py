@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Created by nicolas.looschen@pikobytes.de on 24.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +22,7 @@ from georeference.routers import (
     mosaic_maps,
     transformations,
 )
+from georeference.utils.init_helper import log_startup_information, enable_cors_middleware
 
 # Initialization
 logger = configure_logging()
@@ -30,16 +38,12 @@ create_data_directories()
 logger.debug("Initialize FastAPI...")
 app = FastAPI()
 
-# Setup CORS
-logger.debug("Setup CORS settings ...")
-allowed_origins = settings.CORS_ALLOWED_ORIGINS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Setup CORS middleware, but just if it is enabled. In production setups CORS should be handled from the proxy service.
+if (settings.CORS_ENABLED):
+    enable_cors_middleware(app, settings)
+
+# In case the FastAPI is started in dev_mode and with dev_mode_secret, print a big warning
+log_startup_information(settings)
 
 # Register routers
 logger.debug("Initialize routes ...")

@@ -31,6 +31,6 @@ RUN poetry config virtualenvs.create true \
     && poetry config virtualenvs.options.always-copy true \
     && poetry install --no-interaction --no-ansi
 
-COPY georeference /code/georeferencer
+COPY georeference /code/georeference
 
 ENTRYPOINT ["poetry", "run", "fastapi", "run", "georeference/main.py"]

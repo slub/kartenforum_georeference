@@ -75,16 +75,6 @@ def _get_online_resource_permalink(metadata_obj):
     return {"url": metadata_obj.permalink, "type": "Permalink"}
 
 
-def _get_online_resource_permalink_oai(oai):
-    """
-    :param oai: OAI
-    :type oai: str
-    :result: A online resource which describes a vk20 permalink
-    :rtype: dict
-    """
-    return {"url": get_settings().GLOBAL_PERMALINK_RESOLVER + oai, "type": "Permalink"}
-
-
 def _get_online_resource_wms(service_name):
     """
     :param service_name: Name of the service
@@ -304,13 +294,21 @@ def get_es_index(es_config, index_name, force_recreation):
     :result: Reference on the index
     :rtype: elasticsearch.Elasticsearch
     """
+
+    def get_http_auth(es_config):
+        if (
+            "username" in es_config
+            and es_config["username"] is not None
+            and "password" in es_config
+            and es_config["password"] is not None
+        ):
+            return (es_config["username"], es_config["password"])
+        return None
+
     try:
-        logger.debug("Initialize elasticsearch")
         es = Elasticsearch(
             [{"host": es_config["host"], "port": es_config["port"]}],
-            http_auth=(es_config["username"], es_config["password"])
-            if hasattr(es_config, "username") and hasattr(es_config, "password")
-            else None,
+            http_auth=get_http_auth(es_config),
             use_ssl=es_config["ssl"],
             timeout=5000,
         )
@@ -339,7 +337,6 @@ def get_es_index(es_config, index_name, force_recreation):
 
 def get_es_index_from_settings(force_recreation: bool):
     settings = get_settings()
-
     return get_es_index(
         {
             "host": settings.ES_HOST,

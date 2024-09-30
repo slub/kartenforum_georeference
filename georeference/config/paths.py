@@ -7,7 +7,7 @@
 # "LICENSE", which is part of this source code package
 
 import os
-
+from loguru import logger
 from georeference.config.settings import get_settings
 
 # Path to the data root directory
@@ -24,7 +24,7 @@ PATH_IMAGE_ROOT = os.path.join(PATH_DATA_ROOT, "./original")
 PATH_GEOREF_ROOT = os.path.join(PATH_DATA_ROOT, "./georef")
 
 # Path to the mosaic root directory
-PATH_MOSAIC_ROOT = os.path.join(PATH_DATA_ROOT, "./mosaic")
+PATH_MOSAIC_ROOT = os.path.join(PATH_DATA_ROOT, "./mosaics")
 
 # Path to the template directory
 
@@ -42,10 +42,6 @@ PATH_TMP_NEW_MAP_ROOT = os.path.join(PATH_DATA_ROOT, "./upload_tmp")
 # Directory where the mapfiles for the validation process are saved
 PATH_TMP_TRANSFORMATION_ROOT = os.path.join(PATH_DATA_ROOT, "./map_services_tmp")
 
-# The data root is used by the mapfile an can be accessed from the PATH_TMP_TRANSFORMATION_ROOT. This is
-# necessary for proper working with the docker setup
-PATH_TMP_TRANSFORMATION_DATA_ROOT = "/mapdata/{}"
-
 # Path to the tms root directoy
 PATH_TMS_ROOT = os.path.join(PATH_DATA_ROOT, "./tms")
 
@@ -56,6 +52,7 @@ PATH_ZOOMIFY_ROOT = os.path.join(PATH_DATA_ROOT, "./zoomify")
 def create_data_directories():
     """This function makes sure, that all data directories used by the job function are existing."""
     # Make sure that necessary directory exists
+    logger.debug("Check for needed directories and create if needed ... ")
     create_path_if_not_exists(PATH_TMP_ROOT)
     create_path_if_not_exists(PATH_GEOREF_ROOT)
     create_path_if_not_exists(PATH_TMS_ROOT)
@@ -65,6 +62,7 @@ def create_data_directories():
     create_path_if_not_exists(PATH_THUMBNAIL_ROOT)
     create_path_if_not_exists(PATH_TMP_NEW_MAP_ROOT)
     create_path_if_not_exists(PATH_TMP_TRANSFORMATION_ROOT)
+    create_path_if_not_exists(PATH_MOSAIC_ROOT)
 
 
 def create_path_if_not_exists(path):
@@ -76,6 +74,9 @@ def create_path_if_not_exists(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+        logger.debug("Directory {} created.".format(path))
+    else:
+        logger.debug("Directory {} already exists. Skip creation.".format(path))
 
 
 TMP_DIR = "/tmp"

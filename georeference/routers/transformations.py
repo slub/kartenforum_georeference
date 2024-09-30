@@ -274,7 +274,7 @@ def _handle_transformation_dry_run(
 
     # Create temporary mapfile
     wms_url = _create_temporary_mapfile(
-        map_obj, trg_file_name, correct_transformation_params
+        map_obj, trg_file, correct_transformation_params
     )
 
     return {
