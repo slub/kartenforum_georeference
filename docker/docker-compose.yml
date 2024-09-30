@@ -64,6 +64,8 @@ services:
     environment:
       - USER=${USER}
       - UID=${UID}
+      - POSTGRES_HOST=georeference-db
+      - ES_HOST=elasticsearch
     depends_on:
       - georeference-db
     volumes:
@@ -82,11 +84,13 @@ services:
       args:
         - USERNAME=${USER}
         - UID=${UID}
-    container_name: kartenforum_georeference-daemon
+    container_name: kartenforum_georeference_daemon
     restart: always
     environment:
       - USER=${USER}
       - UID=${UID}
+      - POSTGRES_HOST=georeference-db
+      - ES_HOST=elasticsearch
     depends_on:
       - georeference-db
     volumes:

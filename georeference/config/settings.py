@@ -124,13 +124,11 @@ class Settings(BaseSettings):
 
     # Configuration of link and id schemas
     TEMPLATE_TMS_URLS: list[str] = ["https://tms.ddev.site/{}"]
-    TEMPLATE_WMS_URL: str = "https://wms-slub.pikobytes.de/map/{}"
-    TEMPLATE_WMS_TRANSFORM_URL: str = "http://localhost:8080/?map=/etc/mapserver/{}"
-    TEMPLATE_WCS_URL: str = "https://wcs-slub.pikobytes.de/map/{}"
-    TEMPLATE_ZOOMIFY_URL: str = (
-        "https://zoomify-slub.pikobytes.de/zoomify/{}/ImageProperties.xml"
-    )
-    TEMPLATE_THUMBNAIL_URL: str = "https://thumbnail-slub.pikobytes.de/zoomify/{}"
+    TEMPLATE_WMS_URL: str = "https://wms.ddev.site/map/{}"
+    TEMPLATE_WMS_TRANSFORM_URL: str = "https://wms-transform.ddev.site/map/{}"
+    TEMPLATE_WCS_URL: str = "https://wcs.ddev.site/map/{}"
+    TEMPLATE_ZOOMIFY_URL: str = "https://zoomify.ddev.site/{}/ImageProperties.xml"
+    TEMPLATE_THUMBNAIL_URL: str = "https://thumbnails.ddev.site/{}"
 
     # Overwrites are used within the local development setup. In production, they should be set to null
     OVERWRITE_MAPFILE_TMP_PATH: str = ""
