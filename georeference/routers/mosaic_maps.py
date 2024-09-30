@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import json
-import traceback
-from datetime import datetime
-from typing import Annotated
-
+#
 # Created by nicolas.looschen@pikobytes.de on 25.07.2024
 #
 # This file is subject to the terms and conditions defined in file
@@ -13,6 +9,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from sqlmodel import Session
+import json
+from datetime import datetime
+from typing import Annotated
 
 from georeference.config.constants import GENERAL_ERROR_MESSAGE
 from georeference.config.db import get_session

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by nicolas.looschen@pikobytes.de on 25.04.22
 #
 # This file is subject to the terms and conditions defined in file
@@ -92,9 +92,7 @@ def test_run_process_update_maps_file_only(db_container, es_index):
         map_id = 10007521
         map_object = RawMap.by_id(map_id, session)
         metadata_object = Metadata.by_map_id(map_id, session)
-        existing_path = os.path.join(
-            PATH_IMAGE_ROOT, f"{map_object.file_name}.tif"
-        )
+        existing_path = os.path.join(PATH_IMAGE_ROOT, f"{map_object.file_name}.tif")
         expected_link_thumb_small = metadata_object.link_thumb_small
         expected_link_thumb_mid = metadata_object.link_thumb_mid
         expected_link_zoomify = metadata_object.link_zoomify
@@ -170,9 +168,7 @@ def _run_update_maps_file_and_metadata(dbsession_only, update_metadata, es_index
     map_id = 10007521
     map_object = RawMap.by_id(map_id, dbsession_only)
     metadata_object = Metadata.by_map_id(map_id, dbsession_only)
-    existing_path = os.path.join(
-        PATH_IMAGE_ROOT, f"{map_object.file_name}.tif"
-    )
+    existing_path = os.path.join(PATH_IMAGE_ROOT, f"{map_object.file_name}.tif")
     expected_mtime = os.path.getmtime(existing_path)
     expected_filename = map_object.file_name
     expected_thumbnail_small_path = get_thumbnail_path(f"{map_id}_120x120.jpg")

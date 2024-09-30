@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by jacob.mendt@pikobytes.de on 23.06.22
 #
 # This file is subject to the terms and conditions defined in file
@@ -8,7 +8,6 @@
 import json
 import os
 import shutil
-import traceback
 
 from loguru import logger
 

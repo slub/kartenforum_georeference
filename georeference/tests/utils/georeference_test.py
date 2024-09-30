@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Created by jacob.mendt@pikobytes.de on 06.09.21
+#
+# Created by pouria.rezaei@pikobytes.de on 02.09.24
 #
 # This file is subject to the terms and conditions defined in file
 # 'LICENSE', which is part of this source code package

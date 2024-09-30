@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by nicolas.looschen@pikobytes.de on 11.07.2024
 #
 # This file is subject to the terms and conditions defined in file
@@ -32,7 +32,7 @@ class TestStatistics:
 
         assert user_1_data is not None
 
-        # 17 georeference processes, 20 points per process
-        assert user_1_data["total_points"] == 340
-        assert user_1_data["transformation_updates"] == 14
+        # 16 georeference processes, 20 points per process
+        assert user_1_data["total_points"] == 320
+        assert user_1_data["transformation_updates"] == 13
         assert user_1_data["transformation_new"] == 3

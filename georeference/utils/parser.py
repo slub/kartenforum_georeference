@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Created by nicolas.looschen@pikobytes.de on 10.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
+
 from fastapi import HTTPException
 from loguru import logger
 from osgeo import gdal
@@ -8,12 +14,6 @@ from georeference.config.templates import (
     TEMPLATE_PUBLIC_MAP_ID,
     TEMPLATE_PUBLIC_MOSAIC_MAP_ID,
 )
-
-
-# Created by nicolas.looschen@pikobytes.de on 10.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
 
 
 def from_public_map_id(public_id):

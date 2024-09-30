@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by nicolas.looschen@pikobytes.de on 30.07.2024
 #
 # This file is subject to the terms and conditions defined in file

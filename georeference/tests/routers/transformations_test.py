@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by nicolas.looschen@pikobytes.de on 26.07.2024
 #
 # This file is subject to the terms and conditions defined in file
@@ -266,7 +266,7 @@ class TestTransformationGet:
 
         assert res.status_code == 200
         result = res.json()
-        assert len(result["transformations"]) == 18
+        assert len(result["transformations"]) == 17
 
     def test_get_transformations_success_for_validation_state_invalid(
         self,
@@ -279,7 +279,7 @@ class TestTransformationGet:
         )
         assert res.status_code == 200
         result = res.json()
-        assert len(result["transformations"]) == 1
+        assert len(result["transformations"]) == 2
 
     def test_get_transformations_success_for_user_id(
         self,

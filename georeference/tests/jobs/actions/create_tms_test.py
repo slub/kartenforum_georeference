@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by jacob.mendt@pikobytes.de on 09.03.22
 #
 # This file is subject to the terms and conditions defined in file
@@ -8,7 +8,7 @@
 import os
 import shutil
 
-from georeference.config.paths import PATH_TMP_ROOT, PATH_IMAGE_ROOT
+from georeference.config.paths import PATH_TMP_ROOT
 from georeference.jobs.actions.create_geo_image import run_process_geo_image
 from georeference.jobs.actions.create_tms import run_process_tms
 from georeference.tests.jobs.actions.create_geo_image_test import create_test_data

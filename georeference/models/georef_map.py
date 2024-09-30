@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Created by nicolas.looschen@pikobytes.de on 10.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
+
 import json
 import os
 from datetime import datetime
@@ -11,12 +17,6 @@ from sqlmodel import SQLModel, Field, Session, desc, select
 
 from georeference.config.paths import PATH_GEOREF_ROOT
 from georeference.models import varchar_255, datetime_without_timezone
-
-
-# Created by nicolas.looschen@pikobytes.de on 10.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
 
 
 class ExtentType(UserDefinedType):

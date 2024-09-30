@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from enum import Enum, EnumMeta
-
-
+#
 # Created by nicolas.looschen@pikobytes.de on 22.07.2024
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+
+from enum import Enum, EnumMeta
+
+
 class EnumJobType(Enum, metaclass=EnumMeta):
     TRANSFORMATION_PROCESS = "transformation_process"
     TRANSFORMATION_SET_VALID = "transformation_set_valid"

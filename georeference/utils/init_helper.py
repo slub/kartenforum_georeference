@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by jacob.mendt@pikobytes.de on 25.09.2024
 #
 # This file is subject to the terms and conditions defined in file
@@ -24,6 +24,7 @@ def enable_cors_middleware(app: FastAPI, settings: Settings):
         allow_headers=["*"],
     )
 
+
 def log_startup_information(settings: Settings):
     # Information regarding the used configuration
     logger.debug("Service is start with the following configuration:")
@@ -35,7 +36,9 @@ def log_startup_information(settings: Settings):
     if settings.DEV_MODE and settings.DEV_MODE_SECRET:
         logger.warning("=============================================")
         logger.warning("=============================================")
-        logger.warning("Please be aware that the FastAPI is started in DEV_MODE with a configured DEV_MODE_SECRET!")
+        logger.warning(
+            "Please be aware that the FastAPI is started in DEV_MODE with a configured DEV_MODE_SECRET!"
+        )
         logger.warning("Do not use this in production deployments! It's a backdoor!!!")
         logger.warning("=============================================")
         logger.warning("=============================================")

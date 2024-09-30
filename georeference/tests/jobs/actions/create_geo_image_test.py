@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by jacob.mendt@pikobytes.de on 09.03.22
 #
 # This file is subject to the terms and conditions defined in file
@@ -128,7 +128,9 @@ def create_test_data(
             ),
         ),
         "srcPath": os.path.abspath(os.path.join(PATH_IMAGE_ROOT, f"./{file_name}.tif")),
-        "trgPath": os.path.abspath(os.path.join(PATH_TMP_ROOT, f"./test_{test_name}.tif")),
+        "trgPath": os.path.abspath(
+            os.path.join(PATH_TMP_ROOT, f"./test_{test_name}.tif")
+        ),
     }
 
 

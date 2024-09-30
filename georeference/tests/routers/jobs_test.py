@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Created by nicolas.looschen@pikobytes.de on 22.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import select, Session
 
 from georeference.models.enums import EnumJobState, EnumJobType
 from georeference.models.job import Job
-
-
-# Created by nicolas.looschen@pikobytes.de on 22.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
 
 
 class TestJobs:

@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Created by nicolas.looschen@pikobytes.de on 28.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
+
 import os
 import uuid
 
@@ -17,12 +23,6 @@ from georeference.config.settings import get_settings
 from georeference.utils.georeference import rectify_image
 from georeference.utils.mapfile import write_mapfile
 from georeference.utils.parser import to_gdal_gcps
-
-
-# Created by nicolas.looschen@pikobytes.de on 28.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
 
 
 def _create_temporary_georeference_image(

@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Created by nicolas.looschen@pikobytes.de on 24.07.2024
+#
+# This file is subject to the terms and conditions defined in file
+# "LICENSE", which is part of this source code package
+
 import json
 import os
 import shutil
@@ -17,12 +23,6 @@ from georeference.config.paths import (
 from georeference.models.georef_map import GeorefMap
 from georeference.models.transformation import Transformation
 from georeference.utils.georeference import _get_extent_from_dataset
-
-
-# Created by nicolas.looschen@pikobytes.de on 24.07.2024
-#
-# This file is subject to the terms and conditions defined in file
-# "LICENSE", which is part of this source code package
 
 
 def _same_coordinate(c1, c2):
