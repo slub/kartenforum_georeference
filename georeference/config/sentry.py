@@ -15,7 +15,7 @@ from georeference.config.settings import get_settings
 def setup_sentry():
     settings = get_settings()
 
-    if settings.SENTRY_DSN and settings.DEV_MODE is False:
+    if settings.SENTRY_DSN and len(settings.SENTRY_DSN) > 10:
         logger.info("Initialize sentry...")
         sentry_sdk.init(
             dsn=settings.SENTRY_DSN,
