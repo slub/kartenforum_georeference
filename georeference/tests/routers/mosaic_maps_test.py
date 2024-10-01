@@ -117,7 +117,7 @@ class TestMosaicMapsGet:
         res = test_client.get("/mosaic_maps")
         assert res.status_code == 200
         result = res.json()
-        assert len(result) == 1
+        assert len(result) == 2
         assert result[0]["id"] == test_data["id"]
 
 

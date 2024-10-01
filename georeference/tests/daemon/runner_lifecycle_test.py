@@ -63,13 +63,13 @@ def test_loop_completes_jobs(db_container, es_index):
 
         history = session.exec(select(JobHistory)).all()
 
-        assert len(history) == 14
+        assert len(history) == 15
 
         completed_jobs = session.exec(
             select(JobHistory).where(JobHistory.state == EnumJobState.COMPLETED.value)
         ).all()
 
-        assert len(completed_jobs) == 14
+        assert len(completed_jobs) == 15
 
 
 def test_loop_handles_failed_job(db_container, es_index):
@@ -104,7 +104,7 @@ def test_loop_handles_failed_job(db_container, es_index):
 
         history = session.exec(select(JobHistory)).all()
 
-        assert len(history) == 14
+        assert len(history) == 15
 
         failed_jobs = session.exec(
             select(JobHistory).where(JobHistory.state == EnumJobState.FAILED.value)
@@ -160,7 +160,7 @@ def test_loop_recovers_from_failed_job(db_container, es_index):
 
         history = session.exec(select(JobHistory).order_by(asc(JobHistory.id))).all()
 
-        assert len(history) == 15
+        assert len(history) == 16
 
         failed_jobs = session.exec(
             select(JobHistory).where(JobHistory.state == EnumJobState.FAILED.value)
@@ -170,4 +170,4 @@ def test_loop_recovers_from_failed_job(db_container, es_index):
         successful_jobs = session.exec(
             select(JobHistory).where(JobHistory.state == EnumJobState.COMPLETED.value)
         ).all()
-        assert len(successful_jobs) == 14
+        assert len(successful_jobs) == 15
