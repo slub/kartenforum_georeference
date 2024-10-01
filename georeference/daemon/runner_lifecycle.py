@@ -16,7 +16,8 @@ import os
 import sys
 import time
 import traceback
-
+import sentry_sdk
+from datetime import datetime
 from loguru import logger
 
 from georeference.config.db import get_session
@@ -207,7 +208,13 @@ def main(wait_on_start=1, wait_on_loop=1):
         while True:
             if run_count % settings.DAEMON_LOOP_HEARTBEAT_COUNT == 0:
                 # send heartbeat to sentry
-                logger.error("Sentry Heartbeat. Daemon is still running ...")
+                sentry_sdk.capture_event(
+                    {
+                        "message": "Heartbeat | Daemon.",
+                        "level": "info",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
                 run_count = 0
 
             # To prevent the daemon from having to long lasting logger handles or database session we reinitialize / reset

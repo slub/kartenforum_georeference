@@ -93,6 +93,7 @@ class Settings(BaseSettings):
 
     # Sentry configuration
     SENTRY_DSN: Optional[str] = None
+    SENTRY_ENVIRONMENT: str = "development"
 
     model_config = SettingsConfigDict(
         env_file=[
