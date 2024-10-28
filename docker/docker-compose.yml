@@ -2,32 +2,43 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE.md", which is part of this source code package
-version: '3'
 services:
-  db:
+  georeference-db:
     container_name: pg_container
     image: postgis/postgis:13-master
+    restart: always
     environment:
+      - ES_HOST=elasticsearch
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vkdb
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
-      - ./docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+      - ../database/vkdb-schema.sql:/docker-entrypoint-initdb.d/20_vkdb-schema.sql
+      - ../database/test-data.sql:/docker-entrypoint-initdb.d/30_test-data.sql
+      - ../database/update-sequences.sql:/docker-entrypoint-initdb.d/40_update-sequences.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   mapserver:
     container_name: mapserver
     image: camptocamp/mapserver
+    restart: unless-stopped
     volumes:
       - ../tmp/tmp/:/etc/mapserver/
       - ../tmp/tmp/:/mapdata/
     ports:
-      - 8080:80
+      - "8080:80"
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
     container_name: elasticsearch
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1024m -Xmx1024m
     ulimits:
       memlock:
         soft: -1
@@ -35,9 +46,55 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    mem_limit: 2g
     cap_add:
       - IPC_LOCK
     ports:
-      - 9200:9200
-      - 9300:9300
+      - "9200:9200"
+      - "9300:9300"
+  georeference:
+    build:
+      context: ../
+      dockerfile: georeference/Dockerfile
+      args:
+        - USERNAME=${USER}
+        - UID=${UID}
+    container_name: kartenforum_georeference
+    restart: always
+    environment:
+      - USER=${USER}
+      - UID=${UID}
+      - POSTGRES_HOST=georeference-db
+      - ES_HOST=elasticsearch
+    depends_on:
+      - georeference-db
+    volumes:
+      - ../tmp/:/opt/kartenforum_georeference/data
+      - ../:/code
+      - ./entrypoints/run-fastapi.sh:/entrypoints/run-fastapi.sh
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    entrypoint: /entrypoints/run-fastapi.sh
 
+  georeference-daemon:
+    build:
+      context: ../
+      dockerfile: georeference/Dockerfile
+      args:
+        - USERNAME=${USER}
+        - UID=${UID}
+    container_name: kartenforum_georeference_daemon
+    restart: always
+    environment:
+      - USER=${USER}
+      - UID=${UID}
+      - POSTGRES_HOST=georeference-db
+      - ES_HOST=elasticsearch
+    depends_on:
+      - georeference-db
+    volumes:
+      - ../tmp/:/opt/kartenforum_georeference/data
+      - ../:/code
+      - ./entrypoints/run-job-loop.sh:/entrypoints/run-job-loop.sh
+    entrypoint: /entrypoints/run-job-loop.sh

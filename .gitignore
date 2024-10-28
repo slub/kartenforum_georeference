@@ -1,18 +1,24 @@
 # local developing files
+.venv
+__pycache__
+.pytest_cache
+.idea
 .vscode/
+
+.env.production
+
 .idea/
 .coverage
 /deprecated
 /georeference/__test_data/data_output
-!/georeference/__test_data/data_output/.placeholder
 /georeference/__test_data/data_input
-!/georeference/__test_data/data_input/.placeholder
 /tmp
-!/tmp/.placeholder
 TODO.md
 
-# custom installations files
-/python_env
+# testmon files
+.testmondata
+.testmondata-shm
+.testmondata-wal
 
 # build files
 /georeference.egg-info
@@ -31,3 +37,14 @@ scripts/kartenforum_georeference
 # do not track sql dumps and log files
 *.dump
 *.log
+
+# Local development files
+.local
+LOCAL.md
+
+# do not track files within data directory
+# Ignore all directories within the specified directory
+data/*/
+
+# Allow tracking of the parent directory itself
+!data/

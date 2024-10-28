@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+#
 # Created by nicolas.looschen@pikobytes.de on 25.04.22
 #
 # This file is subject to the terms and conditions defined in file
@@ -9,38 +9,52 @@ import json
 import os.path
 from urllib.parse import urlsplit, urlunsplit
 
+from loguru import logger
+from sqlmodel import delete, update
+
+from georeference.config.constants import raw_map_keys
+from georeference.config.paths import (
+    PATH_IMAGE_ROOT,
+    create_path_if_not_exists,
+)
+from georeference.config.templates import (
+    TEMPLATE_PUBLIC_THUMBNAIL_URL,
+    TEMPLATE_PUBLIC_ZOOMIFY_URL,
+)
 from georeference.jobs.actions.create_raw_image import run_process_raw_image
 from georeference.jobs.actions.create_thumbnail import run_process_thumbnail
 from georeference.jobs.actions.create_zoomify_tiles import run_process_zoomify_tiles
 from georeference.jobs.actions.update_index import run_update_index
-from georeference.models import RawMap, Metadata, Transformation
-from georeference.models.georef_maps import GeorefMap
-from georeference.schema.map import raw_map_keys
-from georeference.settings import PATH_IMAGE_ROOT, TEMPLATE_PUBLIC_THUMBNAIL_URL, TEMPLATE_PUBLIC_ZOOMIFY_URL
-from georeference.utils import create_path_if_not_exists
-from georeference.utils.utils import without_keys, remove_if_exists, get_thumbnail_path, get_zoomify_path
+from georeference.models.georef_map import GeorefMap
+from georeference.models.metadata import Metadata
+from georeference.models.raw_map import RawMap
+from georeference.models.transformation import Transformation
+from georeference.utils.utils import (
+    without_keys,
+    get_thumbnail_path,
+    get_zoomify_path,
+    remove_if_exists,
+)
 
 
-def run_process_update_maps(es_index, dbsession, logger, job):
-    """ Runs jobs of type "maps_update"
+def run_process_update_maps(es_index, dbsession, job):
+    """Runs jobs of type "maps_update"
 
     :param es_index: Elasticsearch client
     :type es_index: elasticsearch.Elasticsearch
     :param dbsession: Database session
     :type dbsession: sqlalchemy.orm.session.Session
-    :param logger: Logger
-    :type logger: logging.Logger
     :param job: Job which will be processed
     :type job: georeference.models.jobs.Job
     """
-    logger.debug('Process maps_update job ...')
+    logger.debug("Process maps_update job ...")
     description = json.loads(job.description)
-    map_id = description['map_id']
+    map_id = description["map_id"]
     metadata_updates = {}
     raw_map_object = RawMap.by_id(map_id, dbsession)
 
-    if 'metadata' in description and description['metadata'] is not None:
-        metadata_updates = {**description['metadata'].copy(), **metadata_updates}
+    if "metadata" in description and description["metadata"] is not None:
+        metadata_updates = {**description["metadata"].copy(), **metadata_updates}
 
     # collect updates which should be written to db
     raw_map_updates = _get_defined_keys(metadata_updates, raw_map_keys)
@@ -51,43 +65,79 @@ def run_process_update_maps(es_index, dbsession, logger, job):
     # Get current path
     processed_image_path = raw_map_object.get_abs_path()
 
-    is_file_updated = 'file' in description and description['file'] is not None
-    logger.debug(f'Update file: {is_file_updated}')
+    is_file_updated = "file" in description and description["file"] is not None
+    logger.debug(f"Update file: {is_file_updated}")
 
     if is_file_updated:
         if not os.path.exists(PATH_IMAGE_ROOT):
-            logger.error(f'Configured PATH_IMAGE_ROOT ({PATH_IMAGE_ROOT}) does not exists.')
+            logger.warning(
+                f"Configured PATH_IMAGE_ROOT ({PATH_IMAGE_ROOT}) does not exists."
+            )
 
         # ensure all paths relative to the PATH_IMAGE_ROOT exists
         create_path_if_not_exists(os.path.dirname(processed_image_path))
 
-        processed_image_path = run_process_raw_image(description['file'], processed_image_path, logger, force=True)
+        processed_image_path = run_process_raw_image(
+            description["file"], processed_image_path, force=True
+        )
 
-        raw_map_updates['file_name'] = os.path.splitext(processed_image_path.split(os.sep)[-1])[0]
-        raw_map_updates['rel_path'] = os.path.relpath(processed_image_path, PATH_IMAGE_ROOT)
+        raw_map_updates["file_name"] = os.path.splitext(
+            processed_image_path.split(os.sep)[-1]
+        )[0]
+        raw_map_updates["rel_path"] = os.path.relpath(
+            processed_image_path, PATH_IMAGE_ROOT
+        )
 
     # handle link updates if necessary
     internal_thumbnail_base_url = _get_base_url(TEMPLATE_PUBLIC_THUMBNAIL_URL)
     internal_zoomify_base_url = _get_base_url(TEMPLATE_PUBLIC_ZOOMIFY_URL)
 
-    if _should_generate_files(metadata, metadata_updates, 'link_zoomify', internal_zoomify_base_url, is_file_updated):
-        metadata_updates['link_zoomify'] = generate_zoomify(processed_image_path, map_id, logger)
+    if _should_generate_files(
+        metadata,
+        metadata_updates,
+        "link_zoomify",
+        internal_zoomify_base_url,
+        is_file_updated,
+    ):
+        metadata_updates["link_zoomify"] = generate_zoomify(
+            processed_image_path, map_id
+        )
 
-    if _should_generate_files(metadata, metadata_updates, 'link_thumb_small', internal_thumbnail_base_url,
-                              is_file_updated):
-        metadata_updates['link_thumb_small'] = generate_thumbnail(processed_image_path, map_id, 120, logger)
+    if _should_generate_files(
+        metadata,
+        metadata_updates,
+        "link_thumb_small",
+        internal_thumbnail_base_url,
+        is_file_updated,
+    ):
+        metadata_updates["link_thumb_small"] = generate_thumbnail(
+            processed_image_path, map_id, 120
+        )
 
-    if _should_generate_files(metadata, metadata_updates, 'link_thumb_mid', internal_thumbnail_base_url,
-                              is_file_updated):
-        metadata_updates['link_thumb_mid'] = generate_thumbnail(processed_image_path, map_id, 400, logger)
+    if _should_generate_files(
+        metadata,
+        metadata_updates,
+        "link_thumb_mid",
+        internal_thumbnail_base_url,
+        is_file_updated,
+    ):
+        metadata_updates["link_thumb_mid"] = generate_thumbnail(
+            processed_image_path, map_id, 400
+        )
 
     # Write updates to db
     if len(raw_map_updates) > 0:
-        dbsession.query(RawMap).filter(RawMap.id == map_id).update(raw_map_updates)
+        stmt = update(RawMap).where(RawMap.id == map_id).values(**raw_map_updates)
+        dbsession.execute(stmt)
 
     if len(metadata_updates) > 0:
         metadata_updates = without_keys(metadata_updates, raw_map_keys)
-        dbsession.query(Metadata).filter(Metadata.raw_map_id == map_id).update(metadata_updates)
+        stmt = (
+            update(Metadata)
+            .where(Metadata.raw_map_id == map_id)
+            .values(**metadata_updates)
+        )
+        dbsession.execute(stmt)
 
     dbsession.flush()
 
@@ -99,10 +149,10 @@ def run_process_update_maps(es_index, dbsession, logger, job):
         georef_obj = GeorefMap.by_raw_map_id(map_id, dbsession)
 
     # update index
-    run_update_index(es_index, raw_map_object, georef_obj, dbsession, logger)
+    run_update_index(es_index, raw_map_object, georef_obj, dbsession)
 
 
-def generate_thumbnail(base_image_path, map_id, size, logger):
+def generate_thumbnail(base_image_path, map_id, size):
     """
     Generates a thumbnail from a specific base_image.
 
@@ -112,19 +162,18 @@ def generate_thumbnail(base_image_path, map_id, size, logger):
     :type map_id: int
     :param size: size of the image:
     :type size: int
-    :param logger: logger
-    :type logger: logging.Logger
     :result: Public url of the thumbnail
     :rtype: path like
     """
-    thumbnail_target = get_thumbnail_path(f'{map_id}_{size}x{size}.jpg')
-    thumbnail_target = run_process_thumbnail(base_image_path, thumbnail_target, logger,
-                                             size, size, force=True)
+    thumbnail_target = get_thumbnail_path(f"{map_id}_{size}x{size}.jpg")
+    thumbnail_target = run_process_thumbnail(
+        base_image_path, thumbnail_target, size, size, force=True
+    )
 
     return TEMPLATE_PUBLIC_THUMBNAIL_URL.format(os.path.basename(thumbnail_target))
 
 
-def generate_zoomify(base_image_path, map_id, logger):
+def generate_zoomify(base_image_path, map_id):
     """
     Generates zoomify tiles from a specific base_image.
 
@@ -132,14 +181,14 @@ def generate_zoomify(base_image_path, map_id, logger):
     :type base_image_path: path like
     :param map_id: Map Id
     :type map_id: int
-    :param logger: logger
-    :type logger: logging.Logger
     :result: Public url of the thumbnail
     :rtype: path like
     """
     # in case the urls in metadata do not exist or in case they are hosted on this system update them
     zoomify_target = get_zoomify_path(str(map_id))
-    zoomify_target = run_process_zoomify_tiles(base_image_path, zoomify_target, logger, force=True)
+    zoomify_target = run_process_zoomify_tiles(
+        base_image_path, zoomify_target, force=True
+    )
     return TEMPLATE_PUBLIC_ZOOMIFY_URL.format(os.path.basename(zoomify_target))
 
 
@@ -150,7 +199,7 @@ def _get_base_url(url):
     :type url: str
     """
     scheme, location, *rest = urlsplit(url)
-    return urlunsplit((scheme, location, '', '', ''))
+    return urlunsplit((scheme, location, "", "", ""))
 
 
 def _get_defined_keys(obj, keys):
@@ -175,11 +224,17 @@ def join_existing_metadata_with_updates(map_id, metadata_updates, dbsession):
     :rtype: dict
     """
     metadata_obj = Metadata.by_map_id(map_id, dbsession)
-    metadata = without_keys(metadata_obj.__dict__, ["raw_map_id", "_sa_instance_state", "time_of_publication"])
+    metadata = without_keys(
+        metadata_obj.__dict__,
+        ["raw_map_id", "_sa_instance_state", "time_of_publication"],
+    )
     metadata = {
         **metadata,
-        **_get_defined_keys(RawMap.by_id(map_id, dbsession).__dict__, ["map_type", "default_crs", "map_scale"]),
-        **{"time_of_publication": metadata_obj.time_of_publication.isoformat()}
+        **_get_defined_keys(
+            RawMap.by_id(map_id, dbsession).__dict__,
+            ["map_type", "default_crs", "map_scale"],
+        ),
+        **{"time_of_publication": metadata_obj.time_of_publication.isoformat()},
     }
     return {**metadata, **metadata_updates}
 
@@ -204,7 +259,8 @@ def _reset_georef_state_for_map(map_id, dbsession):
         dbsession.delete(georef_map_object)
 
         # Delete all related transformations
-        dbsession.query(Transformation).filter(Transformation.raw_map_id == map_id).delete()
+        stmt = delete(Transformation).where(Transformation.raw_map_id == map_id)
+        dbsession.execute(stmt)
 
 
 def _should_generate_files(metadata, metadata_updates, key, base_url, is_file_updated):

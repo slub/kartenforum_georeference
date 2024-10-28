@@ -49,3 +49,23 @@ The paths of the uploaded files and the ids of the associated maps are written t
 - (optional) b - allows to pass basic-auth credentials to the request
 - (required) upload-url - url to the georef service endpoints
 - (required) upload-directory - which directory to scan recursively for files to upload
+
+
+## initialize_zoomify_and_thumbnail.sh
+
+`/initialize_zoomify_and_thumbnail.sh`
+
+The  script is a utility tool designed to initialize thumbnails and zoomify tiles for test data. It automates the process of running python scripts responsible for these initializations within a specified virtual environment.
+
+## download-testdata.sh
+
+`./download-testdata.sh`
+
+The scripts is a utility tool designed to download test data for local development.
+
+## initialize-testdata.sh
+
+`./initialize-testdata.sh`
+
+The scripts is a utility tool designed to initialize test data for local development. It downloads all test data and creates locally thumbnails and zoomify tiles for the test data.
+
