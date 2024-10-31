@@ -48,6 +48,7 @@ alembic = "^1.13.2"
 start-daemon = "georeference.daemon.runner:runner"
 kill-daemon = "georeference.daemon.runner:kill"
 start-job-loop = "georeference.daemon.runner_lifecycle:run_without_daemon"
+fix-tms = "georeference.scripts.fix_tms:main"
 
 [build-system]
 requires = ["poetry-core"]
