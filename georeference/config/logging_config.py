@@ -25,13 +25,19 @@ def parse_log_level(log_level: str) -> int:
 def configure_logging():
     # Setup log level from settings
     settings = get_settings()
-    log_level = settings.LOG_LEVEL
-    numeric_level = parse_log_level(log_level)
+    log_level = parse_log_level(settings.LOG_LEVEL)
 
     # Remove the default handler
     logger.remove(0)
 
     # Add new handler with min log level defined in the settings
-    logger.add(sys.stderr, level=numeric_level, colorize=True)
+    if settings.API_LOGFILE_PATH is not None:
+        logger.add(
+            settings.API_LOGFILE_PATH,
+            level=log_level,
+            rotation="daily",
+            retention="14 days",
+        )
+    logger.add(sys.stderr, level=log_level, colorize=True)
     logger.debug(f"Logging configured with level {log_level}")
     return logger

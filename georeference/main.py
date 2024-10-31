@@ -32,7 +32,6 @@ setup_sentry()
 
 logger.debug("Initialize settings")
 settings = get_settings()
-logger.debug(json.dumps(settings.model_dump(), indent=2))
 
 logger.debug("Create data directories")
 create_data_directories()

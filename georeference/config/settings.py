@@ -119,6 +119,11 @@ class Settings(BaseSettings):
     DAEMON_LOG_LEVEL: str = "DEBUG"
     DAEMON_LOOP_HEARTBEAT_COUNT: int = 10
 
+    # Log file settings for api
+    API_LOGFILE_PATH: Optional[str] = os.path.abspath(
+        os.path.join(BASE_PATH, "../tmp/api.log")
+    )
+
     # Configuration of the data root directory
     PATH_BASE_ROOT: str = BASE_PATH
     PATH_DATA_ROOT: str = os.path.abspath(os.path.join(BASE_PATH, "../data"))
