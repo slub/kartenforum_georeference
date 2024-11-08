@@ -37,7 +37,11 @@ logger.debug("Create data directories")
 create_data_directories()
 
 logger.debug("Initialize FastAPI...")
-app = FastAPI()
+app = FastAPI(
+    docs_url=("/docs" if settings.SWAGGER_ENABLED else None),
+    redoc_url=("/redoc" if settings.REDOC_ENABLED else None),
+    openapi_url=("/openapi.json" if settings.OPENAPI_ENABLED else None),
+)
 
 # Setup CORS middleware, but just if it is enabled. In production setups CORS should be handled from the proxy service.
 if settings.CORS_ENABLED:

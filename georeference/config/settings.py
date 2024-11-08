@@ -139,6 +139,11 @@ class Settings(BaseSettings):
     # Overwrites are used within the local development setup. In production, they should be set to null
     OVERWRITE_MAPFILE_TMP_PATH: str = ""
 
+    # Disable swagger docs
+    SWAGGER_ENABLED: bool = False
+    REDOC_ENABLED: bool = False
+    OPENAPI_ENABLED: bool = False
+
 
 # For usage of the settings as dependency
 @lru_cache
