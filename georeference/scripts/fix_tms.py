@@ -28,7 +28,7 @@ sys.path.insert(0, BASE_PATH)
 sys.path.append(BASE_PATH_PARENT)
 
 # Define path of the process log
-PATH_PROCESS_LOG = os.path.join(get_settings().PATH_DATA_ROOT, "process.log")
+PATH_PROCESS_LOG = os.path.join(get_settings().PATH_DATA_ROOT, "tasks/process.log")
 
 def _initialize_logger():
     """Function loads and create the logger for the daemon"""
