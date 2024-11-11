@@ -30,6 +30,7 @@ sys.path.append(BASE_PATH_PARENT)
 # Define path of the process log
 PATH_PROCESS_LOG = os.path.join(get_settings().PATH_DATA_ROOT, "tasks/process.log")
 
+
 def _initialize_logger():
     """Function loads and create the logger for the daemon"""
 
@@ -40,6 +41,7 @@ def _initialize_logger():
     logger.add(sys.stderr, level=log_level, colorize=True)
     logger.debug("Load logger.")
 
+
 def _read_json_file(file):
     if os.path.exists(file) is False:
         return {}
@@ -48,14 +50,23 @@ def _read_json_file(file):
     with open(file, "r") as f:
         return json.load(f)
 
+
 def _write_json_file(file, json_content):
     # Write the JSON content to a given file path
     with open(file, "w") as f:
         json.dump(json_content, f, indent=2)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Scripts for reprocessing all TMS for transformation with a target crs of 4314.")
-    parser.add_argument("--job_number", help="Number of jobs to process on one run.", type=int, default=1)
+    parser = argparse.ArgumentParser(
+        description="Scripts for reprocessing all TMS for transformation with a target crs of 4314."
+    )
+    parser.add_argument(
+        "--job_number",
+        help="Number of jobs to process on one run.",
+        type=int,
+        default=1,
+    )
 
     # Parse command-line arguments
     args = parser.parse_args(sys.argv[1:])
@@ -73,12 +84,16 @@ def main():
 
         logger.info("Load process log.")
         process_log = _read_json_file(PATH_PROCESS_LOG)
-        jobs = process_log["jobs"] if "jobs" in process_log else {
-            "pending": [],
-            "pending_number": 0,
-            "finished": [],
-            "finished_number": 0,
-        }
+        jobs = (
+            process_log["jobs"]
+            if "jobs" in process_log
+            else {
+                "pending": [],
+                "pending_number": 0,
+                "finished": [],
+                "finished_number": 0,
+            }
+        )
         job_number = args.job_number
 
         # Generate job for all relevant georef maps
@@ -86,7 +101,9 @@ def main():
             logger.info("Generate job list")
             all_georef_maps = GeorefMap.all(session)
             for georef_map in all_georef_maps:
-                transformation = Transformation.by_id(georef_map.transformation_id, session)
+                transformation = Transformation.by_id(
+                    georef_map.transformation_id, session
+                )
                 logger.debug(transformation.target_crs)
                 if transformation.target_crs == 4314:
                     jobs["pending"].append(georef_map.raw_map_id)
@@ -107,16 +124,15 @@ def main():
             path_tms_directory = get_tms_directory(raw_map)
 
             if raw_map_id in jobs["finished"]:
-                logger.info("Skip job with raw map id %s, because it is already processed." % raw_map_id)
+                logger.info(
+                    "Skip job with raw map id %s, because it is already processed."
+                    % raw_map_id
+                )
                 continue
             else:
                 logger.info("Recalculate TMS for raw map id %s." % raw_map_id)
                 counter_processed_jobs += 1
-                run_process_tms(
-                    path_tms_directory,
-                    path_geo_image,
-                    force=True
-                )
+                run_process_tms(path_tms_directory, path_geo_image, force=True)
                 jobs["finished"].append(raw_map_id)
                 jobs["finished_number"] = len(jobs["finished"])
                 jobs["pending"].remove(raw_map_id)
@@ -131,9 +147,7 @@ def main():
         logger.info(f"Finished jobs: {jobs['finished_number']}")
 
         # Write the json dictionary to the log file
-        _write_json_file(PATH_PROCESS_LOG, {
-            "jobs": jobs
-        })
+        _write_json_file(PATH_PROCESS_LOG, {"jobs": jobs})
 
         logger.info("Clean up")
         if session is not None:
