@@ -38,6 +38,7 @@ TYPO3_URL_TYPE = Annotated[str, AfterValidator(is_https)]
 class Settings(BaseSettings):
     # Role configuration
     ADMIN_ROLE: str = "vk2-admin"
+    EDITOR_ROLE: str = "vk2-editor"
     USER_ROLE: str = "vk2-user"
 
     # CORS CONFIGURATION

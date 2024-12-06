@@ -8,3 +8,6 @@ SELECT setval('mosaic_maps_id_seq', max(id))
 FROM mosaic_maps;
 SELECT setval('map_view_id_seq', max(id))
 FROM map_view;
+
+SELECT setval('vector_maps_id_seq', max(id))
+FROM vector_maps;

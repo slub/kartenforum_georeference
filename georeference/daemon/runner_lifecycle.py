@@ -16,8 +16,9 @@ import os
 import sys
 import time
 import traceback
-import sentry_sdk
 from datetime import datetime
+
+import sentry_sdk
 from loguru import logger
 
 from georeference.config.db import get_session
@@ -35,7 +36,7 @@ from georeference.jobs.process_update_maps import run_process_update_maps
 from georeference.jobs.set_validation import run_process_new_validation
 from georeference.models.enums import EnumJobType, EnumJobState
 from georeference.models.job import Job, JobHistory
-from georeference.utils.es_index import get_es_index_from_settings
+from georeference.utils.es_index.es_index_sync import get_es_index_from_settings
 from georeference.utils.init_helper import log_startup_information
 
 # For correct resolving of the paths we use derive the base_path of the file

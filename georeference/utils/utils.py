@@ -29,6 +29,30 @@ def _same_coordinate(c1, c2):
     return c1[0] == c2[0] and c1[1] == c2[1]
 
 
+def bounds_to_polygon(bounds):
+    """Converts a bounds tuple to a GeoJSON polygon.
+
+    :param bounds: Bounds tuple
+    :type bounds: tuple
+    :result: GeoJSON polygon
+    :rtype: dict"""
+
+    result = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [bounds[0], bounds[1]],
+                [bounds[2], bounds[1]],
+                [bounds[2], bounds[3]],
+                [bounds[0], bounds[3]],
+                [bounds[0], bounds[1]],
+            ]
+        ],
+    }
+
+    return result
+
+
 def fix_polygon_geometry(geometry):
     """The function checks the given geometry for different typical failures, which leads
         to indexing problems for the geometry.

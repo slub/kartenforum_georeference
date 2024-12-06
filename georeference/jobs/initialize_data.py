@@ -7,7 +7,9 @@
 # "LICENSE", which is part of this source code package
 import json
 import os
+
 from loguru import logger
+from shapely.io import from_geojson
 
 from georeference.config.paths import PATH_MOSAIC_ROOT
 from georeference.config.settings import get_settings
@@ -20,10 +22,12 @@ from georeference.models.metadata import Metadata
 from georeference.models.mosaic_map import MosaicMap
 from georeference.models.raw_map import RawMap
 from georeference.models.transformation import Transformation
-from georeference.utils.es_index import (
-    get_es_index_from_settings,
+from georeference.models.vector_map import VectorMap
+from georeference.utils.es_index.document_formatter import (
     generate_es_original_map_document,
+    generate_es_vector_map_document,
 )
+from georeference.utils.es_index.es_index_sync import get_es_index_from_settings
 from georeference.utils.mosaics import get_mosaic_dataset_path
 from georeference.utils.utils import (
     get_extent_as_geojson_polygon,
@@ -31,6 +35,7 @@ from georeference.utils.utils import (
     get_mapfile_path,
     get_mapfile_id,
     get_geometry,
+    bounds_to_polygon,
 )
 
 
@@ -141,6 +146,31 @@ def run_initialize_data(dbsession):
                 logger.info("Error while trying to mosaic document to index")
                 logger.error(e)
         logger.info("Finish initializing mosaic maps.")
+
+        logger.info("Start processing all vector maps ...")
+        for vector_map_obj in VectorMap.all_with_content(dbsession):
+            logger.info(f"Initialize vector map with id {vector_map_obj[0].id} ...")
+            try:
+                vector_map, vector_map_content = vector_map_obj
+                geom = from_geojson(json.dumps(vector_map_content.content))
+                document = generate_es_vector_map_document(
+                    vector_map, bounds_to_polygon(geom.bounds)
+                )
+                logger.debug(
+                    f"Write search record for vector map id {vector_map.id} to index ..."
+                )
+                logger.debug(document)
+                es_index.index(
+                    index=settings.ES_INDEX_NAME,
+                    doc_type=None,
+                    id=vector_map.public_id,
+                    body=document,
+                )
+
+            except Exception as e:
+                logger.info("Error while trying to vector document to index")
+                logger.error(e)
+        logger.info("Finish initializing vector maps.")
 
         logger.info("Finish initialization job.")
         return True

@@ -19,7 +19,9 @@ from georeference.jobs.actions.create_mosaic_services import run_process_mosaic_
 from georeference.models.enums import EnumJobType
 from georeference.models.georef_map import GeorefMap
 from georeference.models.mosaic_map import MosaicMap
-from georeference.utils.es_index import generate_es_mosaic_map_document
+from georeference.utils.es_index.document_formatter import (
+    generate_es_mosaic_map_document,
+)
 from georeference.utils.mosaics import (
     create_mosaic_dataset,
     get_mosaic_dataset_path,

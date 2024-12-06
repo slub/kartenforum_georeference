@@ -9,8 +9,8 @@
 from typing import Annotated, Union
 
 import requests
-from loguru import logger
 from fastapi import Cookie, HTTPException, Depends, Header
+from loguru import logger
 
 from georeference.config.settings import get_settings, Settings
 from georeference.schemas.user import User, UserResponse
@@ -36,7 +36,10 @@ def get_user_from_session(
                 return User(
                     username=dev_mode_name,
                     uid=-1,
-                    groups=[settings.USER_ROLE, settings.ADMIN_ROLE],
+                    groups=[
+                        settings.USER_ROLE,
+                        settings.ADMIN_ROLE,
+                    ],
                 )
 
         response = http_session.get(
@@ -63,9 +66,24 @@ def require_authenticated_user(user: Annotated[User, Depends(get_user_from_sessi
     return user
 
 
+### Authorization policies
+
+
+def is_admin(user: User, settings: Settings):
+    return settings.ADMIN_ROLE in user.groups
+
+
+def is_editor(user: User, settings: Settings):
+    return settings.EDITOR_ROLE in user.groups
+
+
+# Decorator to require a specific user role - admins bypass this check
 def require_user_role(role: str):
-    def _require_user_role(user: User = Depends(require_authenticated_user)):
-        if role not in user.groups:
+    def _require_user_role(
+        user: User = Depends(require_authenticated_user),
+        settings: Settings = Depends(get_settings),
+    ):
+        if role not in user.groups and not is_admin(user, settings):
             raise HTTPException(status_code=403, detail="Not authorized")
         return user
 

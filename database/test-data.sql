@@ -239,7 +239,9 @@ VALUES (27, 'transformation_process', '{"transformation_id": 40}', 'not_started'
 INSERT INTO public.jobs (id, type, description, state, submitted, user_id, comment)
 VALUES (28, 'transformation_process', '{"transformation_id": 41}', 'not_started', '2021-11-22 15:57:34.685979', 'test',
         NULL);
-INSERT INTO public.jobs_history (id, type, description, state, submitted, user_id, comment) VALUES (29, 'mosaic_map_create', '{"mosaic_map_id": 1, "mosaic_map_name": "mosaik_1"}', 'completed', '2024-09-30 12:57:27.636057', 'jmendt', NULL);
+INSERT INTO public.jobs_history (id, type, description, state, submitted, user_id, comment)
+VALUES (29, 'mosaic_map_create', '{"mosaic_map_id": 1, "mosaic_map_name": "mosaik_1"}', 'completed',
+        '2024-09-30 12:57:27.636057', 'jmendt', NULL);
 
 
 --
@@ -363,11 +365,45 @@ VALUES (10003265, 'Meßtischblatt 2340 : Lissa, 1919', 'Lissa', 'Topographische 
 -- Data for Name: mosaic_maps; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.mosaic_maps (id, name, raw_map_ids, title, title_short, description, time_of_publication, link_thumb, map_scale, last_change, last_service_update, last_overview_update) VALUES (1, 'mosaik_1', '{10007521,10001963,10001556}', 'Mosaik', 'Mosaik', 'Test der Mosaikkarte', '1945-01-01 00:00:00', 'https://thumbnails.ddev.site/df_dk_0010001_5154_1892_120x120.jpg', 25000, '2024-09-30 12:57:27.627049', '2024-09-30 12:58:21.835176', NULL);
+INSERT INTO public.mosaic_maps (id, name, raw_map_ids, title, title_short, description, time_of_publication, link_thumb,
+                                map_scale, last_change, last_service_update, last_overview_update)
+VALUES (1, 'mosaik_1', '{10007521,10001963,10001556}', 'Mosaik', 'Mosaik', 'Test der Mosaikkarte',
+        '1945-01-01 00:00:00', 'https://thumbnails.ddev.site/df_dk_0010001_5154_1892_120x120.jpg', 25000,
+        '2024-09-30 12:57:27.627049', '2024-09-30 12:58:21.835176', NULL);
 
 
 --
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
+INSERT INTO public.vector_maps (id, public_id, description, title, link_thumb, submitted, last_change, last_request,
+                                request_count)
+VALUES (1, '7d06b85a-99b4-404a-9501-a282e0180032', 'Dresden city area', 'Dresden', null, '2024-11-13 08:24:14.429273',
+        '2024-11-13 08:24:14.429273', null, 0);
+INSERT INTO public.vector_maps (id, public_id, description, title, link_thumb, submitted, last_change, last_request,
+                                request_count)
+VALUES (2, '8d2605e2-1ecd-47d7-be2c-9fb3042715c7', 'Dresden city area', 'Test Map', null, '2024-11-13 08:24:33.876109',
+        '2024-11-13 08:24:33.876109', '2024-11-13 08:24:39.587214', 2);
 
+
+
+INSERT INTO public.vector_maps_content (vector_map_id, content, version, submitted, created_by)
+VALUES (1,
+        '{"bbox": null, "type": "FeatureCollection", "features": [{"id": null, "bbox": null, "type": "Feature", "geometry": {"bbox": null, "type": "Polygon", "coordinates": [[[13.47067215549103, 51.204420835808065], [13.47067215549103, 50.8292773400147], [14.123496020148508, 50.8292773400147], [14.123496020148508, 51.204420835808065], [13.47067215549103, 51.204420835808065]]]}, "properties": {}}]}',
+        0, '2024-11-13 08:24:14.429273', 'test_user');
+INSERT INTO public.vector_maps_content (vector_map_id, content, version, submitted, created_by)
+VALUES (2,
+        '{"bbox": null, "type": "FeatureCollection", "features": [{"id": null, "bbox": null, "type": "Feature", "geometry": {"bbox": null, "type": "Polygon", "coordinates": [[[13.47067215549103, 51.204420835808065], [13.47067215549103, 50.8292773400147], [14.123496020148508, 50.8292773400147], [14.123496020148508, 51.204420835808065], [13.47067215549103, 51.204420835808065]]]}, "properties": {}}]}',
+        0, '2024-11-13 08:24:33.876109', 'test_user');
+INSERT INTO public.vector_maps_content (vector_map_id, content, version, submitted, created_by)
+VALUES (2,
+        '{"bbox": null, "type": "FeatureCollection", "features": [{"id": null, "bbox": null, "type": "Feature", "geometry": {"bbox": null, "type": "Polygon", "coordinates": [[[13.47067215549103, 51.204420835808065], [13.47067215549103, 50.8292773400147], [14.123496020148508, 50.8292773400147], [14.123496020148508, 51.204420835808065], [13.47067215549103, 51.204420835808065]]]}, "properties": {}}, {"id": null, "bbox": null, "type": "Feature", "geometry": {"bbox": null, "type": "Polygon", "coordinates": [[[13.469205518550979, 51.558985875028156], [13.469205518550979, 51.28225178432186], [14.11402530533158, 51.28225178432186], [14.11402530533158, 51.558985875028156], [13.469205518550979, 51.558985875028156]]]}, "properties": {}}]}',
+        1, '2024-11-13 08:29:40.084019', 'test_user');
+
+
+INSERT INTO public.vector_maps_roles (vector_map_id, role, user_id)
+VALUES (1, 'owner', 'test_user');
+INSERT INTO public.vector_maps_roles (vector_map_id, role, user_id)
+VALUES (1, 'editor', 'test_user_2');
+INSERT INTO public.vector_maps_roles (vector_map_id, role, user_id)
+VALUES (2, 'owner', 'test_user');
