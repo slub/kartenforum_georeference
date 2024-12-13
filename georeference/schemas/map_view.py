@@ -25,6 +25,7 @@ class CustomBasemap(BaseModel):
 class EnumOperationalLayerType(Enum, metaclass=EnumMeta):
     GEOJSON = "geojson"
     HISTORIC_MAP = "historic_map"
+    VECTOR = "vector"
 
 
 class OperationalLayerBase(BaseModel):
@@ -44,6 +45,10 @@ class HistoricMapLayer(OperationalLayerBase):
     type: Literal[EnumOperationalLayerType.HISTORIC_MAP.value]
 
 
+class VectorMapLayer(OperationalLayerBase):
+    type: Literal[EnumOperationalLayerType.VECTOR.value]
+
+
 class CameraOptions(BaseModel):
     bearing: float
     center: conlist(float, min_length=2, max_length=2)
@@ -55,7 +60,7 @@ class CameraOptions(BaseModel):
 class MapViewJsonBase(BaseModel):
     activeBasemapId: str
     customBasemaps: Optional[List[CustomBasemap]] = []
-    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
+    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer, VectorMapLayer]]
     is3dEnabled: Optional[bool]
     cameraOptions: CameraOptions
 
