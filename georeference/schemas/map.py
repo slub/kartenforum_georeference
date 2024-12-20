@@ -30,26 +30,26 @@ class MetadataPayload(BaseModel):
 
 
 class MapResponse(BaseModel):
-    description: str
+    description: Optional[str] = None
     license: str
     title: str
     title_short: str
     time_of_publication: NaiveDatetime
 
-    link_thumb_small: Optional[str]
-    link_thumb_mid: Optional[str]
-    link_zoomify: Optional[str]
-    measures: Optional[str]
-    owner: Optional[str]
-    permalink: Optional[str]
-    ppn: Optional[str]
-    technic: Optional[str]
-    title_serie: Optional[str]
-    type: Optional[str]
+    link_thumb_small: Optional[str] = None
+    link_thumb_mid: Optional[str] = None
+    link_zoomify: Optional[str] = None
+    measures: Optional[str] = None
+    owner: Optional[str] = None
+    permalink: Optional[str] = None
+    ppn: Optional[str] = None
+    technic: Optional[str] = None
+    title_serie: Optional[str] = None
+    type: Optional[str] = None
 
     file_name: str
     map_id: str
     transformation_id: Optional[int] = None
-    map_type: Optional[str]
+    map_type: Optional[str] = None
     allow_download: bool
-    map_scale: Optional[int]
+    map_scale: Optional[int] = None
