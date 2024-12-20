@@ -42,6 +42,7 @@ from georeference.schemas.vector_map import (
     VectorMapResponsePublic,
     VectorMapUpdatePayload,
     VectorMapVersionPayload,
+    VectorMapUpdateRolesPayload,
 )
 from georeference.utils.auth import (
     require_user_role,
@@ -514,6 +515,106 @@ def get_roles(
             VectorMapRoles.by_vector_map_id(vector_map.id, session),
         )
     )
+
+
+@router.patch(
+    "/{vector_map_id}/roles",
+    tags=["vector_map"],
+    responses={200: {"description": "Roles successfully updated", "content": None}},
+)
+def update_roles(
+    vector_map_id: uuid.UUID,
+    new_roles: VectorMapUpdateRolesPayload,
+    user: User = Depends(require_user_role(settings.EDITOR_ROLE)),
+    session: Session = Depends(get_session),
+):
+    vector_map = get_vector_map(vector_map_id, session)
+
+    # Check that the user is allowed to edit the roles
+    if not VectorMap.is_owner(vector_map.id, user, session):
+        raise HTTPException(
+            status_code=403,
+            detail="User is not allowed to edit the roles of this vector map",
+        )
+
+    # Check a user is not added and removed in the same request
+    modified_users = set([])
+
+    if new_roles.create_or_update is not None:
+        for role in new_roles.create_or_update:
+            if role.user_id in modified_users:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"The user {role.user_id} appears multiple times",
+                )
+
+            modified_users.add(role.user_id)
+
+    if new_roles.remove is not None:
+        for role in new_roles.remove:
+            if role.user_id in modified_users:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"The user {role.user_id} appears multiple times",
+                )
+
+            modified_users.add(role.user_id)
+
+    # Handle add roles
+    if new_roles.create_or_update is not None:
+        for role in new_roles.create_or_update:
+            if role.role == RoleEnum.owner and not is_admin(user, settings):
+                raise HTTPException(
+                    status_code=403, detail="Only admins can modify owners"
+                )
+
+            vector_map_role = VectorMapRoles.by_vector_map_id_and_user_id(
+                vector_map.id, role.user_id, session
+            )
+
+            if vector_map_role is None:
+                # If the user does not have a role for this vector map, create a new role
+                vector_map_role = VectorMapRoles(
+                    vector_map_id=vector_map.id,
+                    user_id=role.user_id,
+                    role=role.role,
+                )
+
+            else:
+                # If the user already has a role for this vector map, update the role
+                vector_map_role.role = role.role
+
+            try:
+                session.add(vector_map_role)
+                session.flush()
+            except IntegrityError:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"User {role.user_id} already has a role for this vector map",
+                )
+
+    # Handle remove roles
+    if new_roles.remove is not None:
+        for role in new_roles.remove:
+            to_delete = VectorMapRoles.by_vector_map_id_and_user_id(
+                vector_map.id, role.user_id, session
+            )
+
+            if to_delete is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No role found for the supplied user {role.user_id}",
+                )
+
+            if to_delete.role == RoleEnum.owner and not is_admin(user, settings):
+                raise HTTPException(
+                    status_code=403, detail="Only admins can modify owners"
+                )
+
+            session.delete(to_delete)
+            session.flush()
+
+    session.commit()
 
 
 @router.post(

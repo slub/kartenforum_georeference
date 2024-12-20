@@ -168,7 +168,7 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
             "slub_url": None,
             "online_resources": [],
             "tms_urls": [],
-            "thumb_url": "",
+            "thumb_url": str(vector_map_obj.link_thumb).replace("http:", ""),
             "geometry": geometry if geometry is not None else None,  #
             "has_georeference": True,
             "time_published": vector_map_obj.submitted.date().isoformat(),

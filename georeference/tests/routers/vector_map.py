@@ -841,3 +841,174 @@ class TestVectorMapRolesRemove:
         )
 
         assert response.status_code == 403
+
+
+class TestVectorMapRolesUpdate:
+    def test_no_user_authentication(
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+        )
+
+        assert response.status_code == 401
+
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-editor")
+    def test_user_unauthorized(
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={"create_or_update": [{"user_id": "test_user", "role": "editor"}]},
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    def test_remove_role_success(
+        self,
+        override_get_session,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={"remove": [{"user_id": "test_user_2"}]},
+        )
+
+        assert response.status_code == 200
+
+        with Session(db_container[1]) as session:
+            vector_map = VectorMap.by_public_id(
+                "7d06b85a-99b4-404a-9501-a282e0180032", session
+            )
+            roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
+            assert len(roles) == 1
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    def test_remove_role_failure_not_found(
+        self,
+        override_get_session_read_only,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={"remove": [{"user_id": "new_user"}]},
+        )
+
+        assert response.status_code == 404
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    def test_remove_role_failure_not_authorized(
+        self,
+        override_get_session_read_only,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={"remove": [{"user_id": "test_user"}]},
+        )
+
+        assert response.status_code == 403
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-admin")
+    def test_add_role_failure_same_user_twice(
+        self,
+        override_get_session_read_only,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={
+                "create_or_update": [
+                    {"user_id": "test_user", "role": "editor"},
+                    {"user_id": "test_user", "role": "owner"},
+                ]
+            },
+        )
+
+        assert response.status_code == 409
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-admin")
+    def test_add_remove_role_failure_same_user_twice(
+        self,
+        override_get_session_read_only,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={
+                "create_or_update": [
+                    {"user_id": "test_user", "role": "editor"},
+                ],
+                "remove": [
+                    {"user_id": "test_user", "role": "owner"},
+                ],
+            },
+        )
+
+        assert response.status_code == 409
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    def test_add_remove_role_success(
+        self,
+        override_get_session,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={
+                "create_or_update": [{"user_id": "test_user_15", "role": "editor"}],
+                "remove": [{"user_id": "test_user_2"}],
+            },
+        )
+
+        assert response.status_code == 200
+
+        with Session(db_container[1]) as session:
+            vector_map = VectorMap.by_public_id(
+                "7d06b85a-99b4-404a-9501-a282e0180032", session
+            )
+            roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
+            assert len(roles) == 2
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    def test_adding_user_twice_failure(
+        self,
+        override_get_session_read_only,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.patch(
+            "/vector_maps/7d06b85a-99b4-404a-9501-a282e0180032/roles",
+            json={
+                "create_or_update": [{"user_id": "test_user_2", "role": "owner"}],
+            },
+        )
+
+        assert response.status_code == 403

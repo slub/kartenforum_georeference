@@ -78,6 +78,11 @@ class VectorMapRemoveRolePayload(BaseModel):
     user_id: str
 
 
+class VectorMapUpdateRolesPayload(BaseModel):
+    create_or_update: Optional[List[VectorMapRolePayload]] = None
+    remove: Optional[List[VectorMapRemoveRolePayload]] = None
+
+
 class VectorMapCreateResponse(BaseModel):
     id: uuid.UUID
 
