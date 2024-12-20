@@ -168,7 +168,7 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
             "slub_url": None,
             "online_resources": [],
             "tms_urls": [],
-            "thumb_url": str(vector_map_obj.link_thumb).replace("http:", ""),
+            "thumb_url": str(vector_map_obj.link_thumb).replace("http:", "") if vector_map_obj.link_thumb is not None else "",
             "geometry": geometry if geometry is not None else None,  #
             "has_georeference": True,
             "time_published": vector_map_obj.submitted.date().isoformat(),
@@ -176,6 +176,6 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
         }
     except Exception as e:
         logger.warning(
-            "Failed creating a es document for mosaic map %s." % vector_map_obj.id
+            "Failed creating a es document for vector map %s." % vector_map_obj.id
         )
         logger.error(e)
