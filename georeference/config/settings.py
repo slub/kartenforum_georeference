@@ -38,6 +38,7 @@ TYPO3_URL_TYPE = Annotated[str, AfterValidator(is_https)]
 class Settings(BaseSettings):
     # Role configuration
     ADMIN_ROLE: str = "vk2-admin"
+    EDITOR_ROLE: str = "vk2-editor"
     USER_ROLE: str = "vk2-user"
 
     # CORS CONFIGURATION
@@ -119,6 +120,11 @@ class Settings(BaseSettings):
     DAEMON_LOG_LEVEL: str = "DEBUG"
     DAEMON_LOOP_HEARTBEAT_COUNT: int = 10
 
+    # Log file settings for api
+    API_LOGFILE_PATH: Optional[str] = os.path.abspath(
+        os.path.join(BASE_PATH, "../tmp/api.log")
+    )
+
     # Configuration of the data root directory
     PATH_BASE_ROOT: str = BASE_PATH
     PATH_DATA_ROOT: str = os.path.abspath(os.path.join(BASE_PATH, "../data"))
@@ -133,6 +139,11 @@ class Settings(BaseSettings):
 
     # Overwrites are used within the local development setup. In production, they should be set to null
     OVERWRITE_MAPFILE_TMP_PATH: str = ""
+
+    # Disable swagger docs
+    SWAGGER_ENABLED: bool = False
+    REDOC_ENABLED: bool = False
+    OPENAPI_ENABLED: bool = False
 
 
 # For usage of the settings as dependency

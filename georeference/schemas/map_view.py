@@ -7,8 +7,8 @@
 from enum import Enum, EnumMeta
 from typing import List, Optional, Union, Literal
 
-from geojson_pydantic import FeatureCollection, Polygon
-from pydantic import BaseModel, conlist
+from geojson_pydantic import FeatureCollection
+from pydantic import BaseModel, conlist, Field
 
 
 class MapViewResponse(BaseModel):
@@ -23,25 +23,25 @@ class CustomBasemap(BaseModel):
 
 
 class EnumOperationalLayerType(Enum, metaclass=EnumMeta):
-    GEOJSON = "geojson"
     HISTORIC_MAP = "historic_map"
+    VECTOR = "vector"
 
 
 class OperationalLayerBase(BaseModel):
-    id: str
     isVisible: bool
     opacity: float
-    properties: dict
-    geometry: Optional[Polygon] = None
 
 
-class GeoJsonLayer(OperationalLayerBase):
-    type: Literal[EnumOperationalLayerType.GEOJSON.value]
+class ContentPersistentLayer(OperationalLayerBase):
+    # Currently only vector maps support content persistence
+    type: Literal[EnumOperationalLayerType.VECTOR.value]
     geojson: FeatureCollection
+    properties: dict
 
 
-class HistoricMapLayer(OperationalLayerBase):
-    type: Literal[EnumOperationalLayerType.HISTORIC_MAP.value]
+class IdPersistentLayer(OperationalLayerBase):
+    id: str
+    type: EnumOperationalLayerType
 
 
 class CameraOptions(BaseModel):
@@ -54,8 +54,8 @@ class CameraOptions(BaseModel):
 # New Mapview does not have distinction between 2d and 3d view mode in camera options
 class MapViewJsonBase(BaseModel):
     activeBasemapId: str
-    customBasemaps: Optional[List[CustomBasemap]] = []
-    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
+    customBasemaps: Optional[List[CustomBasemap]] = Field(default_factory=lambda: [])
+    operationalLayers: List[Union[ContentPersistentLayer, IdPersistentLayer]]
     is3dEnabled: Optional[bool]
     cameraOptions: CameraOptions
 
@@ -66,8 +66,9 @@ class MapViewPayload(BaseModel):
 
 class LegacyMapViewJsonBase(BaseModel):
     activeBasemapId: str
-    customBasemaps: Optional[List[CustomBasemap]] = []
-    operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
+    customBasemaps: Optional[List[CustomBasemap]] = Field(default_factory=lambda: [])
+    # Not existent anymore
+    # operationalLayers: List[Union[GeoJsonLayer, HistoricMapLayer]]
 
 
 # Deprecated, only here for informational purposes

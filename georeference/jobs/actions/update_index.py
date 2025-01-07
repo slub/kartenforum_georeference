@@ -11,7 +11,9 @@ from loguru import logger
 
 from georeference.config.settings import get_settings
 from georeference.models.metadata import Metadata
-from georeference.utils.es_index import generate_es_original_map_document
+from georeference.utils.es_index.document_formatter import (
+    generate_es_original_map_document,
+)
 from georeference.utils.utils import get_geometry
 
 

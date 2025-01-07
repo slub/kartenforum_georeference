@@ -98,3 +98,23 @@ services:
       - ../:/code
       - ./entrypoints/run-job-loop.sh:/entrypoints/run-job-loop.sh
     entrypoint: /entrypoints/run-job-loop.sh
+
+#  georeference-fix-tms:
+#    build:
+#      context: ../
+#      dockerfile: georeference/Dockerfile
+#      args:
+#        - USERNAME=${USER}
+#        - UID=${UID}
+#    container_name: kartenforum_georeference_fix_tms
+#    environment:
+#      - USER=${USER}
+#      - UID=${UID}
+#      - POSTGRES_HOST=georeference-db
+#      - LOG_LEVEL=DEBUG
+#    depends_on:
+#      - georeference-db
+#    volumes:
+#      - ../tmp/:/opt/kartenforum_georeference/data
+#      - ../:/code
+#    entrypoint: ["sh", "-c", "poetry install && poetry run fix-tms --job_number=5"]

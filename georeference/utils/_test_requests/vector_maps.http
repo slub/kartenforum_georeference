@@ -1,0 +1,211 @@
+### Create vector map
+
+POST api.ddev.site/vector_maps/
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+{
+  "title": "Dresden",
+  "description": "Dresden city area",
+  "geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+          "coordinates": [
+            [
+              [
+                13.47067215549103,
+                51.204420835808065
+              ],
+              [
+                13.47067215549103,
+                50.8292773400147
+              ],
+              [
+                14.123496020148508,
+                50.8292773400147
+              ],
+              [
+                14.123496020148508,
+                51.204420835808065
+              ],
+              [
+                13.47067215549103,
+                51.204420835808065
+              ]
+            ]
+          ],
+          "type": "Polygon"
+        }
+      }
+    ]
+  }
+}
+
+> {% client.global.set("vector_map_id", response.body.id) %}
+
+
+### Get Vector Map
+
+GET api.ddev.site/vector_maps/{{vector_map_id}}
+
+### Get Vector Map (with role)
+
+GET api.ddev.site/vector_maps/{{vector_map_id}}
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+### Delete Vector Map (401)
+
+DELETE api.ddev.site/vector_maps/{{vector_map_id}}
+
+### Delete Vector Map (403)
+
+DELETE api.ddev.site/vector_maps/{{vector_map_id}}
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user_2
+
+### Delete Vector Map (200)
+
+DELETE api.ddev.site/vector_maps/{{vector_map_id}}
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+
+### Get vector map versions
+GET api.ddev.site/vector_maps/{{vector_map_id}}/versions
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+
+### Create new version
+
+POST api.ddev.site/vector_maps/{{vector_map_id}}/versions
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              13.47067215549103,
+              51.204420835808065
+            ],
+            [
+              13.47067215549103,
+              50.8292773400147
+            ],
+            [
+              14.123496020148508,
+              50.8292773400147
+            ],
+            [
+              14.123496020148508,
+              51.204420835808065
+            ],
+            [
+              13.47067215549103,
+              51.204420835808065
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              13.469205518550979,
+              51.558985875028156
+            ],
+            [
+              13.469205518550979,
+              51.28225178432186
+            ],
+            [
+              14.11402530533158,
+              51.28225178432186
+            ],
+            [
+              14.11402530533158,
+              51.558985875028156
+            ],
+            [
+              13.469205518550979,
+              51.558985875028156
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      }
+    }
+  ]
+}
+
+> {% client.global.set("vector_map_version_id", response.body.version) %}}
+
+### Get vector map version
+
+GET api.ddev.site/vector_maps/{{vector_map_id}}/versions/{{vector_map_version_id}}
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+### Get vector map roles
+
+GET api.ddev.site/vector_maps/{{vector_map_id}}/roles
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+
+### Create vector map role
+POST api.ddev.site/vector_maps/{{vector_map_id}}/roles/add
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+{
+  "user_id": "test_user_2",
+  "role": "editor"
+}
+
+### Remove vector map role
+POST api.ddev.site/vector_maps/{{vector_map_id}}/roles/remove
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+{
+  "user_id": "test_user_2"
+}
+
+### Update vector map metadata
+PUT api.ddev.site/vector_maps/{{vector_map_id}}
+Content-Type: application/json
+dev-mode-secret: supersecret123
+dev-mode-name: test_user
+
+{
+  "title": "New new updated title",
+  "description": "Dresden city area"
+}

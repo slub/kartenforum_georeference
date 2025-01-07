@@ -6,25 +6,21 @@
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
 
-import json
 
 # Created by jacob.mendt@pikobytes.de on 17.09.21
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
-import os
 
 from elasticsearch import Elasticsearch
 from loguru import logger
 
 from georeference.config.settings import get_settings
 from georeference.config.templates import (
-    TEMPLATE_TMS_URLS,
     TEMPLATE_PUBLIC_WMS_URL,
     TEMPLATE_PUBLIC_WCS_URL,
 )
 from georeference.utils.georeference import get_image_size
-from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id
 
 MAPPING = {
     "map_id": {"type": "text", "index": True},  # string id
@@ -158,128 +154,15 @@ def _get_online_resource_wcs_for_download(georef_map_obj, coverage_title, extent
     }
 
 
-def generate_es_original_map_document(
-    raw_map_obj, metadata_obj, georef_map_obj=None, geometry=None
-):
-    """Generates an elasticsearch document for an original_map.
-
-    :param raw_map_obj: Original map
-    :type raw_map_obj: georeference.models.raw_maps.RawMap
-    :param metadata_obj: Metadata obj
-    :type metadata_obj: georeference.models.metadata.Metadata
-    :param georef_map_obj: Georef map
-    :type georef_map_obj: georeference.models.original_maps.GeorefMap | None
-    :param geometry: GeoJSON geometry
-    :type geometry: dict
-    :result: Document matching the es mapping
-    :rtype: dict
-    """
-    try:
-        # Necessary for creating the online ressource
-        online_resources = [_get_online_resource_permalink(metadata_obj)]
-
-        # We can only create georeference ressources if the absolute path exists
-        if georef_map_obj is not None and os.path.exists(georef_map_obj.get_abs_path()):
-            online_resources.append(_get_online_resource_wms(raw_map_obj.id))
-            if raw_map_obj.allow_download:
-                extent = json.loads(georef_map_obj.extent)
-                online_resources.append(_get_online_resource_wcs(raw_map_obj))
-                online_resources.append(
-                    _get_online_resource_wcs_for_download(
-                        georef_map_obj,
-                        raw_map_obj.file_name,
-                        extent,
-                    )
-                )
-
-        # Create tms link
-        tms_urls = []
-        if georef_map_obj is not None and os.path.exists(georef_map_obj.get_abs_path()):
-            for template in TEMPLATE_TMS_URLS:
-                tms_urls.append(
-                    template.format(
-                        str(raw_map_obj.map_type).lower() + "/" + raw_map_obj.file_name
-                    )
-                )
-
-        keywords = ";".join(
-            list(
-                filter(
-                    lambda x: x is not None, [metadata_obj.type, metadata_obj.technic]
-                )
-            )
-        )
-
-        return {
-            "map_id": to_public_map_id(raw_map_obj.id),
-            "file_name": raw_map_obj.file_name,
-            "description": metadata_obj.description,
-            "map_scale": int(raw_map_obj.map_scale)
-            if raw_map_obj.map_scale is not None
-            else None,
-            "zoomify_url": str(metadata_obj.link_zoomify).replace("http:", ""),
-            "map_type": raw_map_obj.map_type.lower(),
-            "keywords": keywords if keywords is not None else "",
-            "title_long": metadata_obj.title,
-            "title": metadata_obj.title_short,
-            "permalink": metadata_obj.permalink,
-            "slub_url": metadata_obj.permalink,
-            "online_resources": online_resources,
-            "tms_urls": tms_urls,
-            "thumb_url": str(metadata_obj.link_thumb_small).replace("http:", ""),
-            "geometry": geometry if geometry is not None else None,  #
-            "has_georeference": georef_map_obj is not None,
-            "time_published": metadata_obj.time_of_publication.date().isoformat(),
-            "type": "single_sheet",
-        }
-    except Exception as e:
-        logger.warning(
-            "Failed creating a es document for georef map %s." % raw_map_obj.id
-        )
-        logger.error(e)
-
-
-def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
-    """Generates an elasticsearch document for a mosaic_map.
-
-    :param mosaic_map_obj: Mosaic map
-    :type mosaic_map_obj: georeference.models.mosaic_maps.MosaicMap
-    :param geometry: GeoJSON geometry
-    :type geometry: dict
-    :result: Document matching the es mapping
-    :rtype: dict
-    """
-    try:
-        # Necessary for creating the online ressource
-        online_resources = [_get_online_resource_wms(mosaic_map_obj.name)]
-
-        return {
-            "map_id": to_public_mosaic_map_id(mosaic_map_obj.id),
-            "file_name": None,
-            "description": mosaic_map_obj.description,
-            "map_scale": int(mosaic_map_obj.map_scale)
-            if mosaic_map_obj.map_scale is not None
-            else None,
-            "zoomify_url": None,
-            "map_type": None,
-            "keywords": "",
-            "title_long": mosaic_map_obj.title,
-            "title": mosaic_map_obj.title_short,
-            "permalink": None,
-            "slub_url": None,
-            "online_resources": online_resources,
-            "tms_urls": [],
-            "thumb_url": str(mosaic_map_obj.link_thumb).replace("http:", ""),
-            "geometry": geometry if geometry is not None else None,  #
-            "has_georeference": True,
-            "time_published": mosaic_map_obj.time_of_publication.date().isoformat(),
-            "type": "mosaic",
-        }
-    except Exception as e:
-        logger.warning(
-            "Failed creating a es document for mosaic map %s." % mosaic_map_obj.id
-        )
-        logger.error(e)
+def get_http_auth(es_config):
+    if (
+        "username" in es_config
+        and es_config["username"] is not None
+        and "password" in es_config
+        and es_config["password"] is not None
+    ):
+        return (es_config["username"], es_config["password"])
+    return None
 
 
 def get_es_index(es_config, index_name, force_recreation):
@@ -299,16 +182,6 @@ def get_es_index(es_config, index_name, force_recreation):
     :result: Reference on the index
     :rtype: elasticsearch.Elasticsearch
     """
-
-    def get_http_auth(es_config):
-        if (
-            "username" in es_config
-            and es_config["username"] is not None
-            and "password" in es_config
-            and es_config["password"] is not None
-        ):
-            return (es_config["username"], es_config["password"])
-        return None
 
     try:
         es = Elasticsearch(

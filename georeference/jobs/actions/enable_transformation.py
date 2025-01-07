@@ -61,13 +61,14 @@ def run_enable_transformation(transformation_obj, es_index, dbsession):
 
     # Make sure to process the geo image. We do not use the "force" parameter, which skips this
     # step in case a geo image already exists
+
     path_geo_image = run_process_geo_image(
         transformation_obj,
         raw_map_obj.get_abs_path(),
         georef_map_obj.get_abs_path(),
         force=True,
         clip=Transformation.get_valid_clip_geometry(
-            georef_map_obj.transformation_id, dbsession=dbsession
+            transformation_obj.id, dbsession=dbsession
         )
         if transformation_obj.clip is not None
         else None,

@@ -557,3 +557,60 @@ ALTER TABLE ONLY public.transformations
 -- PostgreSQL database dump complete
 --
 
+CREATE TABLE public.vector_maps
+(
+    id            INT PRIMARY KEY,
+    public_id     UUID NOT NULL               DEFAULT gen_random_uuid(),
+
+    -- Metadata
+    description   TEXT,
+    title         TEXT NOT NULL,
+    link_thumb    TEXT,
+    submitted     TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+    last_change   TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+
+    -- Request tracking
+    last_request  TIMESTAMP WITHOUT TIME ZONE,
+    request_count INTEGER                     DEFAULT 0
+);
+
+
+CREATE SEQUENCE public.vector_maps_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE ONLY public.vector_maps
+    ALTER COLUMN id SET DEFAULT nextval('public.vector_maps_id_seq'::regclass);
+
+
+CREATE INDEX idx_vector_maps_public_id ON public.vector_maps (public_id);
+
+CREATE TABLE public.vector_maps_content
+(
+    vector_map_id INTEGER NOT NULL REFERENCES public.vector_maps (id) ON DELETE CASCADE,
+    content       JSONB   NOT NULL,
+    version       INTEGER NOT NULL,
+    created_by    TEXT    NOT NULL,
+
+    -- metadata
+    submitted     TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+
+
+    PRIMARY KEY (vector_map_id, version)
+);
+
+CREATE INDEX idx_vector_maps_content_id ON public.vector_maps_content (vector_map_id);
+
+CREATE TYPE public.vector_map_role AS ENUM ('owner', 'editor');
+
+CREATE TABLE public.vector_maps_roles
+(
+    vector_map_id INTEGER                NOT NULL REFERENCES public.vector_maps (id) ON DELETE CASCADE,
+    role          public.vector_map_role NOT NULL,
+    user_id       TEXT                   NOT NULL,
+
+    PRIMARY KEY (vector_map_id, user_id)
+);

@@ -74,7 +74,7 @@ make any changes to `pyproject.toml`. Also, if you make any changes to `pyprojec
    
 4. Run the server:
     ```shell
-    uvicorn app.api.server:app --reload
+   uvicorn georeference.main:app --reload
     ```
 
 ## Configuration

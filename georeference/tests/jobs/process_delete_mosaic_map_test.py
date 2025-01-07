@@ -17,7 +17,7 @@ from georeference.jobs.process_delete_mosaic_map import run_process_delete_mosai
 from georeference.models.enums import EnumJobType, EnumJobState
 from georeference.models.job import Job
 from georeference.models.mosaic_map import MosaicMap
-from georeference.utils.es_index import (
+from georeference.utils.es_index.document_formatter import (
     generate_es_mosaic_map_document,
 )
 from georeference.utils.mosaics import get_mosaic_dataset_path, get_mosaic_mapfile_path

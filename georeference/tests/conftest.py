@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable
 
 import pytest
+from elasticsearch import AsyncElasticsearch, Elasticsearch
 from sqlalchemy import Engine, create_engine
 from sqlmodel import Session
 from starlette.testclient import TestClient
@@ -22,7 +23,12 @@ from georeference.config.settings import get_settings
 from georeference.main import app
 from georeference.schemas.user import User
 from georeference.utils.auth import get_user_from_session
-from georeference.utils.es_index import get_es_index
+from georeference.utils.es_index.es_index_async import get_async_es_client
+from georeference.utils.es_index.es_index_sync import (
+    get_es_index,
+    MAPPING,
+    get_http_auth,
+)
 
 init_scripts = [
     {"host": "vkdb-schema.sql", "container": "20_vkdb-schema.sql"},
@@ -203,3 +209,52 @@ def es_index(request):
     request.addfinalizer(remove_container)
 
     return es_index
+
+
+@pytest.fixture(scope="function")
+def override_get_async_es_index(request):
+    settings = get_settings()
+    index_name = settings.ES_INDEX_NAME
+
+    es_container = ElasticSearchContainer(image="elasticsearch:7.14.1", mem_limit="2G")
+    es_container.start()
+
+    es_config = {
+        "host": es_container.get_container_host_ip(),
+        "port": int(es_container.get_exposed_port(9200)),
+        "ssl": False,
+    }
+
+    es_sync = Elasticsearch(
+        [{"host": es_config["host"], "port": es_config["port"]}],
+        http_auth=get_http_auth(es_config),
+        use_ssl=es_config["ssl"],
+        timeout=5000,
+    )
+
+    es_sync.indices.create(
+        index=index_name,
+        body={"mappings": {"properties": MAPPING}},
+    )
+
+    es_async = AsyncElasticsearch(
+        [{"host": es_config["host"], "port": es_config["port"]}],
+        use_ssl=es_config["ssl"],
+        max_retries=10,
+    )
+
+    def override_get_es_index():
+        return es_async
+
+    def remove_container():
+        es_sync.close()
+        es_async.close()
+        es_container.stop()
+
+    request.addfinalizer(remove_container)
+
+    app.dependency_overrides[get_async_es_client] = override_get_es_index
+
+    yield
+
+    del app.dependency_overrides[get_async_es_client]

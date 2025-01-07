@@ -74,7 +74,7 @@ def run_process_tms(path_tms_dir, path_geo_image, force=False):
             # 3. If that is the case reproject the image to 3857 and use it as base for the tms calculation
             if not is_contained:
                 if direction != "east":
-                    raise Exception(
+                    logger.warning(
                         "The bounding box is not contained in the EPSG 4314 bounding box and not to the east of it."
                     )
                 else:
