@@ -99,6 +99,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=[
             os.path.abspath(os.path.join(BASE_PATH, "../", ".env")),
+            os.path.abspath(os.path.join(BASE_PATH, "../", ".env.local")),
             os.path.abspath(os.path.join(BASE_PATH, "../", ".env.production")),
         ]
     )
