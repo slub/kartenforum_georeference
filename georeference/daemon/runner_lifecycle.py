@@ -18,8 +18,9 @@ import time
 import traceback
 from datetime import datetime
 
-import sentry_sdk
 from loguru import logger
+
+from sentry_sdk.crons import monitor
 
 from georeference.config.db import get_session
 from georeference.config.logging_config import parse_log_level
@@ -86,6 +87,7 @@ def _initialize_logger():
     logger.debug("Logger initialized")
 
 
+@monitor(monitor_slug=settings.SENTRY_CRON_MONITOR_SLUG)
 def loop(dbsession, handlers, es_index):
     """Iteration holding the main functionality
 
@@ -190,7 +192,6 @@ def main(wait_on_start=1, wait_on_loop=1):
     :type wait_on_loop: int
     """
     try:
-        run_count = 0
         _initialize_logger()
         logger.info(f"Start logger but waiting for {wait_on_start} seconds ...")
         log_startup_information(settings)
@@ -207,17 +208,6 @@ def main(wait_on_start=1, wait_on_loop=1):
         session.close()
 
         while True:
-            if run_count % settings.DAEMON_LOOP_HEARTBEAT_COUNT == 0:
-                # send heartbeat to sentry
-                sentry_sdk.capture_event(
-                    {
-                        "message": "Heartbeat | Daemon.",
-                        "level": "info",
-                        "timestamp": datetime.utcnow().isoformat(),
-                    }
-                )
-                run_count = 0
-
             # To prevent the daemon from having to long lasting logger handles or database session we reinitialize / reset
             # both before each loop
             logger.info("################################")
@@ -246,7 +236,6 @@ def main(wait_on_start=1, wait_on_loop=1):
             es_index.close()
 
             time.sleep(wait_on_loop)
-            run_count += 1
     except Exception as e:
         logger.info("Error while running the daemon")
         logger.error(e)
