@@ -28,6 +28,7 @@ from georeference.models.vector_map import (
     RoleEnum,
     VectorMapRoles,
 )
+from georeference.models.vector_map_external import VectorMapExternal
 from georeference.schemas.user import User
 from georeference.schemas.vector_map import (
     VectorMapPayload,
@@ -91,9 +92,11 @@ world_bounds = ((180, 90), (-180, 90), (-180, -90), (180, -90), (180, 90))
 
 
 async def push_vector_map_to_index(
-    vector_map: VectorMap, geom_string: str, es_index: AsyncElasticsearch
+    vector_map: VectorMap | VectorMapExternal,
+    geom_string: str,
+    es_index: AsyncElasticsearch,
 ):
-    exists_index = await es_index.indices.exists(settings.ES_INDEX_NAME)
+    exists_index = await es_index.indices.exists(index=settings.ES_INDEX_NAME)
     if exists_index:
         geom = from_geojson(geom_string)
 
@@ -118,8 +121,8 @@ async def push_vector_map_to_index(
         await es_index.index(
             index=settings.ES_INDEX_NAME,
             doc_type=None,
-            id=vector_map.public_id,
-            body=generate_es_vector_map_document(
+            id=str(vector_map.public_id),
+            document=generate_es_vector_map_document(
                 vector_map, bounds_to_polygon(geom.bounds)
             ),
         )

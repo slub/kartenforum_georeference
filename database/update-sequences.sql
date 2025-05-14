@@ -11,3 +11,6 @@ FROM map_view;
 
 SELECT setval('vector_maps_id_seq', max(id))
 FROM vector_maps;
+
+SELECT setval('vector_maps_external_id_seq', max(id))
+FROM vector_maps_external;

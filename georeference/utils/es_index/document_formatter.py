@@ -19,6 +19,10 @@ from georeference.utils.es_index.es_index_sync import (
 from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id
 
 
+def parse_url(url: str):
+    return str(url).replace("http:", "")
+
+
 def generate_es_original_map_document(
     raw_map_obj, metadata_obj, georef_map_obj=None, geometry=None
 ):
@@ -91,6 +95,8 @@ def generate_es_original_map_document(
             "geometry": geometry if geometry is not None else None,  #
             "has_georeference": georef_map_obj is not None,
             "time_published": metadata_obj.time_of_publication.date().isoformat(),
+            "time_period": None,
+            "external_content_url": None,
             "type": "single_sheet",
         }
     except Exception as e:
@@ -134,6 +140,8 @@ def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
             "geometry": geometry if geometry is not None else None,  #
             "has_georeference": True,
             "time_published": mosaic_map_obj.time_of_publication.date().isoformat(),
+            "time_period": None,
+            "external_content_url": None,
             "type": "mosaic",
         }
     except Exception as e:
@@ -144,15 +152,22 @@ def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
 
 
 def generate_es_vector_map_document(vector_map_obj, geometry=None):
-    """Generates an elasticsearch document for a vector map.
+    """Generates an elasticsearch document for vector maps and external vector maps.
 
-    :param vector_map_obj: Mosaic map
-    :type vector_map_obj: georeference.models.vector_map.VectorMap
+    :param vector_map_obj: external vector map or vector map
+    :type vector_map_obj: georeference.models.vector_map.VectorMapExternal | georeference.models.vector_map.VectorMap
     :param geometry: GeoJSON geometry
     :type geometry: dict
     :result: Document matching the es mapping
     :rtype: dict
     """
+    # TODO backport time_period to VectorMap
+    time_period = getattr(vector_map_obj, "time_period", None)
+
+    external_content_url = getattr(vector_map_obj, "link_content", None)
+    if external_content_url is not None:
+        external_content_url = parse_url(external_content_url)
+
     try:
         return {
             "map_id": vector_map_obj.public_id,
@@ -168,10 +183,14 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
             "slub_url": None,
             "online_resources": [],
             "tms_urls": [],
-            "thumb_url": str(vector_map_obj.link_thumb).replace("http:", "") if vector_map_obj.link_thumb is not None else "",
-            "geometry": geometry if geometry is not None else None,  #
+            "thumb_url": str(vector_map_obj.link_thumb).replace("http:", "")
+            if vector_map_obj.link_thumb is not None
+            else "",
+            "geometry": geometry if geometry is not None else None,
             "has_georeference": True,
             "time_published": vector_map_obj.submitted.date().isoformat(),
+            "time_period": time_period,
+            "external_content_url": external_content_url,
             "type": "vector",
         }
     except Exception as e:
