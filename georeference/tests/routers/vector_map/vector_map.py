@@ -4,13 +4,19 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+from uuid import UUID
 import pytest
 from sqlmodel import Session
 from starlette.testclient import TestClient
 
 from georeference.models.vector_map import VectorMap, VectorMapRoles
 from georeference.tests.routers.__test_data.vector_maps import (
+    patch_payloads_metadata_only_invalid_time_period,
+    invalid_metadatas_time_period,
+    vector_maps_invalid_time_period,
+    vector_map_metadata_missing_required_properties,
     vector_map_with_empty_feature_collection,
+    vector_map_with_missing_required_metadata_props,
     vector_map_updated_metadata,
     empty_feature_collection,
     vector_map_patch_payload_with_metadata,
@@ -42,6 +48,51 @@ class TestCreateVectorMap:
             "/vector_maps", json=vector_map_with_empty_feature_collection
         )
         assert response.status_code == 403
+
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-editor")
+    def test_create_vector_map_fail_missing_metadata_props(
+        self,
+        override_get_session,
+        test_client: TestClient,
+        override_get_user_from_session,
+        override_get_async_es_index,
+    ):
+        response = test_client.post(
+            "/vector_maps", json=vector_map_with_missing_required_metadata_props
+        )
+
+        assert response.status_code == 422
+
+        missing_props = [
+            error["loc"][1]
+            for error in response.json()["detail"]
+            if error["type"] == "missing"
+        ]
+
+        assert len(missing_props) == 2
+        assert "title" in missing_props
+        assert "time_period" in missing_props
+
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-editor")
+    @pytest.mark.parametrize(
+        "invalid_vector_map,expected_error", vector_maps_invalid_time_period
+    )
+    def test_create_vector_map_fail_invalid_time_period(
+        self,
+        invalid_vector_map,
+        expected_error,
+        override_get_session,
+        test_client: TestClient,
+        override_get_user_from_session,
+        override_get_async_es_index,
+    ):
+        response = test_client.post("/vector_maps", json=invalid_vector_map)
+
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 1
+        assert response.json()["detail"][0]["type"] == expected_error
 
     @pytest.mark.user("user_1")
     @pytest.mark.roles("vk2-editor")
@@ -113,6 +164,8 @@ class TestReadVectorMap:
         data = response.json()
 
         assert data["title"] == "Dresden"
+
+        assert data["time_period"] == ["2024-11-13", "2024-11-13"]
         assert "user_role" not in data
         assert "version" not in data
         assert data["id"] == "7d06b85a-99b4-404a-9501-a282e0180032"
@@ -132,6 +185,7 @@ class TestReadVectorMap:
         data = response.json()
 
         assert data["title"] == "Dresden"
+        assert data["time_period"] == ["2024-11-13", "2024-11-13"]
         assert data["user_role"] == "owner"
         assert data["version"] == 0
         assert data["id"] == "7d06b85a-99b4-404a-9501-a282e0180032"
@@ -151,6 +205,7 @@ class TestReadVectorMap:
         data = response.json()
 
         assert data["title"] == "Dresden"
+        assert data["time_period"] == ["2024-11-13", "2024-11-13"]
         assert data["user_role"] == "editor"
         assert data["version"] == 0
         assert data["id"] == "7d06b85a-99b4-404a-9501-a282e0180032"
@@ -170,6 +225,7 @@ class TestReadVectorMap:
         data = response.json()
 
         assert data["title"] == "Dresden"
+        assert data["time_period"] == ["2024-11-13", "2024-11-13"]
         assert data["user_role"] == "owner"
         assert data["version"] == 0
         assert data["id"] == "7d06b85a-99b4-404a-9501-a282e0180032"
@@ -203,6 +259,7 @@ class TestReadVectorMap:
         data = response.json()
 
         assert data["title"] == "Test Map"
+        assert data["time_period"] == ["2024-11-13", "2024-11-13"]
         assert data["id"] == "8d2605e2-1ecd-47d7-be2c-9fb3042715c7"
         assert data["version"] == 1
         assert data["user_role"] == "owner"
@@ -256,12 +313,61 @@ class TestUpdateVectorMapMetadata:
 
     @pytest.mark.user("test_user")
     @pytest.mark.roles("vk2-editor")
-    def test_update_vector_map_success(
+    def test_update_metadata_fails_missing_properties(
+        self,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
+    ):
+        response = test_client.put(
+            "/vector_maps/8d2605e2-1ecd-47d7-be2c-9fb3042715c7",
+            json=vector_map_metadata_missing_required_properties,
+        )
+
+        assert response.status_code == 422
+
+        missing_props = [
+            error["loc"][1]
+            for error in response.json()["detail"]
+            if error["type"] == "missing"
+        ]
+
+        assert len(missing_props) == 2
+        assert "title" in missing_props
+        assert "time_period" in missing_props
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    @pytest.mark.parametrize(
+        "invalid_metadata,expected_error", invalid_metadatas_time_period
+    )
+    def test_update_metadata_fails_invalid_time_period(
+        self,
+        invalid_metadata,
+        expected_error,
+        override_get_session_read_only,
+        test_client: TestClient,
+        override_get_user_from_session,
+        override_get_async_es_index,
+    ):
+        response = test_client.put(
+            "/vector_maps/8d2605e2-1ecd-47d7-be2c-9fb3042715c7",
+            json=invalid_metadata,
+        )
+
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 1
+        assert response.json()["detail"][0]["type"] == expected_error
+
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    def test_update_vector_map_metadata_success(
         self,
         override_get_session,
         db_container,
         test_client: TestClient,
         override_get_user_from_session,
+        override_get_async_es_index,
     ):
         response = test_client.put(
             "/vector_maps/8d2605e2-1ecd-47d7-be2c-9fb3042715c7",
@@ -272,7 +378,7 @@ class TestUpdateVectorMapMetadata:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "8d2605e2-1ecd-47d7-be2c-9fb3042715c7", session
+                UUID("8d2605e2-1ecd-47d7-be2c-9fb3042715c7"), session
             )
 
             assert vector_map.title == vector_map_updated_metadata["title"]
@@ -328,6 +434,31 @@ class TestUpdateVectorMap:
 
         assert response.status_code == 403
 
+    @pytest.mark.user("test_user")
+    @pytest.mark.roles("vk2-editor")
+    @pytest.mark.parametrize(
+        "invalid_patch_metadata,expected_error",
+        patch_payloads_metadata_only_invalid_time_period,
+    )
+    def test_update_vector_map_fail_invalid_time_period(
+        self,
+        invalid_patch_metadata,
+        expected_error,
+        override_get_session,
+        db_container,
+        test_client: TestClient,
+        override_get_user_from_session,
+        override_get_async_es_index,
+    ):
+        response = test_client.patch(
+            "/vector_maps/8d2605e2-1ecd-47d7-be2c-9fb3042715c7",
+            json=invalid_patch_metadata,
+        )
+
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 1
+        assert response.json()["detail"][0]["type"] == expected_error
+
     @pytest.mark.user("test_user_2")
     @pytest.mark.roles("vk2-editor")
     def test_editor_authorized_for_geojson(
@@ -369,7 +500,7 @@ class TestUpdateVectorMap:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "8d2605e2-1ecd-47d7-be2c-9fb3042715c7", session
+                UUID("8d2605e2-1ecd-47d7-be2c-9fb3042715c7"), session
             )
 
             assert vector_map.title == vector_map_updated_metadata["title"]
@@ -408,19 +539,20 @@ class TestDeleteVectorMap:
         self,
         override_get_session,
         db_container,
+        provision_mock_vector_map,
         test_client: TestClient,
         override_get_user_from_session,
+        override_get_async_es_index,
     ):
+        vector_map = provision_mock_vector_map
         response = test_client.delete(
-            "/vector_maps/8d2605e2-1ecd-47d7-be2c-9fb3042715c7",
+            "/vector_maps/{id}".format(id=vector_map.public_id),
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 204
 
         with Session(db_container[1]) as session:
-            vector_map = VectorMap.by_public_id(
-                "8d2605e2-1ecd-47d7-be2c-9fb3042715c7", session
-            )
+            vector_map = VectorMap.by_public_id(vector_map.public_id, session)
 
             assert vector_map is None
 
@@ -601,7 +733,7 @@ class TestCreateVectorMapVersion:
 
         with Session(db_container[1]) as session:
             vector_map, vector_map_content = VectorMap.by_public_id_with_contents(
-                "8d2605e2-1ecd-47d7-be2c-9fb3042715c7", session
+                UUID("8d2605e2-1ecd-47d7-be2c-9fb3042715c7"), session
             )
 
             assert len(vector_map_content.content["features"]) == 0
@@ -697,7 +829,7 @@ class TestVectorMapRolesAdd:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "8d2605e2-1ecd-47d7-be2c-9fb3042715c7", session
+                UUID("8d2605e2-1ecd-47d7-be2c-9fb3042715c7"), session
             )
             roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
 
@@ -753,7 +885,7 @@ class TestVectorMapRolesAdd:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "8d2605e2-1ecd-47d7-be2c-9fb3042715c7", session
+                UUID("8d2605e2-1ecd-47d7-be2c-9fb3042715c7"), session
             )
             roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
 
@@ -805,7 +937,7 @@ class TestVectorMapRolesRemove:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "7d06b85a-99b4-404a-9501-a282e0180032", session
+                UUID("7d06b85a-99b4-404a-9501-a282e0180032"), session
             )
             roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
             assert len(roles) == 1
@@ -888,7 +1020,7 @@ class TestVectorMapRolesUpdate:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "7d06b85a-99b4-404a-9501-a282e0180032", session
+                UUID("7d06b85a-99b4-404a-9501-a282e0180032"), session
             )
             roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
             assert len(roles) == 1
@@ -990,7 +1122,7 @@ class TestVectorMapRolesUpdate:
 
         with Session(db_container[1]) as session:
             vector_map = VectorMap.by_public_id(
-                "7d06b85a-99b4-404a-9501-a282e0180032", session
+                UUID("7d06b85a-99b4-404a-9501-a282e0180032"), session
             )
             roles = VectorMapRoles.by_vector_map_id(vector_map.id, session)
             assert len(roles) == 2

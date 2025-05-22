@@ -10,8 +10,8 @@ from typing import Optional, Dict
 
 from pydantic import NaiveDatetime
 from sqlalchemy import func
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlmodel import Field, SQLModel, select, col, desc
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY, DATE
+from sqlmodel import Field, SQLModel, select, col, desc, Column
 
 from georeference.config.settings import get_settings
 from georeference.models import datetime_without_timezone
@@ -25,7 +25,7 @@ class RoleEnum(enum.Enum):
 
 
 class VectorMap(SQLModel, table=True):
-    __tablename__ = "vector_maps"
+    __tablename__: str = "vector_maps"  # type: ignore
 
     id: int = Field(primary_key=True, default=None)
     public_id: uuid.UUID = Field(
@@ -34,6 +34,7 @@ class VectorMap(SQLModel, table=True):
     )
     description: Optional[str]
     title: str
+    time_period: list = Field(sa_column=Column(ARRAY(DATE), nullable=False))
     link_thumb: Optional[str]
     submitted: NaiveDatetime = datetime_without_timezone
     last_change: NaiveDatetime = datetime_without_timezone
@@ -117,7 +118,7 @@ class VectorMap(SQLModel, table=True):
 
 
 class VectorMapContent(SQLModel, table=True):
-    __tablename__ = "vector_maps_content"
+    __tablename__: str = "vector_maps_content"  # type: ignore
 
     vector_map_id: int = Field(
         default=None, primary_key=True, foreign_key="vector_maps.id"
@@ -178,7 +179,7 @@ class VectorMapContent(SQLModel, table=True):
 
 
 class VectorMapRoles(SQLModel, table=True):
-    __tablename__ = "vector_maps_roles"
+    __tablename__: str = "vector_maps_roles"  # type: ignore
 
     vector_map_id: int = Field(
         default=None, primary_key=True, foreign_key="vector_maps.id"

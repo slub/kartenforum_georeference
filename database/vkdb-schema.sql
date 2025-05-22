@@ -566,8 +566,12 @@ CREATE TABLE public.vector_maps
     description   TEXT,
     title         TEXT NOT NULL,
     link_thumb    TEXT,
+    time_period date[2] NOT NULL,
     submitted     TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     last_change   TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+
+    CONSTRAINT valid_time_period_shape CHECK (array_ndims(time_period) = 1 AND cardinality(time_period) = 2),
+    CONSTRAINT valid_time_period CHECK (time_period[1] <= time_period[2]),
 
     -- Request tracking
     last_request  TIMESTAMP WITHOUT TIME ZONE,

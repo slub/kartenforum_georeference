@@ -169,6 +169,7 @@ def read_vector_map(
     # Return response
     response = VectorMapResponse(
         title=vector_map.title,
+        time_period=vector_map.time_period,
         description=vector_map.description,
         link_thumb=vector_map.link_thumb,
         id=vector_map.public_id,
@@ -207,6 +208,7 @@ async def create_new_vector_map(
 
     vector_map = VectorMap(
         title=new_vector_map.title,
+        time_period=new_vector_map.time_period,
         description=new_vector_map.description,
         link_thumb=new_vector_map.link_thumb,
         submitted=submitted,
@@ -271,6 +273,7 @@ async def update_vector_map_metadata(
     vector_map.title = updated_vector_map.title
     vector_map.description = updated_vector_map.description
     vector_map.link_thumb = updated_vector_map.link_thumb
+    vector_map.time_period = updated_vector_map.time_period
 
     vector_map.last_change = submitted
 
@@ -316,13 +319,12 @@ async def delete_vector_map(
 
     # Delete document from index
     await es_index.delete(
-        index=settings.ES_INDEX_NAME, doc_type=None, id=vector_map.public_id
+        index=settings.ES_INDEX_NAME, doc_type=None, id=str(vector_map.public_id)
     )
 
     return Response(status_code=204)
 
 
-# @TODO: Add tests
 @router.patch("/{vector_map_id}", tags=["vector_map"])
 async def update_vector_map(
     vector_map_update: VectorMapUpdatePayload,
@@ -345,6 +347,7 @@ async def update_vector_map(
         submitted = datetime.now()
 
         vector_map.title = metadata_update.title
+        vector_map.time_period = metadata_update.time_period
         vector_map.description = metadata_update.description
         vector_map.link_thumb = metadata_update.link_thumb
 

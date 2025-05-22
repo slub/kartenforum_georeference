@@ -376,13 +376,13 @@ VALUES (1, 'mosaik_1', '{10007521,10001963,10001556}', 'Mosaik', 'Mosaik', 'Test
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-INSERT INTO public.vector_maps (id, public_id, description, title, link_thumb, submitted, last_change, last_request,
+INSERT INTO public.vector_maps (id, public_id, description, time_period, title, link_thumb, submitted, last_change, last_request,
                                 request_count)
-VALUES (1, '7d06b85a-99b4-404a-9501-a282e0180032', 'Dresden city area', 'Dresden', null, '2024-11-13 08:24:14.429273',
+VALUES (1, '7d06b85a-99b4-404a-9501-a282e0180032', 'Dresden city area',  '{2024-11-13,2024-11-13}' , 'Dresden', null, '2024-11-13 08:24:14.429273',
         '2024-11-13 08:24:14.429273', null, 0);
-INSERT INTO public.vector_maps (id, public_id, description, title, link_thumb, submitted, last_change, last_request,
+INSERT INTO public.vector_maps (id, public_id, description, time_period, title, link_thumb, submitted, last_change, last_request,
                                 request_count)
-VALUES (2, '8d2605e2-1ecd-47d7-be2c-9fb3042715c7', 'Dresden city area', 'Test Map', null, '2024-11-13 08:24:33.876109',
+VALUES (2, '8d2605e2-1ecd-47d7-be2c-9fb3042715c7', 'Dresden city area',  '{2024-11-13,2024-11-13}', 'Test Map', null, '2024-11-13 08:24:33.876109',
         '2024-11-13 08:24:33.876109', '2024-11-13 08:24:39.587214', 2);
 
 

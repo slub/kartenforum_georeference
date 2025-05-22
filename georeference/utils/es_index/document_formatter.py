@@ -4,10 +4,12 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+from datetime import date
 import json
 import os
 
 from loguru import logger
+from pydantic import NaiveDatetime
 
 from georeference.config.templates import TEMPLATE_TMS_URLS
 from georeference.utils.es_index.es_index_sync import (
@@ -21,6 +23,14 @@ from georeference.utils.parser import to_public_map_id, to_public_mosaic_map_id
 
 def parse_url(url: str):
     return str(url).replace("http:", "")
+
+
+def to_time_period(datetime: NaiveDatetime):
+    year = datetime.date().year
+    time_period_start = date(year, 1, 1)
+    time_period_end = date(year, 12, 31)
+
+    return time_period_start, time_period_end
 
 
 def generate_es_original_map_document(
@@ -75,6 +85,10 @@ def generate_es_original_map_document(
             )
         )
 
+        time_period_start, time_period_end = to_time_period(
+            metadata_obj.time_of_publication
+        )
+
         return {
             "map_id": to_public_map_id(raw_map_obj.id),
             "file_name": raw_map_obj.file_name,
@@ -94,8 +108,9 @@ def generate_es_original_map_document(
             "thumb_url": str(metadata_obj.link_thumb_small).replace("http:", ""),
             "geometry": geometry if geometry is not None else None,  #
             "has_georeference": georef_map_obj is not None,
-            "time_published": metadata_obj.time_of_publication.date().isoformat(),
-            "time_period": None,
+            "time_period_start": time_period_start,
+            "time_period_end": time_period_end,
+            "time_published": metadata_obj.time_of_publication.date().isoformat(),  # TODO DEPRECATED, remove time_published in next deployment
             "external_content_url": None,
             "type": "single_sheet",
         }
@@ -120,6 +135,10 @@ def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
         # Necessary for creating the online ressource
         online_resources = [_get_online_resource_wms(mosaic_map_obj.name)]
 
+        time_period_start, time_period_end = to_time_period(
+            mosaic_map_obj.time_of_publication
+        )
+
         return {
             "map_id": to_public_mosaic_map_id(mosaic_map_obj.id),
             "file_name": None,
@@ -139,8 +158,9 @@ def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
             "thumb_url": str(mosaic_map_obj.link_thumb).replace("http:", ""),
             "geometry": geometry if geometry is not None else None,  #
             "has_georeference": True,
-            "time_published": mosaic_map_obj.time_of_publication.date().isoformat(),
-            "time_period": None,
+            "time_period_start": time_period_start,
+            "time_period_end": time_period_end,
+            "time_published": mosaic_map_obj.time_of_publication.date().isoformat(),  # TODO DEPRECATED, remove time_published in next deployment
             "external_content_url": None,
             "type": "mosaic",
         }
@@ -161,8 +181,9 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
     :result: Document matching the es mapping
     :rtype: dict
     """
-    # TODO backport time_period to VectorMap
-    time_period = getattr(vector_map_obj, "time_period", None)
+    time_period = vector_map_obj.time_period
+    time_period_start = time_period[0]
+    time_period_end = time_period[1]
 
     external_content_url = getattr(vector_map_obj, "link_content", None)
     if external_content_url is not None:
@@ -188,8 +209,9 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
             else "",
             "geometry": geometry if geometry is not None else None,
             "has_georeference": True,
-            "time_published": vector_map_obj.submitted.date().isoformat(),
-            "time_period": time_period,
+            "time_period_start": time_period_start,
+            "time_period_end": time_period_end,
+            "time_published": vector_map_obj.submitted.date().isoformat(),  # TODO DEPRECATED, remove time_published in next deployment
             "external_content_url": external_content_url,
             "type": "vector",
         }
