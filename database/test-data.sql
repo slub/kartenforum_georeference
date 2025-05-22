@@ -408,4 +408,5 @@ VALUES (1, 'editor', 'test_user_2');
 INSERT INTO public.vector_maps_roles (vector_map_id, role, user_id)
 VALUES (2, 'owner', 'test_user');
 
-INSERT INTO public.vector_maps_external (id, public_id, title, link_content, time_period, description, link_thumb, submitted, last_change, last_request, request_count) VALUES (1, '0d5633a7-8e30-4bfc-8b9c-d5ccf7338c7a', 'Test external vector map', 'https://geojson.ddev.site/technische_denkmaeler.json', '{2025-05-01,2025-05-07}', 'Sample external vector map', NULL, '2025-05-07 15:50:52.785413', '2025-05-07 15:50:52.785416', NULL, 0);
+
+INSERT INTO public.vector_maps_external (id, public_id, title, link_content, time_period, description, content_type, link_thumb, submitted, last_change, last_request, request_count) VALUES (1, '0d5633a7-8e30-4bfc-8b9c-d5ccf7338c7a', 'Test external vector map', 'https://geojson.ddev.site/technische_denkmaeler.json', '{2025-05-01,2025-05-07}', 'Sample external vector map', 'vkf:geojson-spec-v1' ,NULL, '2025-05-07 15:50:52.785413', '2025-05-07 15:50:52.785416', NULL, 0);

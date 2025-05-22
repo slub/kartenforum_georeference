@@ -14,7 +14,10 @@ from sqlmodel import Session
 
 from georeference.config.settings import get_settings
 from georeference.main import app
-from georeference.models.vector_map_external import VectorMapExternal
+from georeference.models.vector_map_external import (
+    ExternalContentTypeEnum,
+    VectorMapExternal,
+)
 from georeference.tests.routers.__test_data.vector_maps_external import (
     empty_geojson,
     invalid_geojson,
@@ -82,6 +85,7 @@ def provision_mock_vector_map_external(db_container, override_get_async_es_index
     mock = VectorMapExternal(
         title="bla",
         description="bla",
+        content_type=ExternalContentTypeEnum.VKF,
         link_thumb="https://bla.bla",
         link_content="https://bla.bla",
         time_period=["2025-01-01", "2026-01-01"],

@@ -629,6 +629,7 @@ CREATE TABLE public.vector_maps_external (
     time_period date[2] NOT NULL,
     description TEXT,
     link_thumb TEXT,
+    content_type TEXT NOT NULL DEFAULT 'vkf:geojson-spec-v1',
     submitted TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     last_change TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
 

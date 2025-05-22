@@ -11,6 +11,7 @@ file "LICENSE.txt", which is part of this source code package.
 valid_vector_map = {
     "title": "TestTitle",
     "description": "TestDescription",
+    "content_type": "vkf:geojson-spec-v1",
     "link_thumb": "https://testlinkthumb.test.bla",
     "link_content": "https://testlinkcontent.test.bla",
     "time_period": ["2025-01-01", "2025-02-01"],
@@ -21,6 +22,41 @@ invalid_vector_map = {
     "link_thumb": "https://testlinkthumb.test.bla",
 }
 
+invalid_vector_maps_content_type = [
+    (
+        {  # missing content_type
+            "time_period": ["2000-01-01", "2002-01-01"],
+            "description": "TestDescription",
+            "link_thumb": "https://testlinkthumb.test.bla",
+            "link_content": "https://testlinkcontent.test.bla",
+            "title": "test",
+        },
+        "missing",
+    ),
+    (
+        {
+            "content_type": "wrong_type",
+            "time_period": ["2000-01-01", "2002-01-01"],
+            "description": "TestDescription",
+            "link_thumb": "https://testlinkthumb.test.bla",
+            "link_content": "https://testlinkcontent.test.bla",
+            "title": "test",
+        },
+        "enum",
+    ),
+    (
+        {
+            "content_type": "",
+            "time_period": ["2000-01-01", "2002-01-01"],
+            "description": "TestDescription",
+            "link_thumb": "https://testlinkthumb.test.bla",
+            "link_content": "https://testlinkcontent.test.bla",
+            "title": "test",
+        },
+        "enum",
+    ),
+]
+
 invalid_vector_maps_time_period = [
     (
         {
@@ -29,6 +65,7 @@ invalid_vector_maps_time_period = [
             "link_thumb": "https://testlinkthumb.test.bla",
             "link_content": "https://testlinkcontent.test.bla",
             "title": "test",
+            "content_type": "vkf:geojson-spec-v1",
         },
         "too_short",
     ),
@@ -39,6 +76,7 @@ invalid_vector_maps_time_period = [
             "link_thumb": "https://testlinkthumb.test.bla",
             "link_content": "https://testlinkcontent.test.bla",
             "title": "test",
+            "content_type": "vkf:geojson-spec-v1",
         },
         "too_long",
     ),
@@ -49,6 +87,7 @@ invalid_vector_maps_time_period = [
             "link_thumb": "https://testlinkthumb.test.bla",
             "link_content": "https://testlinkcontent.test.bla",
             "title": "test",
+            "content_type": "vkf:geojson-spec-v1",
         },
         "value_error",
     ),

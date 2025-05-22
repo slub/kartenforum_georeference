@@ -112,6 +112,7 @@ def generate_es_original_map_document(
             "time_period_end": time_period_end,
             "time_published": metadata_obj.time_of_publication.date().isoformat(),  # TODO DEPRECATED, remove time_published in next deployment
             "external_content_url": None,
+            "external_content_type": None,
             "type": "single_sheet",
         }
     except Exception as e:
@@ -162,6 +163,7 @@ def generate_es_mosaic_map_document(mosaic_map_obj, geometry=None):
             "time_period_end": time_period_end,
             "time_published": mosaic_map_obj.time_of_publication.date().isoformat(),  # TODO DEPRECATED, remove time_published in next deployment
             "external_content_url": None,
+            "external_content_type": None,
             "type": "mosaic",
         }
     except Exception as e:
@@ -189,6 +191,8 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
     if external_content_url is not None:
         external_content_url = parse_url(external_content_url)
 
+    external_content_type = getattr(vector_map_obj, "content_type", None)
+
     try:
         return {
             "map_id": vector_map_obj.public_id,
@@ -213,6 +217,7 @@ def generate_es_vector_map_document(vector_map_obj, geometry=None):
             "time_period_end": time_period_end,
             "time_published": vector_map_obj.submitted.date().isoformat(),  # TODO DEPRECATED, remove time_published in next deployment
             "external_content_url": external_content_url,
+            "external_content_type": external_content_type,
             "type": "vector",
         }
     except Exception as e:

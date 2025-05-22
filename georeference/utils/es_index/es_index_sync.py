@@ -68,8 +68,15 @@ MAPPING = {
         "type": "text",
         "index": False,
     },  # https://ddev.geojson.site/technische_denkmaeler.json
+    "external_content_type": {
+        "type": "keyword",
+        "index": True,
+    },  # vkf:geojson-spec-v1, idohist:idohist-v1
     "type": {"type": "keyword", "index": True},  # vector, mosaic, single_sheet
-    "time_published": {"type": "date", "index": True},  # TODO DEPRECATED, remove time_published in next deployment
+    "time_published": {
+        "type": "date",
+        "index": True,
+    },  # TODO DEPRECATED, remove time_published in next deployment
 }
 
 

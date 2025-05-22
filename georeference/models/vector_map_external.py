@@ -8,14 +8,20 @@ This file is subject to the terms and conditions defined in
 file "LICENSE.txt", which is part of this source code package.
 """
 
+from enum import Enum
 from typing import Optional
 import uuid
 from pydantic import NaiveDatetime
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, DATE
-from sqlmodel import Field, SQLModel, select, col, Column
+from sqlmodel import Field, SQLModel, select, col, Column, Enum as sqlmodelEnum
 
 
 from georeference.models import datetime_without_timezone
+
+
+class ExternalContentTypeEnum(str, Enum):
+    VKF = "vkf:geojson-spec-v1"
+    IDOHIST = "idohist:idohist-v1"
 
 
 class VectorMapExternal(SQLModel, table=True):
@@ -29,6 +35,16 @@ class VectorMapExternal(SQLModel, table=True):
     description: Optional[str]
     link_thumb: Optional[str]
     link_content: str
+    content_type: ExternalContentTypeEnum = Field(
+        default=ExternalContentTypeEnum.VKF.value,
+        sa_column=Column(
+            sqlmodelEnum(
+                ExternalContentTypeEnum,
+                native_enum=False,
+                values_callable=lambda x: [e.value for e in x],
+            )
+        ),
+    )
     time_period: list = Field(sa_column=Column(ARRAY(DATE), nullable=False))
     submitted: NaiveDatetime = datetime_without_timezone
     last_change: NaiveDatetime = datetime_without_timezone

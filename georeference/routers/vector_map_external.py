@@ -20,7 +20,9 @@ from sqlmodel import Session
 
 from georeference.config import settings
 from georeference.config.db import get_session
-from georeference.models.vector_map_external import VectorMapExternal
+from georeference.models.vector_map_external import (
+    VectorMapExternal,
+)
 
 from georeference.routers.vector_map import push_vector_map_to_index
 from georeference.schemas.vector_map_external import (
@@ -85,6 +87,7 @@ def read_external_vector_map(
         description=vector_map.description,
         link_thumb=vector_map.link_thumb,
         link_content=vector_map.link_content,
+        content_type=vector_map.content_type,
         time_period=vector_map.time_period,
         submitted=vector_map.submitted,
         last_change=vector_map.last_change,
@@ -146,6 +149,7 @@ async def update_external_vector_map(
     vector_map.description = updated_vector_map.description
     vector_map.link_thumb = updated_vector_map.link_thumb
     vector_map.link_content = updated_vector_map.link_content
+    vector_map.content_type = updated_vector_map.content_type
     vector_map.time_period = updated_vector_map.time_period
 
     vector_map.last_change = datetime.now()
@@ -165,6 +169,7 @@ async def update_external_vector_map(
         description=vector_map.description,
         link_thumb=vector_map.link_thumb,
         link_content=vector_map.link_content,
+        content_type=vector_map.content_type,
         time_period=vector_map.time_period,
         submitted=vector_map.submitted,
         last_change=vector_map.last_change,

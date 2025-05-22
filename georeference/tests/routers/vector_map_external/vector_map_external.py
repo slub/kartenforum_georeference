@@ -16,6 +16,7 @@ from georeference.tests.routers.__test_data.vector_maps_external import (
     valid_vector_map,
     invalid_vector_map,
     invalid_vector_maps_time_period,
+    invalid_vector_maps_content_type,
 )
 
 
@@ -69,6 +70,7 @@ class TestCreateVectorMapExternal:
         assert "title" in missing_props
         assert "link_content" in missing_props
         assert "time_period" in missing_props
+        assert "content_type" in missing_props
 
     @pytest.mark.user("user_1")
     @pytest.mark.roles("vk2-admin")
@@ -76,6 +78,26 @@ class TestCreateVectorMapExternal:
         "invalid_vector_map,expected_error", invalid_vector_maps_time_period
     )
     def test_create_vector_map_fail_invalid_time_period(
+        self,
+        invalid_vector_map,
+        expected_error,
+        test_client: TestClient,
+        override_get_session_read_only,
+        override_get_user_from_session,
+        override_get_http_client_with_valid_response,
+    ):
+        response = test_client.post("/vector_maps_external", json=invalid_vector_map)
+
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 1
+        assert response.json()["detail"][0]["type"] == expected_error
+
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
+    @pytest.mark.parametrize(
+        "invalid_vector_map,expected_error", invalid_vector_maps_content_type
+    )
+    def test_create_vector_map_fail_invalid_content_type(
         self,
         invalid_vector_map,
         expected_error,
@@ -196,6 +218,7 @@ class TestUpdateVectorMapExternal:
         assert "title" in missing_props
         assert "link_content" in missing_props
         assert "time_period" in missing_props
+        assert "content_type" in missing_props
 
     @pytest.mark.user("user_1")
     @pytest.mark.roles("vk2-admin")
@@ -203,6 +226,31 @@ class TestUpdateVectorMapExternal:
         "invalid_vector_map,expected_error", invalid_vector_maps_time_period
     )
     def test_update_vector_map_fail_invalid_time_period(
+        self,
+        invalid_vector_map,
+        expected_error,
+        provision_mock_vector_map_external,
+        test_client: TestClient,
+        override_get_session_read_only,
+        override_get_user_from_session,
+        override_get_http_client_with_valid_response,
+    ):
+        vector_map = provision_mock_vector_map_external
+        id_ = vector_map.public_id
+        response = test_client.put(
+            "/vector_maps_external/{id}".format(id=id_), json=invalid_vector_map
+        )
+
+        assert response.status_code == 422
+        assert len(response.json()["detail"]) == 1
+        assert response.json()["detail"][0]["type"] == expected_error
+
+    @pytest.mark.user("user_1")
+    @pytest.mark.roles("vk2-admin")
+    @pytest.mark.parametrize(
+        "invalid_vector_map,expected_error", invalid_vector_maps_content_type
+    )
+    def test_update_vector_map_fail_invalid_content_type(
         self,
         invalid_vector_map,
         expected_error,
