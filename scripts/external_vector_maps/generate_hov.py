@@ -55,6 +55,12 @@ def validate_geometry(geometry):
     if geometry["type"] not in valid_geometries:
         raise ValueError("Invalid geometry")
 
+    if geometry["coordinates"][0] < 11 or geometry["coordinates"][0] > 16:
+        raise ValueError("Invalid longitude")
+
+    if geometry["coordinates"][1] < 50 or geometry["coordinates"][1] > 52:
+        raise ValueError("Invalid latitude")
+
     return
 
 
@@ -74,6 +80,7 @@ def create_feature(record):
 
     feature["id"] = hov_code
     feature["geometry"] = geometry
+    feature["type"] = "Feature"
 
     if image_url is not None:
         feature["properties"]["img_link"] = image_url
