@@ -39,55 +39,80 @@ def get_marker_color(record):
 
 def get_type_name(record):
     try:
-        # SIC!
-        type_name = record["typ"]["ortsyp"]
+        type_name = record["typ"]["ortstyp"]
         return type_name
     except Exception:
         return None
 
 
-def validate_geometry(geometry):
-    valid_geometries = ["Point", "LineString", "Polygon"]
+def get_description(record):
+    district = record["kreis"]
+    direction = record["lagerichtung"]
+    city_type = get_type_name(record)
 
+    if district is not None and direction is not None:
+        coerced_city_type = city_type if city_type is not None else ""
+
+        return "{city_type} {direction}, {district}".format(
+            city_type=coerced_city_type, direction=direction, district=district
+        ).strip()
+
+    return None
+
+
+def validate_coordinates(coordinates):
+    # coarse bounds of federal state saxony
+    if coordinates[0] < 11 or coordinates[0] > 16:
+        raise ValueError("Invalid longitude")
+
+    if coordinates[1] < 50 or coordinates[1] > 52:
+        raise ValueError("Invalid latitude")
+
+
+def validate_geometry(geometry):
     if geometry is None:
         raise ValueError("Geometry is None")
 
-    if geometry["type"] not in valid_geometries:
-        raise ValueError("Invalid geometry")
+    if geometry["type"] != "Point":
+        raise ValueError("Invalid geometry: '{geometry}'".format(geometry=geometry))
 
-    if geometry["coordinates"][0] < 11 or geometry["coordinates"][0] > 16:
-        raise ValueError("Invalid longitude")
+    validate_coordinates(geometry["coordinates"])
 
-    if geometry["coordinates"][1] < 50 or geometry["coordinates"][1] > 52:
-        raise ValueError("Invalid latitude")
-
-    return
+    return geometry
 
 
 def create_feature(record):
     hov_code = record["hovcode"]
     geometry = record["geometry"]
-    title = record["ortsname"]
+    title = (
+        record["ortsklarname"]
+        if record["ortsklarname"] is not None
+        else record["ortsname"]
+    )
     hov_link = HOV_WEB_BASE_URL + str(hov_code)
     marker = get_marker_color(record)
     type_name = get_type_name(record)
     image_url = record["image_url"]
+    description = get_description(record)
 
     validate_geometry(geometry)
 
     feature = {}
-    feature["properties"] = {}
 
     feature["id"] = hov_code
     feature["geometry"] = geometry
     feature["type"] = "Feature"
 
+    feature["properties"] = {}
+
     if image_url is not None:
         feature["properties"]["img_link"] = image_url
 
-    feature["properties"]["marker"] = marker
+    if description is not None:
+        feature["properties"]["description"] = description
 
     feature["properties"]["marker"] = marker
+
     feature["properties"]["title"] = title
 
     if type_name is not None:
@@ -155,7 +180,11 @@ def generate_geojson():
 
         try:
             feature = create_feature(record)
-        except Exception:
+        except Exception as e:
+            print(
+                "Error HOVCODE {hovcode}: {e}".format(hovcode=record["hovcode"], e=e),
+                file=sys.stderr,
+            )
             continue
 
         features.append(feature)
