@@ -31,8 +31,6 @@ MAPPING = {
     "zoomify_url": {"type": "text", "index": False},
     # "http://fotothek.slub-dresden.de/zooms/df/dk/0010000/df_dk_0010001_5248_1933/ImageProperties.xml"
     "map_type": {"type": "keyword", "index": True},  # "M"
-    "orginal_url": {"type": "text", "index": False},
-    # "http://fotothek.slub-dresden.de/fotos/df/dk/0010000/df_dk_0010001_5248_1933.jpg"
     "keywords": {
         "type": "text",
         "index": False,
@@ -58,11 +56,27 @@ MAPPING = {
     # "http://fotothek.slub-dresden.de/thumbs/df/dk/0010000/df_dk_0010001_5248_1933.jpg"
     "geometry": {"type": "geo_shape"},  # GeoJSON
     "has_georeference": {"type": "boolean", "index": True},
-    "time_published": {"type": "date", "index": True},  # "1939-1-1",
-    "is_mosaic": {
-        "type": "boolean",
+    "time_period_start": {
+        "type": "date",
         "index": True,
-    },  # Signals if the given map is a mosaic map layer
+    },  # "2000-01-01"
+    "time_period_end": {
+        "type": "date",
+        "index": True,
+    },  # "2000-12-31"
+    "external_content_url": {
+        "type": "text",
+        "index": False,
+    },  # https://ddev.geojson.site/technische_denkmaeler.json
+    "external_content_type": {
+        "type": "keyword",
+        "index": True,
+    },  # vkf:geojson-spec-v1, idohist:idohist-v1
+    "type": {"type": "keyword", "index": True},  # vector, mosaic, single_sheet
+    "time_published": {
+        "type": "date",
+        "index": True,
+    },  # TODO DEPRECATED, remove time_published in next deployment
 }
 
 

@@ -255,6 +255,6 @@ def override_get_async_es_index(request):
 
     app.dependency_overrides[get_async_es_client] = override_get_es_index
 
-    yield
+    yield es_sync
 
     del app.dependency_overrides[get_async_es_client]

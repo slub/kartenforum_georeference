@@ -80,10 +80,11 @@ make any changes to `pyproject.toml`. Also, if you make any changes to `pyprojec
 ## Configuration
 Configuration is managed via environment variables. They can be set in the following ways:
 1. Directly in the environment: These take precedence over everything else.
-2. In a `.env.production` file in the root of the project: This file will be automatically loaded by `pydantic-settings`
+2. In a `.env.local`. Overrides variables in `.env` and is overriden by `env.production`, ignored by git
+3. In a `.env.production` file in the root of the project: This file will be automatically loaded by `pydantic-settings`
    and will take precedence over the default values defined in `.env`. It does not need to be exhaustive, only the
    variables that should be overwritten are required.
-3. In a `.env` file: This file is also automatically loaded by `pydantic-settings`.
+4. In a `.env` file: This file is also automatically loaded by `pydantic-settings`.
 
 For more information, check the [Pydantic documentation](https://docs.pydantic.dev/latest/concepts/pydantic_settings/#dotenv-env-support).
 

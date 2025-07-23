@@ -8,6 +8,7 @@
 import json
 import os
 
+import httpx
 from loguru import logger
 from shapely.io import from_geojson
 
@@ -23,6 +24,8 @@ from georeference.models.mosaic_map import MosaicMap
 from georeference.models.raw_map import RawMap
 from georeference.models.transformation import Transformation
 from georeference.models.vector_map import VectorMap
+from georeference.models.vector_map_external import VectorMapExternal
+
 from georeference.utils.es_index.document_formatter import (
     generate_es_original_map_document,
     generate_es_vector_map_document,
@@ -47,6 +50,8 @@ def run_initialize_data(dbsession):
     :result: True if performed successfully
     :rtype: bool
     """
+    settings = get_settings()
+
     try:
         logger.info("Run initialization job ...")
         logger.info("Create index ...")
@@ -116,7 +121,7 @@ def run_initialize_data(dbsession):
                     geometry=get_geometry(raw_map_obj.id, dbsession),
                 )
                 logger.debug(document)
-                settings = get_settings()
+
                 es_index.index(
                     index=settings.ES_INDEX_NAME,
                     doc_type=None,
@@ -143,7 +148,7 @@ def run_initialize_data(dbsession):
                     trg_mosaic_dataset=trg_mosaic_dataset,
                 )
             except Exception as e:
-                logger.info("Error while trying to mosaic document to index")
+                logger.info("Error while trying to write mosaic document to index")
                 logger.error(e)
         logger.info("Finish initializing mosaic maps.")
 
@@ -168,9 +173,42 @@ def run_initialize_data(dbsession):
                 )
 
             except Exception as e:
-                logger.info("Error while trying to vector document to index")
+                logger.info("Error while trying to write vector document to index")
                 logger.error(e)
         logger.info("Finish initializing vector maps.")
+
+        logger.info("Start processing all external vector maps ...")
+        for ext_vector_map_obj in VectorMapExternal.all(dbsession):
+            logger.info(f"Initialize vector map with id {ext_vector_map_obj.id} ...")
+            try:
+                vector_map = ext_vector_map_obj
+
+                response = httpx.get(
+                    vector_map.link_content,
+                    headers={"accept": "application/json"},
+                    # don't verify SSL cert in dev mode (self-signed)
+                    verify=False if settings.DEV_MODE else True,
+                )
+                response.raise_for_status()
+                geom = from_geojson(response.text)
+                document = generate_es_vector_map_document(
+                    vector_map, bounds_to_polygon(geom.bounds)
+                )
+                logger.debug(
+                    f"Write search record for vector map id {vector_map.id} to index ..."
+                )
+                logger.debug(document)
+                es_index.index(
+                    index=settings.ES_INDEX_NAME,
+                    doc_type=None,
+                    id=vector_map.public_id,
+                    document=document,
+                )
+
+            except Exception as e:
+                logger.info("Error while trying to write vector document to index")
+                logger.error(e)
+        logger.info("Finish initializing external vector maps.")
 
         logger.info("Finish initialization job.")
         return True

@@ -16,6 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 INITIALIZE_THUMBNAILS_AND_ZOOMIFY="$SCRIPT_DIR/initialize-zoomify-and-thumbnail.sh"
 DOWNLOAD_TEST_DATA="$SCRIPT_DIR/download-testdata.sh"
+INIT_EXTERNAL_GEOJSON="$SCRIPT_DIR/initialize-external-vector-map-content.sh"
 
 # Set the PYTHONPATH to include the project root directory
 export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
@@ -40,5 +41,6 @@ echo "Starting initialization of test data ..."
 
 run_script "$DOWNLOAD_TEST_DATA"
 run_script "$INITIALIZE_THUMBNAILS_AND_ZOOMIFY"
+run_script "$INIT_EXTERNAL_GEOJSON"
 
 echo "Initialization complete."

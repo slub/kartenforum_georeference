@@ -4,20 +4,34 @@
 #
 # This file is subject to the terms and conditions defined in file
 # "LICENSE", which is part of this source code package
+
 import uuid
-from typing import Optional, List
+from typing import Annotated, Optional, List
+from datetime import date
 
 from geojson_pydantic import FeatureCollection
-from pydantic import BaseModel, Field, NaiveDatetime, RootModel
+from pydantic import BaseModel, Field, NaiveDatetime, RootModel, conlist, AfterValidator
 
 from georeference.config.constants import regex_link
 from georeference.models.vector_map import RoleEnum
+
+
+def validate_start_and_end_date(value: list[date]) -> list[date]:
+    start = value[0]
+    end = value[1]
+    if start > end:
+        raise ValueError(f"{start} is > {end}")
+    return value
 
 
 class VectorMapMetadata(BaseModel):
     description: Optional[str] = None
     link_thumb: Optional[str] = Field(default=None, pattern=regex_link)
     title: str
+    time_period: Annotated[
+        conlist(item_type=date, min_length=2, max_length=2),
+        AfterValidator(validate_start_and_end_date),
+    ]
 
 
 class VectorMapPayload(VectorMapMetadata):
@@ -28,6 +42,12 @@ class VectorMapMetadataUpdate(BaseModel):
     description: Optional[str] = None
     link_thumb: Optional[str] = Field(default=None, pattern=regex_link)
     title: Optional[str]
+    time_period: Optional[
+        Annotated[
+            conlist(item_type=date, min_length=2, max_length=2),
+            AfterValidator(validate_start_and_end_date),
+        ]
+    ]
 
 
 class VectorMapUpdatePayload(BaseModel):
@@ -44,6 +64,7 @@ class VectorMapVersionPayload(BaseModel):
 class VectorMapResponsePublic(BaseModel):
     id: uuid.UUID
     title: str
+    time_period: conlist(item_type=date, min_length=2, max_length=2)
     description: Optional[str] = None
     link_thumb: Optional[str] = None
     submitted: NaiveDatetime

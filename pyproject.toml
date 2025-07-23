@@ -1,5 +1,5 @@
 [tool.poetry]
-packages = [{ include = "georeference" }]
+packages = [{ include = "georeference", format = "sdist"}]
 name = "Virtuelles Kartenforum"
 version = "0.1.0"
 description = ""

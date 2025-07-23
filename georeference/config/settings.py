@@ -95,10 +95,12 @@ class Settings(BaseSettings):
     # Sentry configuration
     SENTRY_DSN: Optional[str] = None
     SENTRY_ENVIRONMENT: str = "development"
+    SENTRY_CRON_MONITOR_SLUG: str = "georeference-daemon"
 
     model_config = SettingsConfigDict(
         env_file=[
             os.path.abspath(os.path.join(BASE_PATH, "../", ".env")),
+            os.path.abspath(os.path.join(BASE_PATH, "../", ".env.local")),
             os.path.abspath(os.path.join(BASE_PATH, "../", ".env.production")),
         ]
     )
@@ -118,7 +120,6 @@ class Settings(BaseSettings):
         os.path.join(BASE_PATH, "../tmp/daemon.log")
     )
     DAEMON_LOG_LEVEL: str = "DEBUG"
-    DAEMON_LOOP_HEARTBEAT_COUNT: int = 10
 
     # Log file settings for api
     API_LOGFILE_PATH: Optional[str] = os.path.abspath(

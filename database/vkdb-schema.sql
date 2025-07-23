@@ -566,8 +566,12 @@ CREATE TABLE public.vector_maps
     description   TEXT,
     title         TEXT NOT NULL,
     link_thumb    TEXT,
+    time_period date[2] NOT NULL,
     submitted     TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     last_change   TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+
+    CONSTRAINT valid_time_period_shape CHECK (array_ndims(time_period) = 1 AND cardinality(time_period) = 2),
+    CONSTRAINT valid_time_period CHECK (time_period[1] <= time_period[2]),
 
     -- Request tracking
     last_request  TIMESTAMP WITHOUT TIME ZONE,
@@ -614,3 +618,38 @@ CREATE TABLE public.vector_maps_roles
 
     PRIMARY KEY (vector_map_id, user_id)
 );
+
+
+CREATE TABLE public.vector_maps_external (
+    id integer PRIMARY KEY,
+    public_id UUID NOT NULL DEFAULT gen_random_uuid(),
+
+    title TEXT NOT NULL,
+    link_content TEXT NOT NULL,
+    time_period date[2] NOT NULL,
+    description TEXT,
+    link_thumb TEXT,
+    content_type TEXT NOT NULL DEFAULT 'vkf:geojson-spec-v1',
+    submitted TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+    last_change TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+
+    CONSTRAINT valid_time_period_shape CHECK (array_ndims(time_period) = 1 AND cardinality(time_period) = 2),
+    CONSTRAINT valid_time_period CHECK (time_period[1] <= time_period[2]),
+
+    -- Request tracking
+    last_request TIMESTAMP WITHOUT TIME ZONE,
+    request_count INTEGER DEFAULT 0
+);
+
+CREATE SEQUENCE public.vector_maps_external_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE ONLY public.vector_maps_external
+    ALTER COLUMN id SET DEFAULT nextval('public.vector_maps_external_id_seq'::regclass);
+
+
+CREATE INDEX idx_vector_maps_external_public_id ON public.vector_maps_external(public_id);

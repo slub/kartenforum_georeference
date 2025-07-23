@@ -39,7 +39,7 @@ scripts/kartenforum_georeference
 *.log
 
 # Local development files
-.local
+*.local
 LOCAL.md
 
 # do not track files within data directory

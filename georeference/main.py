@@ -22,8 +22,10 @@ from georeference.routers import (
     mosaic_maps,
     transformations,
     vector_map,
+    vector_map_external,
 )
 from georeference.utils.es_index.es_index_async import get_async_es_client
+from georeference.utils.http_client import get_http_client
 from georeference.utils.init_helper import (
     log_startup_information,
     enable_cors_middleware,
@@ -36,6 +38,10 @@ async def lifespan(app: FastAPI):
     # Close connection to the es index
     es_client = get_async_es_client()
     await es_client.close()
+
+    # Close connection to async http client
+    http_client = get_http_client()
+    await http_client.aclose()
 
 
 # Initialization
@@ -74,5 +80,7 @@ app.include_router(mosaic_maps.router, prefix="/mosaic_maps")
 app.include_router(transformations.router, prefix="/transformations")
 
 app.include_router(vector_map.router, prefix="/vector_maps")
+
+app.include_router(vector_map_external.router, prefix="/vector_maps_external")
 
 logger.debug("Initialization done.")
